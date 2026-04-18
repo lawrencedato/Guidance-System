@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard</title>
+
+<link rel="stylesheet" href="style.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- SIDEBAR (UNCHANGED) -->
+<nav class="sidebar">
+
+  <div class="logo-bar">
+
+    <div class="logo">
+      <img src="logo.png" alt="logo">
+      <h3>UNITYCARE</h3>
+    </div>
+
+    <div class="settings-wrapper">
+
+      <button class="settings-icon">
+        <i class="fa fa-gear"></i>
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="menu">
+
+    <a href="dashboard.html" class="active">
+      <i class="fa fa-th-large"></i> Dashboard
+    </a>
+
+    <p class="menu-title">SERVICES</p>
+
+    <a href="booking.html">
+      <i class="fa fa-calendar"></i> Book Appointment
+    </a>
+
+    <a href="concerns.html">
+      <i class="fa fa-exclamation-triangle"></i> Submit Concern
+    </a>
+
+    <a href="wellness.html">
+      <i class="fa fa-heart"></i> Wellness Check
+    </a>
+
+    <a href="referral.html">
+      <i class="fa fa-route"></i> Referral
+    </a>
+
+    <p class="menu-title">UPDATES</p>
+
+    <a href="announcements.html">
+      <i class="fa fa-bullhorn"></i> Announcements
+    </a>
+
+    <p class="menu-title">RECORDS</p>
+
+    <a href="history.html">
+      <i class="fa fa-clock"></i> Session History
+    </a>
+
+    <a href="documents.html">
+      <i class="fa fa-file"></i> Documents
+    </a>
+
+    <a href="ticket.html">
+      <i class="fa fa-ticket"></i> Tickets
+    </a>
+
+    <p class="menu-title">SYSTEM</p>
+
+    <a href="feedback.html">
+      <i class="fa fa-comment"></i> Session Feedback
+    </a>
+
+  </div>
+
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <div class="topbar">
+    <h2>Welcome back, Student 👋</h2>
+  </div>
+
+  <!-- STATS -->
+  <div class="grid">
+
+    <div class="card stat-card">
+      <div class="stat-icon">
+        <i class="fa fa-calendar"></i>
+      </div>
+      <div>
+        <h3>0</h3>
+        <p>Upcoming Sessions</p>
+      </div>
+    </div>
+
+    <div class="card stat-card">
+      <div class="stat-icon">
+        <i class="fa fa-ticket"></i>
+      </div>
+      <div>
+        <h3>1</h3>
+        <p>Open Tickets</p>
+      </div>
+    </div>
+
+    <div class="card stat-card">
+      <div class="stat-icon">
+        <i class="fa fa-heart"></i>
+      </div>
+      <div>
+        <h3>😊</h3>
+        <p>Last Mood</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CARDS -->
+  <div class="grid">
+
+    <div class="card">
+      <h3><i class="fa fa-bullhorn"></i> Announcement</h3>
+      <p><b>Seminar Scheduled</b></p>
+      <p>Friday 2PM - Main Hall</p>
+    </div>
+
+    <div class="card">
+      <h3><i class="fa fa-clock"></i> Recent Activity</h3>
+      <p>✔ Session booked</p>
+      <p>✔ Wellness check submitted</p>
+      <p>✔ Profile updated</p>
+    </div>
+
+  </div>
+
+</main>
+
+</body>
+</html>

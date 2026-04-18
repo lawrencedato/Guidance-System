@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - UNITYCARE</title>
+
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+
+
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+
+<style>
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+
+.login-info {
+  font-size: 12px;
+  margin-top: 8px;
+  opacity: 0.7;
+}
+
+
+.error {
+  color: red;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+
+.role-display {
+  font-size: 13px;
+  margin-bottom: 10px;
+  padding: 6px;
+  background: #eee;
+  border-radius: 6px;
+}
+</style>
+</head>
+
+
+<body class="auth-body">
+
+
+<div class="auth-container">
+
+
+  <!-- LEFT -->
+  <div class="auth-left">
+    <div class="overlay"></div>
+
+
+    <div class="auth-brand">
+      <img src="logo.png">
+      <h1>UNITYCARE</h1>
+    </div>
+  </div>
+
+
+  <!-- RIGHT -->
+  <div class="auth-right">
+
+
+    <div class="auth-box">
+
+
+      <h2>Login</h2>
+
+
+      <!-- SHOW SELECTED ROLE -->
+      <div class="role-display" id="roleDisplay">
+        Role: Not selected
+      </div>
+
+
+      <input type="email" id="loginEmail" placeholder="Email">
+      <input type="password" id="loginPass" placeholder="Password">
+
+
+      <div class="login-info">
+        Attempts left: <span id="attempts">5</span>
+      </div>
+
+
+      <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY_HERE"></div>
+
+
+      <button onclick="login()">Login</button>
+
+
+      <div id="error" class="error"></div>
+
+
+      <p>Don’t have an account?</p>
+      <a href="register.html">Register</a>
+
+
+    </div>
+
+
+  </div>
+
+
+</div>
+
+
+<script>
+let attempts = 5;
+
+
+// GET ROLE FROM ROLE PAGE
+const role = localStorage.getItem("userRole") || "Not selected";
+document.getElementById("roleDisplay").textContent = "Role: " + role;
+
+
+function login() {
+  const email = document.getElementById("loginEmail").value;
+  const pass = document.getElementById("loginPass").value;
+  const error = document.getElementById("error");
+
+
+  error.style.color = "red";
+
+
+  if (!role || role === "Not selected") {
+    error.textContent = "Please go to role selection first.";
+    return;
+  }
+
+
+  if (!email || !pass) {
+    error.textContent = "Please fill in all fields.";
+    return;
+  }
+
+
+  const captcha = grecaptcha.getResponse();
+  if (!captcha) {
+    error.textContent = "Please complete reCAPTCHA.";
+    return;
+  }
+
+
+  attempts--;
+  document.getElementById("attempts").textContent = attempts;
+
+
+  if (attempts <= 0) {
+    error.textContent = "Too many failed attempts.";
+    document.querySelector("button").disabled = true;
+    return;
+  }
+
+
+  error.style.color = "green";
+  error.textContent = "Login successful! Redirecting...";
+
+
+  setTimeout(() => {
+    if (role === "admin") {
+      window.location.href = "admin-dashboard.html";
+    } else if (role === "student") {
+      window.location.href = "dashboard.html";
+    } else if (role === "counselor") {
+      window.location.href = "counselor-dashboard.html";
+    }
+  }, 1000);
+}
+</script>
+
+
+</body>
+</html>
+
