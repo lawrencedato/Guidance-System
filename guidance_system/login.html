@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login | UNITYCARE</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+
+<body class="auth-body">
+
+<div class="auth-container">
+
+  <!-- LEFT PANEL WITH INLINE BACKGROUND -->
+  <section class="auth-left"
+    style="background: url('bg.png') no-repeat center center; background-size: cover;">
+
+    <div class="overlay"></div>
+
+    <div class="auth-brand">
+      <img src="logo.png" alt="UNITYCARE Logo">
+      <h1>UNITYCARE</h1>
+      <p>Support • Care • Connection</p>
+    </div>
+
+  </section>
+
+  <!-- RIGHT PANEL -->
+  <section class="auth-right">
+
+    <div class="auth-box">
+
+      <header>
+        <h2>Login</h2>
+        <p>Welcome back! Please sign in to continue</p>
+      </header>
+
+      <div class="role-display" id="roleDisplay">
+        Role: Not selected
+      </div>
+
+      <form onsubmit="event.preventDefault(); login();">
+
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="Enter your email" required>
+
+        <label for="loginPass">Password</label>
+        <input type="password" id="loginPass" placeholder="Enter your password" required>
+
+        <div class="login-info">
+          Attempts left: <span id="attempts">5</span>
+        </div>
+
+        <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY_HERE"></div>
+
+        <button type="submit">Login</button>
+
+        <div id="error" class="error"></div>
+
+      </form>
+
+     <div class="auth-link">
+  <div>Don’t have an account?</div>
+  <a href="register.html">Create one</a>
+</div>
+
+    </div>
+
+  </section>
+
+</div>
+
+<script>
+let attempts = 5;
+
+const role = localStorage.getItem("userRole") || "Not selected";
+document.getElementById("roleDisplay").textContent = "Role: " + role;
+
+function login() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPass").value.trim();
+  const error = document.getElementById("error");
+
+  error.style.color = "red";
+
+  if (role === "Not selected") {
+    error.textContent = "Please select a role first.";
+    return;
+  }
+
+  if (!email || !pass) {
+    error.textContent = "Please fill in all fields.";
+    return;
+  }
+
+  const captcha = grecaptcha.getResponse();
+  if (!captcha) {
+    error.textContent = "Please complete reCAPTCHA.";
+    return;
+  }
+
+  attempts--;
+  document.getElementById("attempts").textContent = attempts;
+
+  if (attempts <= 0) {
+    error.textContent = "Too many failed attempts.";
+    document.querySelector("button").disabled = true;
+    return;
+  }
+
+  error.style.color = "green";
+  error.textContent = "Login successful! Redirecting...";
+
+  setTimeout(() => {
+    if (role === "admin") {
+      window.location.href = "admin-dashboard.html";
+    } else if (role === "student") {
+      window.location.href = "dashboard.html";
+    } else if (role === "counselor") {
+      window.location.href = "counselor-dashboard.html";
+    }
+  }, 1000);
+}
+</script>
+
+</body>
+</html>
