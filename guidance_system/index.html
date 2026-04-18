@@ -1,179 +1,82 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - UNITYCARE</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="UNITYCARE Role Selection Portal">
+  <title>Select Role | UNITYCARE</title>
 
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
-
-
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
-
-
-<style>
-body {
-  font-family: 'Poppins', sans-serif;
-}
-
-
-.login-info {
-  font-size: 12px;
-  margin-top: 8px;
-  opacity: 0.7;
-}
-
-
-.error {
-  color: red;
-  font-size: 13px;
-  margin-top: 10px;
-}
-
-
-.role-display {
-  font-size: 13px;
-  margin-bottom: 10px;
-  padding: 6px;
-  background: #eee;
-  border-radius: 6px;
-}
-</style>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 
+<body style="background: url('bg.png') no-repeat center center fixed; background-size: cover;">
 
-<body class="auth-body">
+  <main id="main-content">
 
+    <section class="role-selection">
 
-<div class="auth-container">
+      <header class="brand-header">
+        <figure class="logo-wrapper">
+          <img src="logo.png" alt="UNITYCARE Logo" width="80" height="80">
+          <figcaption>
+            <h1>UNITYCARE</h1>
+          </figcaption>
+        </figure>
+      </header>
 
+      <article class="role-card">
 
-  <!-- LEFT -->
-  <div class="auth-left">
-    <div class="overlay"></div>
+        <header>
+          <h2>Select Your Role</h2>
+          <p>Please choose your account type to continue</p>
+        </header>
 
-
-    <div class="auth-brand">
-      <img src="logo.png">
-      <h1>UNITYCARE</h1>
-    </div>
-  </div>
-
-
-  <!-- RIGHT -->
-  <div class="auth-right">
-
-
-    <div class="auth-box">
-
-
-      <h2>Login</h2>
+        <div class="role-buttons">
 
 
-      <!-- SHOW SELECTED ROLE -->
-      <div class="role-display" id="roleDisplay">
-        Role: Not selected
-      </div>
+          <button type="button" class="role-btn student" onclick="handleRoleSelection('student')">
+            Student
+          </button>
 
+          <button type="button" class="role-btn counselor" onclick="handleRoleSelection('counselor')">
+            Counselor
+          </button>
+          
+          <button type="button" class="role-btn admin" onclick="handleRoleSelection('admin')">
+            Admin
+          </button>
 
-      <input type="email" id="loginEmail" placeholder="Email">
-      <input type="password" id="loginPass" placeholder="Password">
+        </div>
 
+      </article>
 
-      <div class="login-info">
-        Attempts left: <span id="attempts">5</span>
-      </div>
+      <footer class="role-footer">
+        <p>&copy; 2026 UNITYCARE. All rights reserved.</p>
+      </footer>
 
+    </section>
 
-      <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY_HERE"></div>
+  </main>
 
+  <script>
+    function handleRoleSelection(role) {
+      localStorage.setItem("userRole", role);
 
-      <button onclick="login()">Login</button>
-
-
-      <div id="error" class="error"></div>
-
-
-      <p>Don’t have an account?</p>
-      <a href="register.html">Register</a>
-
-
-    </div>
-
-
-  </div>
-
-
-</div>
-
-
-<script>
-let attempts = 5;
-
-
-// GET ROLE FROM ROLE PAGE
-const role = localStorage.getItem("userRole") || "Not selected";
-document.getElementById("roleDisplay").textContent = "Role: " + role;
-
-
-function login() {
-  const email = document.getElementById("loginEmail").value;
-  const pass = document.getElementById("loginPass").value;
-  const error = document.getElementById("error");
-
-
-  error.style.color = "red";
-
-
-  if (!role || role === "Not selected") {
-    error.textContent = "Please go to role selection first.";
-    return;
-  }
-
-
-  if (!email || !pass) {
-    error.textContent = "Please fill in all fields.";
-    return;
-  }
-
-
-  const captcha = grecaptcha.getResponse();
-  if (!captcha) {
-    error.textContent = "Please complete reCAPTCHA.";
-    return;
-  }
-
-
-  attempts--;
-  document.getElementById("attempts").textContent = attempts;
-
-
-  if (attempts <= 0) {
-    error.textContent = "Too many failed attempts.";
-    document.querySelector("button").disabled = true;
-    return;
-  }
-
-
-  error.style.color = "green";
-  error.textContent = "Login successful! Redirecting...";
-
-
-  setTimeout(() => {
-    if (role === "admin") {
-      window.location.href = "admin-dashboard.html";
-    } else if (role === "student") {
-      window.location.href = "dashboard.html";
-    } else if (role === "counselor") {
-      window.location.href = "counselor-dashboard.html";
+      switch (role) {
+        case "student":
+          window.location.href = "login.html";
+          break;
+        case "counselor":
+          window.location.href = "counselor.html";
+          break;
+        case "admin":
+        default:
+          window.location.href = "admin-dashboard.html";
+          break;
+      }
     }
-  }, 1000);
-}
-</script>
-
+  </script>
 
 </body>
 </html>
-
