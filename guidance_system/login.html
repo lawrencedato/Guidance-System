@@ -15,64 +15,64 @@
 
 <div class="auth-container">
 
-  <!-- LEFT PANEL WITH INLINE BACKGROUND -->
-  <section class="auth-left"
-    style="background: url('bg.png') no-repeat center center; background-size: cover;">
-
-    <div class="overlay"></div>
+  <!-- LEFT -->
+  <section class="auth-left">
+    <div class="auth-left-overlay"></div>
 
     <div class="auth-brand">
-      <img src="logo.png" alt="UNITYCARE Logo">
-      <h1>UNITYCARE</h1>
-      <p>Support • Care • Connection</p>
+      <img class="auth-brand-logo" src="logo.png">
+      <h1 class="auth-brand-title">UNITYCARE</h1>
+      <p class="auth-brand-subtitle">Support • Care • Connection</p>
     </div>
-
   </section>
 
-  <!-- RIGHT PANEL -->
+  <!-- RIGHT -->
   <section class="auth-right">
 
     <div class="auth-box">
 
-      <header>
-        <h2>Login</h2>
-        <p>Welcome back! Please sign in to continue</p>
-      </header>
+      <h2 class="auth-title">Login</h2>
+      <p class="auth-subtitle">Welcome back!</p>
+      <div class="auth-role" id="roleDisplay">
+   Role: <b>Not Selected</b>
+</div>
 
-      <div class="role-display" id="roleDisplay">
-        Role: Not selected
-      </div>
+      <form class="auth-form" onsubmit="event.preventDefault(); register();">
 
-      <form onsubmit="event.preventDefault(); login();">
+        
+        <label class="auth-label">Email</label>
+        <input class="auth-input" id="email">
 
-        <label for="loginEmail">Email</label>
-        <input type="email" id="loginEmail" placeholder="Enter your email" required>
+        <label class="auth-label">Password</label>
+        <input class="auth-input" id="password">
 
-        <label for="loginPass">Password</label>
-        <input type="password" id="loginPass" placeholder="Enter your password" required>
+        <button class="auth-btn" type="submit">
+          Login
+        </button>
 
-        <div class="login-info">
-          Attempts left: <span id="attempts">5</span>
-        </div>
-
-        <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY_HERE"></div>
-
-        <button type="submit">Login</button>
-
-        <div id="error" class="error"></div>
+        <div class="auth-message" id="regError"></div>
 
       </form>
 
-     <div class="auth-link">
-  <div>Don’t have an account?</div>
-  <a href="register.html">Create one</a>
-</div>
+      <!-- TEMP PASSWORD BOX -->
+      <div class="auth-temp-box" id="tempBox">
+        <p class="auth-temp-title">Temporary Password</p>
+        <p class="auth-temp-password" id="tempPass"></p>
+        <p class="auth-temp-note">Save this password before leaving.</p>
+      </div>
+
+      <div class="auth-footer">
+        <span class="auth-footer-text">Already have an account?</span>
+        <a class="auth-footer-link" href="register.html">Login</a>
+      </div>
 
     </div>
 
   </section>
 
 </div>
+
+</body>
 
 <script>
 let attempts = 5;
@@ -108,7 +108,7 @@ function login() {
 
   if (attempts <= 0) {
     error.textContent = "Too many failed attempts.";
-    document.querySelector("button").disabled = true;
+    document.querySelector(".login-form-button").disabled = true;
     return;
   }
 
@@ -116,13 +116,9 @@ function login() {
   error.textContent = "Login successful! Redirecting...";
 
   setTimeout(() => {
-    if (role === "admin") {
-      window.location.href = "admin-dashboard.html";
-    } else if (role === "student") {
-      window.location.href = "dashboard.html";
-    } else if (role === "counselor") {
-      window.location.href = "counselor-dashboard.html";
-    }
+    if (role === "admin") window.location.href = "admin-dashboard.html";
+    else if (role === "student") window.location.href = "dashboard.html";
+    else if (role === "counselor") window.location.href = "counselor-dashboard.html";
   }, 1000);
 }
 </script>
