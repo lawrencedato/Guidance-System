@@ -1,82 +1,155 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="UNITYCARE Role Selection Portal">
-  <title>Select Role | UNITYCARE</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register | UNITYCARE</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 
-<body style="background: url('bg.png') no-repeat center center fixed; background-size: cover;">
+<body class="auth-body">
 
-  <main id="main-content">
+<div class="auth-container">
 
-    <section class="role-selection">
+  <!-- LEFT -->
+  <section class="auth-left">
 
-      <header class="brand-header">
-        <figure class="logo-wrapper">
-          <img src="logo.png" alt="UNITYCARE Logo" width="80" height="80">
-          <figcaption>
-            <h1>UNITYCARE</h1>
-          </figcaption>
-        </figure>
-      </header>
+    <div class="auth-left-overlay"></div>
 
-      <article class="role-card">
+    <div class="auth-brand">
+      <img class="auth-brand-logo" src="logo.png">
+      <h1 class="auth-brand-title">UNITYCARE</h1>
+      <p class="auth-brand-subtitle">Create your account</p>
+    </div>
 
-        <header>
-          <h2>Select Your Role</h2>
-          <p>Please choose your account type to continue</p>
-        </header>
+  </section>
 
-        <div class="role-buttons">
+  <!-- RIGHT -->
+  <section class="auth-right">
 
+    <div class="auth-box">
 
-          <button type="button" class="role-btn student" onclick="handleRoleSelection('student')">
-            Student
-          </button>
+      <h2 class="auth-title">Register</h2>
 
-          <button type="button" class="role-btn counselor" onclick="handleRoleSelection('counselor')">
-            Counselor
-          </button>
-          
-          <button type="button" class="role-btn admin" onclick="handleRoleSelection('admin')">
-            Admin
-          </button>
+      <p class="auth-subtitle">
+        Join UNITYCARE today
+      </p>
 
+      <form class="auth-form" onsubmit="event.preventDefault(); register();">
+
+        <label class="auth-label">Full Name</label>
+        <input class="auth-input" id="name" type="text">
+
+        <label class="auth-label">Email</label>
+        <input class="auth-input" id="email" type="email">
+
+        <label class="auth-label">Password</label>
+        <input class="auth-input" id="password" type="password">
+
+        <label class="auth-label">Confirm Password</label>
+        <input class="auth-input" id="confirmPassword" type="password">
+
+        <div class="auth-captcha">
+          <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY_HERE"></div>
         </div>
 
-      </article>
+        <button type="submit" class="auth-btn">
+          Register
+        </button>
 
-      <footer class="role-footer">
-        <p>&copy; 2026 UNITYCARE. All rights reserved.</p>
-      </footer>
+        <div class="auth-message" id="error"></div>
 
-    </section>
+      </form>
 
-  </main>
+      <!-- TEMP PASSWORD BOX -->
+      <div id="tempPasswordBox" class="auth-temp-box">
 
-  <script>
-    function handleRoleSelection(role) {
-      localStorage.setItem("userRole", role);
+        <strong class="auth-temp-title">
+          Temporary Password:
+        </strong>
 
-      switch (role) {
-        case "student":
-          window.location.href = "login.html";
-          break;
-        case "counselor":
-          window.location.href = "counselor.html";
-          break;
-        case "admin":
-        default:
-          window.location.href = "admin-dashboard.html";
-          break;
-      }
-    }
-  </script>
+        <p id="tempPassword" class="auth-temp-password"></p>
+
+        <small class="auth-temp-note">
+          Please save this password before continuing.
+        </small>
+
+      </div>
+
+      <!-- FOOTER -->
+      <div class="auth-footer">
+
+        <div class="auth-footer-text">
+          Already have an account?
+        </div>
+
+        <a class="auth-footer-link" href="login.html">
+          Login here
+        </a>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
+
+<script>
+function generateTempPassword() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$";
+  let pass = "";
+  for (let i = 0; i < 10; i++) {
+    pass += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return pass;
+}
+
+function register() {
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const confirmPassword = document.getElementById("confirmPassword").value.trim();
+  const error = document.getElementById("error");
+
+  error.style.color = "red";
+
+  if (!name || !email || !password || !confirmPassword) {
+    error.textContent = "Please fill in all fields.";
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    error.textContent = "Passwords do not match.";
+    return;
+  }
+
+  const captcha = grecaptcha.getResponse();
+  if (!captcha) {
+    error.textContent = "Please complete reCAPTCHA.";
+    return;
+  }
+
+  const tempPassword = generateTempPassword();
+
+  document.getElementById("tempPasswordBox").style.display = "block";
+  document.getElementById("tempPassword").textContent = tempPassword;
+
+  localStorage.setItem("tempPassword", tempPassword);
+  localStorage.setItem("registeredEmail", email);
+
+  error.style.color = "green";
+  error.textContent = "Account created successfully! Redirecting...";
+
+  setTimeout(() => {
+    window.location.href = "login.html";
+  }, 3000);
+}
+</script>
 
 </body>
 </html>
