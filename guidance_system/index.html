@@ -4,46 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="UNITYCARE Role Selection Portal">
-  <title>Select Role | UNITYCARE</title>
+  <title> UNITYCARE | Select RoleUNITYCARE</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 
-<body style="background: url('bg.png') no-repeat center center fixed; background-size: cover;">
+<body class="roleSelect-body">
 
-  <main id="main-content">
+  <main class="roleSelect-main-content">
 
-    <section class="role-selection">
+    <section class="roleSelect-section-wrapper">
 
-      <header class="brand-header">
-        <figure class="logo-wrapper">
-          <img src="logo.png" alt="UNITYCARE Logo" width="80" height="80">
+      <header class="roleSelect-header-brand">
+        <figure class="roleSelect-header-logoWrapper">
+          <img class="roleSelect-header-logoImage" src="logo.png" alt="UNITYCARE Logo">
           <figcaption>
-            <h1>UNITYCARE</h1>
+            <h1 class="roleSelect-header-title">UNITYCARE</h1>
           </figcaption>
         </figure>
       </header>
 
-      <article class="role-card">
+      <article class="roleSelect-card-container">
 
-        <header>
-          <h2>Select Your Role</h2>
-          <p>Please choose your account type to continue</p>
+        <header class="roleSelect-card-header">
+          <h2 class="roleSelect-card-title">Select Your Role</h2>
+          <p class="roleSelect-card-subtitle">Please choose your account type to continue</p>
         </header>
 
-        <div class="role-buttons">
+        <div class="roleSelect-card-buttons">
 
-
-          <button type="button" class="role-btn student" onclick="handleRoleSelection('student')">
+          <button class="roleSelect-card-button roleSelect-card-button-student"
+            onclick="handleRoleSelection('student')">
             Student
           </button>
 
-          <button type="button" class="role-btn counselor" onclick="handleRoleSelection('counselor')">
+          <button class="roleSelect-card-button roleSelect-card-button-counselor"
+            onclick="handleRoleSelection('counselor')">
             Counselor
           </button>
-          
-          <button type="button" class="role-btn admin" onclick="handleRoleSelection('admin')">
+
+          <button class="roleSelect-card-button roleSelect-card-button-admin"
+            onclick="handleRoleSelection('admin')">
             Admin
           </button>
 
@@ -51,8 +53,8 @@
 
       </article>
 
-      <footer class="role-footer">
-        <p>&copy; 2026 UNITYCARE. All rights reserved.</p>
+      <footer class="roleSelect-footer">
+        <p class="roleSelect-footer-text">© 2026 UNITYCARE. All rights reserved.</p>
       </footer>
 
     </section>
@@ -68,7 +70,7 @@
           window.location.href = "login.html";
           break;
         case "counselor":
-          window.location.href = "counselor.html";
+          window.location.href = "clogin.html";
           break;
         case "admin":
         default:
