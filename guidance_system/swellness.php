@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>UNITYCARE - Student Dashboard</title>
+<title>Wellness Check - UNITYCARE</title>
 
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="sWellness.css">
+
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
-
 <body class="body">
 
 <!-- ================= SIDEBAR ================= -->
@@ -39,12 +39,12 @@
 
   <nav class="sidebar-menu">
 
-    <a href="dashboard.html" class="active"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="dashboard.html"><i class="fa fa-th-large"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
     <a href="booking.html"><i class="fa fa-calendar"></i> Book Appointment</a>
     <a href="sconcerns.html"><i class="fa fa-headset"></i> Submit Concern</a>
-    <a href="wellness.html"><i class="fa fa-heart"></i> Wellness Check</a>
+    <a href="wellness.html" class="active"><i class="fa fa-heart"></i> Wellness Check</a>
     <a href="referral.html"><i class="fa fa-route"></i> Referral</a>
 
     <p class="sidebar-title">UPDATES</p>
@@ -61,10 +61,10 @@
 </aside>
 
 <!-- ================= TOPBAR ================= -->
-<header class="topbar">
+ <header class="topbar">
 
   <div class="topbar-left">
-    <h3>Welcome back, Vincent! 👋</h3>
+    <h1>Wellness Check</h1>
   </div>
 
   <div class="topbar-right">
@@ -86,7 +86,7 @@
       </div>
     </div>
 
-   <div class="topbar-user">
+    <div class="topbar-user">
       <img src="student.jpg" alt="user">
       <div>
         <strong>Vincent Aldolf Sablay</strong>
@@ -98,92 +98,63 @@
 
 </header>
 
-<!-- ================= MAIN ================= -->
-<main class="sDashboard-main">
+  <!-- INFO -->
+   <main class="sWellness-main">
 
-  <!-- STATS -->
-  <section class="sDashboard-stats">
-    <div class="sDashboard-card">
-      <h4>Upcoming Appointments</h4>
-      <h2>2</h2>
-      <small>Next: Apr 20, 10:00 AM</small>
+    <div class=sWellness-card>
+
+  <!-- FORM -->
+  <div class="card sWellness-form">
+   <h3>💡 Tip of the Day</h3>
+    <p>Take deep breaths for 5 minutes to reduce stress.</p>
+    <h2 class="sWellness-form-title">How are you feeling today?</h2>
+
+    <!-- MOOD -->
+    <div class="sWellness-mood-container">
+      <button class="sWellness-mood-btn" onclick="setMood('😢')">😢</button>
+      <button class="sWellness-mood-btn" onclick="setMood('😕')">😕</button>
+      <button class="sWellness-mood-btn" onclick="setMood('😐')">😐</button>
+      <button class="sWellness-mood-btn" onclick="setMood('🙂')">🙂</button>
+      <button class="sWellness-mood-btn" onclick="setMood('😁')">😁</button>
     </div>
 
-    <div class="sDashboard-card">
-      <h4>Completed Sessions</h4>
-      <h2>5</h2>
-      <small>Total counseling sessions attended</small>
+    <p class="sWellness-mood-display">
+      Selected Mood: <strong id="moodValue">🙂</strong>
+    </p>
+
+    <!-- STRESS -->
+    <div class="form-group sWellness-form-group">
+      <label>Stress Level</label>
+      <input type="range" min="0" max="100" value="50"
+        oninput="updateStress(this.value)">
+      <p class="sWellness-stress-display">
+        <strong id="stressValue">Moderate (50%)</strong>
+      </p>
     </div>
 
-    <div class="sDashboard-card">
-      <h4>Active Referrals</h4>
-      <h2>1</h2>
-      <small>External professional assigned</small>
+    <!-- SLEEP -->
+    <div class="form-group sWellness-form-group">
+      <label>Sleep Quality</label>
+      <select>
+        <option>Good</option>
+        <option>Average</option>
+        <option>Poor</option>
+      </select>
     </div>
 
-    <div class="sDashboard-card">
-      <h4>Pending Concerns</h4>
-      <h2>3</h2>
-      <small>Awaiting counselor response</small>
+    <!-- MESSAGE -->
+    <div class="form-group sWellness-form-group">
+      <label>Message</label>
+      <textarea rows="4"></textarea>
     </div>
 
-    <div class="card-emergency">
-      <h4>Need immediate help?</h4>
-      <p>Contact your counselor or hotline</p>
-      <p><strong>📞 0912-345-6789</strong></p>
-    </div>
-  </section>
+    <button class="btn sWellness-submit-btn">Submit Check-in</button>
 
-  <!-- CONTENT GRID -->
-  <section class="sDashboard-content">
-
-    <!-- LEFT -->
-    <div class="sDashboard-announcement">
-      <h4>Announcement</h4>
-      <h4>Mental Health Awareness Seminar</h4>
-      <p>Stress management, emotional balance, and self-care strategies for academic pressure.</p>
-
-
-   <a class="btn"
-         href="announcements.html?open=mental-health-seminar">
-        View Details
-      </a>
-    </div>
-
-    <!-- RIGHT -->
-    <div class="sDashboard-side">
-
-      <div class="sDashboard-card">
-        <h4>Wellness</h4>
-        <div class="sDashboard-progress">75%</div>
-      </div>
-
-      <div class="sDashboard-card">
-        <h4>Mood</h4>
-        <div class="sDashboard-mood">😊</div>
-      </div>
-
-      <div class="sDashboard-card">
-        <h4>Activity</h4>
-
-        <div class="sDashboard-activity-item">
-          Booked session <small>Apr 12, 2026</small>
-        </div>
-
-        <div class="sDashboard-activity-item">
-          Submitted concern <small>Apr 10, 2026</small>
-        </div>
-
-      </div>
-
-    </div>
-
-  </section>
-
+  </div>
+</div>
 </main>
-<!-- ================= SCRIPT ================= -->
-    <script>
 
+<script>
 function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
@@ -191,7 +162,8 @@ function toggleSettingsMenu(e){
 
 function toggleTheme(){
   const html = document.documentElement;
-  html.setAttribute("data-theme",
+  html.setAttribute(
+    "data-theme",
     html.getAttribute("data-theme") === "light" ? "dark" : "light"
   );
 }
@@ -209,10 +181,14 @@ document.addEventListener("click", e => {
     menu.classList.remove("show");
   }
 });
-
-
+function setMood(m){
+  document.getElementById("moodValue").innerText=m;
+}
+function updateStress(v){
+  let t=v<30?"Low 😌":v<70?"Moderate 😐":"High 😰";
+  document.getElementById("stressValue").innerText=`${t} (${v}%)`;
+}
 </script>
-
 
 </body>
 </html>
