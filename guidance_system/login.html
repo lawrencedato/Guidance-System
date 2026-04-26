@@ -37,7 +37,7 @@
    Role: <b>Not Selected</b>
 </div>
 
-      <form class="auth-form" onsubmit="event.preventDefault(); register();">
+      <form class="auth-form" onsubmit="event.preventDefault(); login();">
 
         
         <label class="auth-label">Email</label>
@@ -61,9 +61,16 @@
         <p class="auth-temp-note">Save this password before leaving.</p>
       </div>
 
-      <div class="auth-footer">
-        <span class="auth-footer-text">Already have an account?</span>
-        <a class="auth-footer-link" href="register.html">Login</a>
+    <div class="auth-footer">
+
+        <div class="auth-footer-text">
+          Doesn't have an account?
+        </div>
+
+        <a class="auth-footer-link" href="register.html">
+          Register
+        </a>
+
       </div>
 
     </div>
@@ -75,40 +82,23 @@
 </body>
 
 <script>
-let attempts = 5;
-
-const role = localStorage.getItem("userRole") || "Not selected";
-document.getElementById("roleDisplay").textContent = "Role: " + role;
-
 function login() {
-  const email = document.getElementById("loginEmail").value.trim();
-  const pass = document.getElementById("loginPass").value.trim();
-  const error = document.getElementById("error");
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const error = document.getElementById("regError");
 
   error.style.color = "red";
 
-  if (role === "Not selected") {
-    error.textContent = "Please select a role first.";
-    return;
-  }
+  const savedEmail = localStorage.getItem("registeredEmail");
+  const savedPassword = localStorage.getItem("userPassword");
 
-  if (!email || !pass) {
+  if (!email || !password) {
     error.textContent = "Please fill in all fields.";
     return;
   }
 
-  const captcha = grecaptcha.getResponse();
-  if (!captcha) {
-    error.textContent = "Please complete reCAPTCHA.";
-    return;
-  }
-
-  attempts--;
-  document.getElementById("attempts").textContent = attempts;
-
-  if (attempts <= 0) {
-    error.textContent = "Too many failed attempts.";
-    document.querySelector(".login-form-button").disabled = true;
+  if (email !== savedEmail || password !== savedPassword) {
+    error.textContent = "Invalid email or password.";
     return;
   }
 
@@ -116,9 +106,7 @@ function login() {
   error.textContent = "Login successful! Redirecting...";
 
   setTimeout(() => {
-    if (role === "admin") window.location.href = "admin-dashboard.html";
-    else if (role === "student") window.location.href = "dashboard.html";
-    else if (role === "counselor") window.location.href = "counselor-dashboard.html";
+    window.location.href = "dashboard.html";
   }, 1000);
 }
 </script>

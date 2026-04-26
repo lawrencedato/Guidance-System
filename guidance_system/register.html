@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Register | UNITYCARE</title>
+<title>Login | UNITYCARE</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -17,15 +17,13 @@
 
   <!-- LEFT -->
   <section class="auth-left">
-
     <div class="auth-left-overlay"></div>
 
     <div class="auth-brand">
       <img class="auth-brand-logo" src="logo.png">
       <h1 class="auth-brand-title">UNITYCARE</h1>
-      <p class="auth-brand-subtitle">Create your account</p>
+      <p class="auth-brand-subtitle">Support • Care • Connection</p>
     </div>
-
   </section>
 
   <!-- RIGHT -->
@@ -33,62 +31,44 @@
 
     <div class="auth-box">
 
-      <h2 class="auth-title">Register</h2>
+      <h2 class="auth-title">Login</h2>
+      <p class="auth-subtitle">Welcome back!</p>
+      <div class="auth-role" id="roleDisplay">
+   Role: <b>Not Selected</b>
+</div>
 
-      <p class="auth-subtitle">
-        Join UNITYCARE today
-      </p>
+      <form class="auth-form" onsubmit="event.preventDefault(); login();">
 
-      <form class="auth-form" onsubmit="event.preventDefault(); register();">
-
-        <label class="auth-label">Full Name</label>
-        <input class="auth-input" id="name" type="text">
-
+        
         <label class="auth-label">Email</label>
-        <input class="auth-input" id="email" type="email">
+        <input class="auth-input" id="email">
 
         <label class="auth-label">Password</label>
-        <input class="auth-input" id="password" type="password">
+        <input class="auth-input" id="password">
 
-        <label class="auth-label">Confirm Password</label>
-        <input class="auth-input" id="confirmPassword" type="password">
-
-        <div class="auth-captcha">
-          <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY_HERE"></div>
-        </div>
-
-        <button type="submit" class="auth-btn">
-          Register
+        <button class="auth-btn" type="submit">
+          Login
         </button>
 
-        <div class="auth-message" id="error"></div>
+        <div class="auth-message" id="regError"></div>
 
       </form>
 
       <!-- TEMP PASSWORD BOX -->
-      <div id="tempPasswordBox" class="auth-temp-box">
-
-        <strong class="auth-temp-title">
-          Temporary Password:
-        </strong>
-
-        <p id="tempPassword" class="auth-temp-password"></p>
-
-        <small class="auth-temp-note">
-          Please save this password before continuing.
-        </small>
-
+      <div class="auth-temp-box" id="tempBox">
+        <p class="auth-temp-title">Temporary Password</p>
+        <p class="auth-temp-password" id="tempPass"></p>
+        <p class="auth-temp-note">Save this password before leaving.</p>
       </div>
 
-      <!-- FOOTER -->
-      <div class="auth-footer">
+    <div class="auth-footer">
 
         <div class="auth-footer-text">
-          Already have an account?
+          Doesn't have an account?
         </div>
 
-        <a class="auth-footer-link" href="login.html">
-          Login here
+        <a class="auth-footer-link" href="register.html">
+          Register
         </a>
 
       </div>
@@ -99,55 +79,35 @@
 
 </div>
 
-<script>
-function generateTempPassword() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$";
-  let pass = "";
-  for (let i = 0; i < 10; i++) {
-    pass += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return pass;
-}
+</body>
 
-function register() {
-  const name = document.getElementById("name").value.trim();
+<script>
+function login() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
-  const confirmPassword = document.getElementById("confirmPassword").value.trim();
-  const error = document.getElementById("error");
+  const error = document.getElementById("regError");
 
   error.style.color = "red";
 
-  if (!name || !email || !password || !confirmPassword) {
+  const savedEmail = localStorage.getItem("registeredEmail");
+  const savedPassword = localStorage.getItem("userPassword");
+
+  if (!email || !password) {
     error.textContent = "Please fill in all fields.";
     return;
   }
 
-  if (password !== confirmPassword) {
-    error.textContent = "Passwords do not match.";
+  if (email !== savedEmail || password !== savedPassword) {
+    error.textContent = "Invalid email or password.";
     return;
   }
-
-  const captcha = grecaptcha.getResponse();
-  if (!captcha) {
-    error.textContent = "Please complete reCAPTCHA.";
-    return;
-  }
-
-  const tempPassword = generateTempPassword();
-
-  document.getElementById("tempPasswordBox").style.display = "block";
-  document.getElementById("tempPassword").textContent = tempPassword;
-
-  localStorage.setItem("tempPassword", tempPassword);
-  localStorage.setItem("registeredEmail", email);
 
   error.style.color = "green";
-  error.textContent = "Account created successfully! Redirecting...";
+  error.textContent = "Login successful! Redirecting...";
 
   setTimeout(() => {
-    window.location.href = "login.html";
-  }, 3000);
+    window.location.href = "dashboard.html";
+  }, 1000);
 }
 </script>
 
