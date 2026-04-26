@@ -1,0 +1,5036 @@
+/* =========================
+   ROOT DESIGN SYSTEM (FEEDBACK-STYLE GLASS SYSTEM)
+========================= */
+:root {
+
+  /* ================= BRAND ================= */
+  --primary: #4988C4;
+  --primary-hover: #113F67;
+  --secondary: #6aa6d9;
+  --accent: #8bbce8;
+
+  /* ================= BACKGROUND ================= */
+  --bg: #f5f9ff;
+  --bg-soft: #eef4fb;
+
+  /* glass-first system (like feedback card) */
+  --card: rgba(255, 255, 255, 0.75);
+  --glass: rgba(255, 255, 255, 0.55);
+
+  /* ================= TEXT ================= */
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
+  --text-inverse: #ffffff;
+
+  /* ================= BORDERS (SOFTER) ================= */
+  --border: rgba(15, 23, 42, 0.08);
+  --border-strong: rgba(15, 23, 42, 0.14);
+  --border-light: rgba(15, 23, 42, 0.05);
+
+  /* ================= INTERACTIONS ================= */
+  --hover: rgba(73, 136, 196, 0.08);
+  --active: rgba(73, 136, 196, 0.14);
+  --focus: rgba(73, 136, 196, 0.18);
+
+  /* ================= EFFECTS (SOFT LIKE FEEDBACK CARD) ================= */
+  --glow: rgba(73, 136, 196, 0.18);
+
+  --shadow-sm: 0 6px 16px rgba(0, 0, 0, 0.05);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 18px 45px rgba(0, 0, 0, 0.10);
+  --shadow-hover: 0 18px 45px rgba(0, 0, 0, 0.12);
+
+  /* ================= RADIUS ================= */
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+
+  /* ================= SPACING ================= */
+  --spacing-xs: 4px;
+  --spacing-sm: 6px;
+  --spacing-md: 12px;
+  --spacing-lg: 18px;
+  --spacing-xl: 28px;
+  --spacing-xxl: 40px;
+
+  /* ================= MOTION ================= */
+  --transition-fast: 0.15s ease;
+  --transition: 0.25s ease;
+  --transition-slow: 0.4s ease;
+
+  /* ================= LAYOUT ================= */
+  --container: 1200px;
+}
+
+/* =========================
+   RESET
+========================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Poppins", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+
+  background: radial-gradient(circle at top, #eaf3ff, var(--bg));
+  color: var(--text);
+
+  overflow-x: hidden;
+}
+
+/* media */
+img, video {
+  max-width: 100%;
+  display: block;
+}
+
+/* =========================
+   DARK MODE (SOFT GLASS VERSION)
+========================= */
+[data-theme="dark"] {
+
+  --primary: #60a5fa;
+  --primary-hover: #3b82f6;
+  --secondary: #3b82f6;
+  --accent: #93c5fd;
+
+  --bg: #0b1220;
+  --bg-soft: #0f172a;
+
+  --card: rgba(20, 20, 20, 0.55);
+  --glass: rgba(15, 23, 42, 0.55);
+
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --border-light: rgba(255, 255, 255, 0.05);
+
+  --hover: rgba(96, 165, 250, 0.08);
+  --active: rgba(96, 165, 250, 0.14);
+  --focus: rgba(96, 165, 250, 0.18);
+
+  --glow: rgba(96, 165, 250, 0.18);
+
+  --shadow-sm: 0 10px 25px rgba(0, 0, 0, 0.35);
+  --shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 22px 60px rgba(0, 0, 0, 0.55);
+  --shadow-hover: 0 26px 70px rgba(0, 0, 0, 0.6);
+}
+
+/* dark background depth */
+[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at top, #0f172a 0%, #0b1220 60%, #070b14 100%);
+}
+/* =========================
+   GLOBAL UI FIX (DEDUPED)
+========================= */
+.sidebar,
+.topbar,
+.card,
+input,
+textarea,
+select,
+button,
+a {
+  transition: var(--transition);
+}
+
+/* icon consistency */
+i, svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* =========================
+   SIDEBAR BASE (FEEDBACK GLASS THEME)
+========================= */
+.sidebar {
+  width: 280px;
+  height: 100vh;
+
+  position: fixed;
+  left: 0;
+  top: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: var(--spacing-lg);
+  gap: var(--spacing-lg);
+
+  /* FEEDBACK STYLE GLASS */
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+/* scrollbar */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+/* =========================
+   LOGO SECTION
+========================= */
+.sidebar-logoBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.sidebar-logo img {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+}
+
+.sidebar-logoText {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* =========================
+   SETTINGS BUTTON
+========================= */
+.sidebar-settingsButton {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--radius-sm);
+
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.6);
+
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.sidebar-settingsButton:hover {
+  transform: rotate(90deg) scale(1.05);
+  background: var(--hover);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.sidebar-settingsButton i {
+  font-size: 16px;
+  color: var(--primary);
+}
+
+/* =========================
+   SETTINGS DROPDOWN
+========================= */
+.sidebar-settings {
+  position: relative;
+}
+
+.sidebar-settingsDropdown {
+  display: none;
+
+  position: absolute;
+  top: 45px;
+  right: 0;
+
+  min-width: 180px;
+
+  background: var(--card);
+  backdrop-filter: blur(12px);
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  box-shadow: 0 18px 45px rgba(0,0,0,0.12);
+
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.sidebar-settingsDropdown.show {
+  display: block;
+}
+
+.sidebar-settingsDropdown a,
+.sidebar-settingsDropdown button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  width: 100%;
+  padding: 10px 12px;
+
+  background: none;
+  border: none;
+
+  font-size: 14px;
+  color: var(--text);
+
+  cursor: pointer;
+}
+
+.sidebar-settingsDropdown a:hover,
+.sidebar-settingsDropdown button:hover {
+  background: var(--hover);
+}
+
+/* =========================
+   MENU ITEMS (GLASS CARD STYLE)
+========================= */
+.sidebar-menu a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: var(--spacing-md) var(--spacing-lg);
+
+  text-decoration: none;
+  color: var(--text);
+
+  border-radius: var(--radius);
+
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  transition: var(--transition);
+}
+
+.sidebar-menu a:hover {
+  background: var(--hover);
+  transform: translateX(6px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+/* active state (NO GRADIENT) */
+.sidebar-menu a.active {
+  background: var(--card);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* icon alignment */
+.sidebar-menu a i {
+  width: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+/* =========================
+   SECTION TITLE
+========================= */
+.sidebar-title {
+  font-size: 12px;
+  font-weight: 700;
+
+  color: var(--primary);
+
+  margin: var(--spacing-lg) 0 var(--spacing-sm);
+
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* =========================
+   TOPBAR (FEEDBACK GLASS SYSTEM)
+========================= */
+.topbar {
+  margin-left: 280px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: var(--spacing-lg) var(--spacing-xl);
+
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+
+  box-shadow: var(--shadow-sm);
+
+  transition: var(--transition);
+}
+
+/* =========================
+   LEFT SECTION
+========================= */
+.topbar-left {
+  display: flex;
+  align-items: center;
+}
+
+/* =========================
+   SEARCH BOX (FEEDBACK INPUT STYLE)
+========================= */
+.topbar-searchBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  background: var(--card);
+
+  padding: 10px 12px;
+
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+
+  min-width: 260px;
+
+  box-shadow: var(--shadow-sm);
+
+  transition: var(--transition);
+}
+
+/* focus state (feedback system glow) */
+.topbar-searchBox:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--focus);
+}
+
+/* input */
+.topbar-searchBox input {
+  border: none;
+  outline: none;
+
+  font-size: 14px;
+  width: 100%;
+
+  background: transparent;
+  color: var(--text);
+}
+
+/* =========================
+   RIGHT SECTION
+========================= */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  margin-left: auto;
+}
+
+/* =========================
+   ICON GROUP (SOFT BUTTON STYLE)
+========================= */
+.topbar-icons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* icon button (feedback soft hover) */
+.topbar-icon {
+  position: relative;
+
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--radius);
+
+  cursor: pointer;
+
+  transition: var(--transition);
+}
+
+.topbar-icon:hover {
+  background: var(--hover);
+  transform: translateY(-2px);
+}
+
+/* icon */
+.topbar-icon i {
+  font-size: 18px;
+  color: var(--text);
+}
+
+/* =========================
+   BADGE (SYSTEM PRIMARY COLOR)
+========================= */
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+
+  background: var(--primary);
+  color: var(--text-inverse);
+
+  font-size: 11px;
+  padding: 2px 6px;
+
+  border-radius: 999px;
+}
+
+/* =========================
+   DROPDOWN (GLASS SYSTEM)
+========================= */
+.icon-dropdown {
+  display: none;
+  position: absolute;
+
+  top: 45px;
+  right: 0;
+
+  width: 220px;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius);
+
+  box-shadow: var(--shadow);
+
+  z-index: 999;
+}
+
+.icon-dropdown.show {
+  display: block;
+}
+
+/* =========================
+   USER PROFILE (FEEDBACK CARD STYLE)
+========================= */
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 6px 10px;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius);
+
+  max-width: 220px;
+
+  box-shadow: var(--shadow-sm);
+
+  transition: var(--transition);
+}
+
+.topbar-user:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+/* avatar */
+.topbar-user img {
+  width: 36px;
+  height: 36px;
+
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* text */
+.topbar-user div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+
+  overflow: hidden;
+}
+
+.topbar-user strong {
+  font-size: 13px;
+  color: var(--text);
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-user p {
+  font-size: 11px;
+  color: var(--text-muted);
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================
+   BUTTON (FEEDBACK CTA STYLE)
+========================= */
+.btn {
+  padding: 10px 14px;
+
+  border: none;
+  border-radius: var(--radius);
+
+  font-weight: 600;
+  font-size: 13px;
+
+  cursor: pointer;
+
+  color: white;
+
+  background: linear-gradient(
+    135deg,
+    #113F67,
+    #4988C4
+  );
+
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+
+  transition: 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* emergency variant (kept semantic but unified style) */
+.emergency-btn {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+
+/* =========================
+   TAG (SYSTEM BADGE STYLE)
+========================= */
+.tag {
+  background: var(--primary);
+  color: var(--text-inverse);
+
+  font-size: 10px;
+  padding: 3px 6px;
+
+  border-radius: var(--radius-sm);
+
+  margin-left: 10px;
+}
+
+
+/* =========================
+   ROLE SELECT PAGE BASE (FEEDBACK THEME)
+========================= */
+.roleSelect-body {
+  font-family: "Poppins", system-ui, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+
+  background: var(--bg);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =========================
+   MAIN WRAPPER (FIXED CENTERING)
+========================= */
+.accType-main-content {
+  width: 100%;
+  min-height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center; /* FIX: vertical centering */
+
+  padding: var(--spacing-xl); /* prevents sticking to top on small screens */
+}
+
+/* =========================
+   HEADER
+========================= */
+.accType-header-logoWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin-bottom: var(--spacing-xl);
+}
+
+/* FIX: logo spacing balance */
+.accType-header-logoImage {
+  width: 120px;
+  height: 110px;
+
+  border-radius: 50%;
+  object-fit: cover;
+
+  box-shadow: var(--shadow-sm);
+
+  margin-top: 10px; /* FIX: prevents “too high” feel */
+}
+
+/* =========================
+   HEADER TITLE
+========================= */
+.accType-header-title {
+  margin-top: var(--spacing-md);
+  font-size: 22px;
+  font-weight: 700;
+
+  letter-spacing: 1px;
+  color: var(--primary);
+}
+
+/* =========================
+   CARD
+========================= */
+.accType-card-container {
+  background: var(--card);
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+
+  padding: var(--spacing-xxl) var(--spacing-xl);
+  width: 350px;
+
+  box-shadow: var(--shadow);
+
+  transition: var(--transition);
+}
+
+/* hover */
+.accType-card-container:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* =========================
+   TEXT CONTENT
+========================= */
+.accType-card-title {
+  font-size: 22px;
+  font-weight: 700;
+
+  color: var(--text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.accType-card-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+
+  margin-bottom: var(--spacing-xl);
+}
+
+/* =========================
+   BUTTON GROUP
+========================= */
+.accType-card-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* =========================
+   ROLE BUTTONS
+========================= */
+.accType-card-button {
+  padding: 14px;
+
+  border-radius: var(--radius);
+  border: none;
+
+  font-weight: 600;
+  font-size: 14px;
+
+  cursor: pointer;
+
+  color: var(--text-inverse);
+
+  background: linear-gradient(
+    135deg,
+    #113F67,
+    #4988C4
+  );
+
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+
+  transition: 0.2s ease;
+}
+
+/* hover */
+.accType-card-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+/* active */
+.accType-card-button:active {
+  transform: scale(0.98);
+}
+
+/* =========================
+   FOOTER
+========================= */
+.accType-footer {
+  margin-top: var(--spacing-xl);
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+
+/* =========================
+   AUTH BASE (FEEDBACK THEME MATCH)
+========================= */
+/* BODY */
+.auth-body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background: var(--bg);
+}
+
+/* LAYOUT */
+.auth-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* LEFT PANEL */
+.auth-left {
+  flex: 1;
+  background: linear-gradient(135deg, #113F67, #1f5f9a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  color: white;
+}
+
+.auth-left-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+}
+
+/* BRAND */
+.auth-brand {
+  text-align: center;
+  z-index: 2;
+}
+
+.auth-brand-logo {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.auth-brand-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.auth-brand-subtitle {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* RIGHT PANEL */
+.auth-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+/* CARD */
+.auth-box {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+}
+
+/* TEXT */
+.auth-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.auth-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 8px 0 20px;
+}
+
+/* FORM */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auth-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* INPUT */
+.auth-input {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  outline: none;
+  transition: 0.2s ease;
+  font-size: 14px;
+}
+
+.auth-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(17,63,103,0.15);
+}
+
+/* BUTTON */
+.auth-btn {
+  margin-top: 10px;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.auth-btn:hover {
+  background: #0e3558;
+}
+
+/* MESSAGE */
+.auth-message {
+  font-size: 13px;
+  margin-top: 10px;
+  min-height: 18px;
+}
+
+/* TEMP PASSWORD BOX */
+.auth-temp-box {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #f9fbff;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.auth-temp-title {
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 6px;
+}
+
+.auth-temp-password {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.auth-temp-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* FOOTER */
+.auth-footer {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.auth-footer-text {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.auth-footer-link {
+  font-size: 13px;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* ANIMATION */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .auth-container {
+    flex-direction: column;
+  }
+
+  .auth-left {
+    min-height: 220px;
+  }
+
+  .auth-right {
+    padding: 20px;
+  }
+}
+
+/* =========================
+   RESET MODAL (FEEDBACK STYLE)
+========================= */
+
+/* OVERLAY */
+.reset-modal {
+  position: fixed;
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+
+  display: none;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 99999;
+}
+
+/* SHOW STATE (IMPORTANT) */
+.reset-modal.active {
+  display: flex;
+}
+
+/* MODAL BOX */
+.reset-box {
+  width: 420px;
+
+  padding: var(--spacing-xxl);
+
+  background: var(--card);
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow);
+
+  text-align: center;
+
+  animation: modalPop 0.25s ease;
+}
+
+/* TITLE */
+.reset-box h2 {
+  margin-bottom: var(--spacing-sm);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* TEXT */
+.reset-box p {
+  margin-bottom: var(--spacing-lg);
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* INPUT (if you have one in modal) */
+.reset-box input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  outline: none;
+  margin-top: 10px;
+  transition: 0.2s ease;
+}
+
+.reset-box input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(17,63,103,0.15);
+}
+
+/* BUTTON (if inside modal) */
+.reset-box button {
+  margin-top: 14px;
+  width: 100%;
+  padding: 12px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: var(--primary);
+  color: #fff;
+
+  font-weight: 600;
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.reset-box button:hover {
+  background: #0e3558;
+}
+
+/* ANIMATION */
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 500px) {
+  .reset-box {
+    width: 90%;
+    padding: 20px;
+  }
+}
+
+/* =========================
+   MAIN DASHBOARD LAYOUT
+========================= */
+.sDashboard-main {
+  margin-left: 280px;
+  padding: var(--spacing-xxl);
+  background: var(--bg);
+}
+
+/* =========================
+   STATS GRID
+========================= */
+.sDashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+/* =========================
+   CONTENT GRID
+========================= */
+.sDashboard-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-xl);
+  align-items: stretch;
+}
+
+/* =========================
+   BASE CARD STYLE (UNIFIED SYSTEM)
+========================= */
+.sDashboard-card,
+.card-emergency,
+.sDashboard-announcement {
+  position: relative;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius-lg);
+
+  padding: var(--spacing-xl);
+
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* =========================
+   GLASS GLOW OVERLAY
+========================= */
+.sDashboard-card::after,
+.sDashboard-announcement::after,
+.card-emergency::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    var(--glow),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* =========================
+   HOVER EFFECT
+========================= */
+.sDashboard-card:hover,
+.sDashboard-announcement:hover,
+.card-emergency:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* =========================
+   ANNOUNCEMENT CARD
+========================= */
+.sDashboard-announcement {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  min-height: 260px;
+  height: 100%;
+}
+
+.sDashboard-announcement-img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+
+  border-radius: var(--radius); /* FIXED */
+  margin-bottom: var(--spacing-md);
+}
+
+.sDashboard-announcement .btn {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+/* =========================
+   SIDE COLUMN
+========================= */
+.sDashboard-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  height: 100%;
+}
+
+/* =========================
+   MOOD SECTION
+========================= */
+.sDashboard-mood {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  padding: var(--spacing-md) 0;
+}
+
+/* =========================
+   MOOD DISPLAY
+========================= */
+.sDashboard-mood-display {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  text-align: center;
+  width: 100%;
+
+  font-size: 16px;
+  font-weight: 500;
+
+  color: var(--text);
+  margin-bottom: var(--spacing-md);
+}
+
+/* =========================
+   MOOD BUTTONS
+========================= */
+.sDashboard-card button {
+  background: var(--bg);
+  border: 1px solid var(--border);
+
+  padding: 8px 10px;
+
+  border-radius: var(--radius-sm);
+
+  font-size: 18px;
+  cursor: pointer;
+
+  transition: var(--transition);
+}
+
+.sDashboard-card button:hover {
+  transform: scale(1.1);
+  background: var(--primary);
+  color: var(--text-inverse);
+  border-color: var(--primary);
+}
+
+/* ACTIVE STATE */
+.sWellness-mood-btn.active {
+  background: var(--primary);
+  color: var(--text-inverse);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+/* =========================
+   PROGRESS
+========================= */
+.sDashboard-progress {
+  font-size: 24px;
+  text-align: center;
+  color: var(--primary);
+}
+
+/* =========================
+   ACTIVITY LIST
+========================= */
+.sDashboard-activity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: var(--spacing-sm) 0;
+
+  border-bottom: 1px solid var(--border);
+
+  font-size: 14px;
+  color: var(--text);
+}
+
+/* =========================
+   BOOK APPOINTMENT MAIN LAYOUT
+========================= */
+.sBooking-main {
+  margin-left: 280px;
+
+  padding: 40px 28px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  background: var(--bg);
+}
+
+/* =========================
+   BOOKING CARD (FEEDBACK STYLE GLASS)
+========================= */
+.sBooking-card {
+  position: relative;
+
+  padding: 28px;
+
+  border-radius: 20px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  transition: 0.25s ease;
+
+  overflow: hidden;
+}
+
+
+/* SOFT GLOW OVERLAY (like feedback) */
+.sBooking-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(73, 136, 196, 0.18),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* hover */
+.sBooking-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================
+   FORM GROUP
+========================= */
+.sBooking-formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  margin-bottom: 18px;
+}
+
+.sBooking-formGroup label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.9;
+}
+
+/* =========================
+   GRID FORM SECTION (FEEDBACK INPUT STYLE)
+========================= */
+.sBooking-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 18px;
+
+  padding: 20px;
+  margin-top: 10px;
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+}
+
+
+/* =========================
+   INPUT CONTROLS (FEEDBACK MATCH)
+========================= */
+.sBooking-grid input,
+.sBooking-grid select,
+.sBooking-grid textarea {
+  width: 100%;
+
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+
+  color: var(--text);
+  font-size: 14px;
+
+  outline: none;
+
+  transition: 0.2s ease;
+}
+
+
+/* focus (FEEDBACK STYLE GLOW) */
+.sBooking-grid input:focus,
+.sBooking-grid select:focus,
+.sBooking-grid textarea:focus {
+  border-color: #4988C4;
+
+  box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
+}
+
+/* textarea */
+.sBooking-message textarea {
+  min-height: 140px;
+  resize: none;
+}
+
+/* =========================
+   SLOTS
+========================= */
+.sBooking-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sBooking-slotBtn {
+  padding: 8px 14px;
+
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  background: rgba(255, 255, 255, 0.6);
+
+  font-size: 13px;
+  cursor: pointer;
+
+  transition: 0.25s ease;
+}
+
+/* hover */
+.sBooking-slotBtn:hover {
+  transform: scale(1.05);
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* active */
+.sBooking-slotBtn.active-slot {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* disabled */
+.sBooking-slotBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================
+   BUTTON (FEEDBACK STYLE CTA)
+========================= */
+.sBooking-button {
+  width: 100%;
+  padding: 14px;
+
+  margin-top: 15px;
+
+  border-radius: 14px;
+  border: none;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: white;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+
+  transition: 0.2s ease;
+}
+
+.sBooking-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+/* =========================
+   FILE UPLOAD (MATCH INPUT STYLE)
+========================= */
+.sBooking-card input[type="file"] {
+  margin-top: 10px;
+  padding: 10px;
+
+  border-radius: 14px;
+  border: 1px dashed rgba(0, 0, 0, 0.08);
+
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text);
+}
+
+
+/* =========================
+   PAGE LAYOUT
+========================= */
+.sConcern-main {
+  margin-left: 280px;
+
+  padding: 40px 28px;
+  width: calc(100% - 280px);
+
+  background: var(--bg);
+}
+
+/* container layout */
+.sConcern-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* =========================
+   CARD SYSTEM (FEEDBACK GLASS STYLE)
+========================= */
+.sConcern-card,
+.card-emergency {
+  position: relative;
+
+  padding: 28px;
+
+  border-radius: 20px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  transition: 0.25s ease;
+
+  overflow: hidden;
+}
+
+
+/* SOFT GLASS GLOW (like feedback) */
+.sConcern-card::before,
+.card-emergency::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(73, 136, 196, 0.18),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* hover */
+.sConcern-card:hover,
+.card-emergency:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================
+   EMERGENCY CARD (NO ACCENT BAR, JUST COLOR DIFFERENCE)
+========================= */
+.card-emergency::before {
+  background: radial-gradient(
+    circle at top left,
+    rgba(239, 68, 68, 0.2),
+    transparent 60%
+  );
+}
+
+/* =========================
+   FORM SYSTEM (FEEDBACK INPUT STYLE)
+========================= */
+.sConcern-formGroup {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.sConcern-formGroup label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.9;
+}
+
+/* inputs */
+.sConcern-formGroup input,
+.sConcern-formGroup textarea {
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+
+  font-size: 14px;
+  color: var(--text);
+
+  outline: none;
+
+  transition: 0.2s ease;
+}
+
+/* focus glow */
+.sConcern-formGroup input:focus,
+.sConcern-formGroup textarea:focus {
+  border-color: #4988C4;
+  box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
+}
+
+/* textarea */
+.sConcern-formGroup textarea {
+  resize: none;
+}
+
+/* =========================
+   BUTTON (FEEDBACK STYLE CTA)
+========================= */
+.sConcern-button {
+  margin-top: 15px;
+
+  padding: 14px;
+
+  border-radius: 14px;
+  border: none;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: white;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+
+  transition: 0.2s ease;
+}
+
+.sConcern-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+/* =========================
+   TEXT SYSTEM
+========================= */
+.sConcern-text-muted {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.sConcern-result {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--primary);
+}
+
+/* =========================
+   EMERGENCY DETAILS
+========================= */
+.sConcern-emergency-details p {
+  font-size: 13px;
+  margin: 4px 0;
+  color: var(--text);
+}
+
+
+/* =========================
+   WELLNESS PAGE LAYOUT
+========================= */
+.sWellness-main {
+  margin-left: 280px;
+  padding: 40px 28px;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+/* =========================
+   MAIN CARD (FEEDBACK STYLE GLASS)
+========================= */
+.sWellness-card {
+  width: 100%;
+  max-width: 700px;
+
+  position: relative;
+  padding: 28px;
+
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  transition: 0.25s ease;
+  overflow: hidden;
+}
+
+/* SOFT GLOW OVERLAY (LIKE FEEDBACK) */
+.sWellness-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(73, 136, 196, 0.18),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* hover */
+.sWellness-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================
+   MOOD BUTTONS
+========================= */
+.sWellness-mood-container {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+/* mood button (MATCH FEEDBACK INPUT STYLE) */
+.sWellness-mood-btn {
+  flex: 1;
+  font-size: 22px;
+
+  padding: 12px;
+  border-radius: 14px;
+
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+
+  cursor: pointer;
+  transition: 0.2s ease;
+
+  color: var(--text);
+}
+
+
+/* hover */
+.sWellness-mood-btn:hover {
+  transform: scale(1.08);
+  background: #4988C4;
+  color: white;
+}
+
+/* active */
+.sWellness-mood-btn.active {
+  background: #113F67;
+  color: white;
+}
+
+/* =========================
+   MOOD DISPLAY
+========================= */
+.sWellness-mood-display {
+  text-align: center;
+  font-size: 16px;
+  margin-bottom: 18px;
+
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* =========================
+   FORM GROUP (FEEDBACK STYLE)
+========================= */
+.sWellness-form-group {
+  margin-bottom: 18px;
+}
+
+.sWellness-form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+
+  font-size: 13px;
+  color: var(--text);
+}
+
+/* inputs (MATCH FEEDBACK INPUT STYLE) */
+.sWellness-form-group input,
+.sWellness-form-group select {
+  width: 100%;
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+
+  font-size: 14px;
+  color: var(--text);
+
+  outline: none;
+  transition: 0.2s ease;
+}
+
+
+/* focus (FEEDBACK GLOW) */
+.sWellness-form-group input:focus,
+.sWellness-form-group select:focus {
+  border-color: #4988C4;
+  box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
+}
+
+/* =========================
+   STRESS DISPLAY
+========================= */
+.sWellness-stress-display {
+  text-align: center;
+  margin-top: 10px;
+
+  font-weight: 600;
+  color: var(--text);
+}
+
+
+/* =========================
+   REFERRAL PAGE LAYOUT (FEEDBACK SYSTEM)
+========================= */
+.sReferral-main {
+  margin-left: 280px;
+
+  padding: 40px 28px;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+/* =========================
+   REFERRAL CARD (GLASS STYLE - NO LEFT BAR)
+========================= */
+.sReferral-card {
+  width: 900px;
+
+  position: relative;
+
+  padding: 40px 50px;
+
+  border-radius: 20px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  transition: 0.25s ease;
+}
+
+
+/* SOFT GLOW OVERLAY (like feedback) */
+.sReferral-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(73, 136, 196, 0.18),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* hover */
+.sReferral-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================
+   TITLE
+========================= */
+.sReferral-title {
+  text-align: center;
+
+  font-size: 22px;
+  font-weight: 700;
+
+  margin-bottom: 8px;
+
+  color: var(--text);
+}
+
+/* DATE */
+.sReferral-date {
+  text-align: right;
+  font-size: 14px;
+
+  margin-bottom: 20px;
+
+  color: var(--text-muted);
+}
+
+/* =========================
+   SECTION HEADERS
+========================= */
+.sReferral-card h3 {
+  font-size: 15px;
+  font-weight: 600;
+
+  margin-top: 22px;
+  margin-bottom: 10px;
+
+  color: #4988C4;
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding-bottom: 6px;
+}
+
+/* TEXT */
+.sReferral-card p {
+  font-size: 14px;
+
+  margin: 6px 0;
+  line-height: 1.6;
+
+  color: var(--text);
+}
+
+/* =========================
+   SIGNATURE
+========================= */
+.sReferral-signature {
+  width: 180px;
+  margin-top: 18px;
+
+  display: block;
+}
+
+/* =========================
+   BUTTON (FEEDBACK STYLE PRIMARY CTA)
+========================= */
+.sReferral-btn {
+  margin-top: 30px;
+
+  width: 100%;
+  padding: 14px;
+
+  border: none;
+  border-radius: 14px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: white;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+
+  transition: 0.2s ease;
+}
+
+/* hover */
+.sReferral-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+/* click */
+.sReferral-btn:active {
+  transform: scale(0.98);
+}
+
+/* =========================
+   PRINT MODE (CLEAN SYSTEM VERSION)
+========================= */
+@media print {
+  .sidebar,
+  .topbar,
+  .sReferral-btn {
+    display: none !important;
+  }
+
+  .sReferral-main {
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+
+  .sReferral-card {
+    box-shadow: none;
+    border: none;
+    width: 100%;
+    transform: none;
+    background: white;
+  }
+
+  .sReferral-card p,
+  .sReferral-title,
+  .sReferral-date,
+  .sReferral-card h3 {
+    color: black !important;
+  }
+}
+
+
+
+/* =========================
+   ANNOUNCEMENTS LAYOUT (FEEDBACK SYSTEM)
+========================= */
+.sAnnouncements-main {
+  margin-left: 280px;
+
+  padding: 40px 28px;
+  width: calc(100% - 280px);
+
+  display: flex;
+  justify-content: center;
+
+  background: var(--bg);
+}
+
+/* =========================
+   GRID CONTAINER
+========================= */
+.sAnnouncements-container {
+  display: grid;
+
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 26px;
+
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* =========================
+   ANNOUNCEMENT CARD (GLASS - NO LEFT BAR)
+========================= */
+.sAnnouncements-card {
+  position: relative;
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+
+  padding: 26px;
+  min-height: 180px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  transition: 0.25s ease;
+  overflow: hidden;
+
+  cursor: pointer;
+}
+
+
+/* SOFT GLOW OVERLAY (FEEDBACK STYLE) */
+.sAnnouncements-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(73, 136, 196, 0.18),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* HOVER */
+.sAnnouncements-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================
+   TEXT SYSTEM
+========================= */
+.sAnnouncements-card h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+
+  color: var(--text);
+}
+
+.sAnnouncements-card p {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.sAnnouncements-card small {
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+/* =========================
+   MODAL (FEEDBACK STYLE)
+========================= */
+.announcement-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+
+  justify-content: center;
+  align-items: center;
+
+  z-index: 9999;
+}
+
+/* MODAL CARD */
+.announcement-modal-content {
+  position: relative;
+
+  width: 90%;
+  max-width: 520px;
+
+  padding: 28px;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+
+  box-shadow: var(--shadow);
+
+  animation: modalPop 0.25s ease;
+}
+
+/* CLOSE BUTTON (FIXED POSITIONING) */
+.announcement-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  font-size: 18px;
+  cursor: pointer;
+
+  color: var(--text-muted);
+
+  transition: 0.2s ease;
+}
+
+.announcement-close:hover {
+  background: #f3f6fb;
+  color: var(--primary);
+}
+
+/* IMAGE */
+#modalImage {
+  width: 100%;
+  border-radius: 14px;
+  margin-bottom: 14px;
+}
+
+/* TITLE SPACE (optional improvement) */
+.announcement-modal-content h3 {
+  margin-top: 10px;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* TEXT */
+.announcement-modal-content p {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* INTEREST SECTION */
+.modal-interest {
+  margin-top: 18px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* BUTTON (FEEDBACK CTA STYLE) */
+#interestBtn {
+  background: var(--primary);
+  color: white;
+
+  border: none;
+  padding: 10px 14px;
+
+  border-radius: 12px;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+
+  box-shadow: var(--shadow);
+}
+
+#interestBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* ANIMATION */
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+#interestBtn:active {
+  transform: scale(0.98);
+}
+
+
+/* =====================================================
+   REPORTS PAGE (FEEDBACK SYSTEM LAYOUT)
+===================================================== */
+.sReports-main {
+  margin-left: 280px;
+
+  padding: 40px 28px;
+
+  display: flex;
+  justify-content: center;
+
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+/* container */
+.sReports-container {
+  width: 100%;
+  max-width: 900px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* =====================================================
+   REPORT CARD (GLASS STYLE - NO LEFT BAR)
+===================================================== */
+.sReports-card {
+  position: relative;
+
+  padding: 28px;
+
+  border-radius: 20px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  transition: 0.25s ease;
+
+  overflow: hidden;
+}
+
+
+/* SOFT GLOW OVERLAY (FEEDBACK STYLE) */
+.sReports-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(73, 136, 196, 0.18),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* hover */
+.sReports-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* =====================================================
+   TEXT SYSTEM
+===================================================== */
+.sReports-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.sReports-card-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+/* =====================================================
+   INPUT SYSTEM (FEEDBACK STYLE)
+===================================================== */
+.sReports-notesBox {
+  width: 100%;
+
+  margin-top: 12px;
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+
+  color: var(--text);
+  font-size: 13px;
+
+  outline: none;
+
+  transition: 0.2s ease;
+}
+
+
+/* focus */
+.sReports-notesBox:focus {
+  border-color: #4988C4;
+  box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
+}
+
+/* textarea */
+textarea.sReports-notesBox {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* =====================================================
+   BUTTON (FEEDBACK STYLE CTA)
+===================================================== */
+.sReports-exportBtn {
+  margin-top: 14px;
+
+  padding: 14px;
+
+  border: none;
+  border-radius: 14px;
+
+  cursor: pointer;
+
+  font-weight: 600;
+  font-size: 14px;
+
+  color: white;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+
+  transition: 0.2s ease;
+}
+
+/* hover */
+.sReports-exportBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+/* click */
+.sReports-exportBtn:active {
+  transform: scale(0.98);
+}
+
+/* =====================================================
+   STATUS TEXT
+===================================================== */
+.sReports-status {
+  margin-top: 10px;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  color: var(--text-muted);
+}
+
+/* success */
+.sReports-status.success {
+  color: #22c55e;
+}
+
+/* warning */
+.sReports-status.warning {
+  color: #f59e0b;
+}
+
+/* =====================================================
+   FEEDBACK PAGE - MODERN LAYOUT
+===================================================== */
+
+.sFeedback-main {
+  margin-left: 280px;
+  padding: 40px 28px;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+/* container */
+.sFeedback-container {
+  width: 100%;
+  max-width: 760px;
+}
+
+/* =====================================================
+   MODERN CARD (GLASS + SOFT DEPTH)
+===================================================== */
+
+.sFeedback-card {
+  position: relative;
+
+  padding: 28px;
+
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.08);
+
+  transition: 0.25s ease;
+
+  overflow: hidden;
+}
+
+
+/* soft gradient edge glow */
+.sFeedback-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(73, 136, 196, 0.18),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* hover lift */
+.sFeedback-card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* =====================================================
+   TYPOGRAPHY (MODERN CLEAN)
+===================================================== */
+
+.sFeedback-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.sFeedback-muted {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 22px;
+}
+
+/* =====================================================
+   FORM LAYOUT
+===================================================== */
+
+.sFeedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* label */
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.9;
+}
+
+/* =====================================================
+   MODERN INPUT FIELDS
+===================================================== */
+
+.form-group select,
+.form-group textarea {
+  width: 100%;
+
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+
+  color: var(--text);
+  font-size: 14px;
+
+  outline: none;
+
+  transition: 0.2s ease;
+}
+
+/* focus state (modern glow) */
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #4988C4;
+
+  box-shadow:
+    0 0 0 4px rgba(73, 136, 196, 0.15);
+}
+
+/* textarea size */
+.form-group textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+/* =====================================================
+   MODERN BUTTON (PRIMARY CTA)
+===================================================== */
+
+.sFeedback-btn {
+  padding: 14px;
+
+  border: none;
+  border-radius: 14px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: white;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+
+  transition: 0.2s ease;
+}
+
+/* hover */
+.sFeedback-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+/* click feel */
+.sFeedback-btn:active {
+  transform: scale(0.98);
+}
+
+/* =====================================================
+   TOPBAR (MODERN CLEAN HEADER)
+===================================================== */
+
+.topbar {
+  margin-left: 280px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 20px 28px;
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* title */
+.topbar-left h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+/* user card */
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px 12px;
+
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+
+  backdrop-filter: blur(10px);
+}
+
+.topbar-user img {
+  width: 38px;
+  height: 38px;
+
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.topbar-user p {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 768px) {
+
+  .sFeedback-main {
+    margin-left: 0;
+    padding: 20px;
+  }
+
+  .topbar {
+    margin-left: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .sFeedback-container {
+    max-width: 100%;
+  }
+}
+
+/* =========================
+   PROFILE LAYOUT
+========================= */
+.sProfile-main {
+  margin-left: 280px;
+  padding: var(--spacing-xxl);
+  background: var(--bg);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* container alignment fix */
+.sTicket-container {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  justify-content: center;
+}
+
+/* =========================
+   PROFILE CARD (FEEDBACK GLASS SYSTEM)
+========================= */
+.sProfile-card {
+  width: 100%;
+  max-width: 720px;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+
+  padding: var(--spacing-xxl);
+
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+
+  transition: var(--transition);
+}
+
+.sProfile-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* =========================
+   HEADER
+========================= */
+.sProfile-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xl);
+
+  margin-bottom: var(--spacing-xl);
+}
+
+/* =========================
+   AVATAR (CLEAN + CENTERED)
+========================= */
+.sProfile-avatar {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.sProfile-avatar img {
+  width: 120px;
+  height: 120px;
+
+  border-radius: 50%;
+  object-fit: cover;
+
+  border: 3px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+/* camera button */
+.sProfile-upload {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--primary);
+  color: var(--text-inverse);
+
+  border-radius: 50%;
+  cursor: pointer;
+
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.sProfile-upload:hover {
+  transform: scale(1.1);
+}
+
+/* =========================
+   TEXT HEADER
+========================= */
+.sProfile-header h3 {
+  font-size: 20px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.sProfile-muted {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* =========================
+   FORM
+========================= */
+.sProfile-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* input group */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* input style (FEEDBACK SYSTEM) */
+.form-group input {
+  padding: 12px;
+
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+
+  background: var(--card);
+  color: var(--text);
+
+  outline: none;
+
+  transition: var(--transition);
+}
+
+.form-group input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus);
+}
+
+/* readonly inputs */
+.form-group input[readonly] {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+/* =========================
+   BUTTON (FEEDBACK STYLE)
+========================= */
+.sProfile-saveBtn {
+  padding: 14px;
+
+  border: none;
+  border-radius: 14px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: white;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+
+  transition: 0.2s ease;
+}
+
+.sProfile-saveBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+/* click feel */
+.sProfile-saveBtn:active {
+  transform: scale(0.98);
+}
+
+
+/* =========================
+   STATUS MESSAGE
+========================= */
+.sProfile-status {
+  margin-top: var(--spacing-md);
+  font-size: 13px;
+}
+
+/* =========================
+   TAG SYSTEM (FIXED FROM FEEDBACK UI)
+========================= */
+.tag {
+  display: inline-block;
+  padding: 6px 10px;
+
+  border-radius: var(--radius-sm);
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tag.warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.tag.info {
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--primary);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+}
+
+
+/* =========================
+   GLOBAL FIX (IMPORTANT)
+   Fixes padding inconsistency issues
+========================= */
+* {
+  box-sizing: border-box;
+}
+
+/* =========================
+   MAIN LAYOUT
+========================= */
+.sHistory-main {
+  margin-left: 280px;
+  padding: var(--spacing-xxl);
+  background: var(--bg);
+}
+
+/* =========================
+   LIST CONTAINER (FULL WIDTH SAFE)
+   FIX: removes centering imbalance
+========================= */
+.sHistory-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+
+  /* ensures equal spacing inside layout */
+  padding: 0;
+}
+
+/* =========================
+   LIST CARD (FULL WIDTH + BALANCED)
+========================= */
+.sHistory-card {
+  position: relative;
+
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+
+  /* FIX: equal left/right spacing */
+  padding: var(--spacing-lg);
+
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+
+  transition: var(--transition);
+  overflow: hidden;
+
+  cursor: pointer;
+}
+
+/* hover */
+.sHistory-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* soft glow */
+.sHistory-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at left top,
+    rgba(37, 99, 235, 0.15),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* =========================
+   TITLE
+========================= */
+.sHistory-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+
+  margin: 0;
+  padding-right: 80px; 
+  /* FIX: prevents overlap with top-right tag */
+}
+
+/* =========================
+   TAG (TOP RIGHT BADGE)
+========================= */
+.tag {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+
+  font-size: 12px;
+  font-weight: 600;
+
+  z-index: 2;
+
+  /* FIX: prevents visual “heavier right side” */
+  white-space: nowrap;
+}
+
+/* INFO */
+.tag.info {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--primary);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+/* WARNING */
+.tag.warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+/* =========================
+   TEXT
+========================= */
+.sHistory-card p {
+  font-size: 14px;
+  color: var(--text-muted);
+
+  margin: 6px 0 0 0;
+  /* FIX: removes default uneven spacing */
+}
+
+/* =========================
+   MAIN DASHBOARD LAYOUT
+========================= */
+.cDashboard-main {
+  margin-left: 280px;
+  padding: var(--spacing-xxl);
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+/* =========================
+   DASHBOARD GRID CONTAINER
+========================= */
+.cDashboard-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-lg);
+
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* =========================
+   DASHBOARD CARD (FEEDBACK GLASS STYLE)
+========================= */
+.cDashboard-card {
+  position: relative;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+
+  padding: var(--spacing-xl);
+
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+
+  transition: var(--transition);
+  overflow: hidden;
+
+  cursor: pointer;
+}
+
+/* hover */
+.cDashboard-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* soft glow overlay */
+.cDashboard-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(37, 99, 235, 0.15),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* =========================
+   CARD TEXT STYLING
+========================= */
+.cDashboard-card h3 {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.cDashboard-card h4 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.cDashboard-card p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* =========================
+   TOPBAR FIXES
+========================= */
+.topbar {
+  margin-left: 280px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: var(--spacing-lg) var(--spacing-xl);
+
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+/* right side alignment fix */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* icons wrapper */
+.topbar-icons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* icon button */
+.topbar-icon {
+  position: relative;
+  font-size: 18px;
+  cursor: pointer;
+
+  padding: 8px;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--border);
+
+  transition: 0.2s ease;
+}
+
+.topbar-icon:hover {
+  transform: translateY(-2px);
+  background: var(--hover);
+}
+
+/* badge */
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+
+  background: var(--primary);
+  color: white;
+
+  font-size: 10px;
+  padding: 3px 6px;
+  border-radius: 999px;
+}
+
+/* =========================
+   USER INFO CARD
+========================= */
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 6px 10px;
+  border-radius: var(--radius);
+
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.topbar-user img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.topbar-user strong {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.topbar-user p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* =========================
+   DROPDOWN FIX
+========================= */
+.icon-dropdown {
+  position: absolute;
+  top: 45px;
+  right: 0;
+
+  width: 220px;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow);
+
+  padding: 10px;
+
+  display: none;
+  z-index: 999;
+}
+
+.icon-dropdown.show {
+  display: block;
+}
+
+/* notification text */
+.notif-header {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.notif-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 10px;
+}
+
+/* =========================
+   MAIN LAYOUT
+========================= */
+.cAppointment-main {
+  margin-left: 280px;
+  padding: var(--spacing-xxl);
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+/* =========================
+   GRID LAYOUT
+========================= */
+.cAppointment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--spacing-lg);
+
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* =========================
+   APPOINTMENT CARD (GLASS THEME)
+========================= */
+.cAppointment-card {
+  position: relative;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+
+  padding: var(--spacing-xl);
+
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+
+  transition: var(--transition);
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* hover */
+.cAppointment-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* soft glow */
+.cAppointment-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(37, 99, 235, 0.15),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* =========================
+   HEADER INSIDE CARD
+========================= */
+.cAppointment-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+/* group icon + name together on the LEFT */
+.cAppointment-card h3 i {
+  color: var(--primary);
+}
+
+/* push ONLY the button to the right */
+.cAppointment-card h3 .btn-small {
+  margin-left: auto;
+}
+
+.cAppointment-card p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 2px 0;
+}
+
+/* =========================
+   BUTTON GROUP
+========================= */
+.cAppointment-actions {
+  display: flex;
+  gap: 10px;
+
+  margin-top: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+/* =========================
+   MAIN ACTION BUTTONS
+========================= */
+.cAppointment-btn {
+  border: none;
+  padding: 10px 14px;
+
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* APPROVE */
+.cAppointment-btn.approve {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.cAppointment-btn.approve:hover {
+  background: #22c55e;
+  color: white;
+}
+
+/* DECLINE */
+.cAppointment-btn.decline {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.cAppointment-btn.decline:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* =========================
+   SMALL VIEW PROFILE BUTTON
+========================= */
+.btn-small {
+  font-size: 13px;
+  padding: 4px 8px;
+
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+
+  background: var(--bg);
+  color: var(--text);
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.btn-small:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* =========================
+   EXPORT BUTTON
+========================= */
+.cAppointment-exportBtn {
+  margin-left: auto;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+
+  padding: 8px 10px;
+  border-radius: var(--radius);
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+
+  display: inline-flex;
+  align-items: center;
+}
+
+.cAppointment-exportBtn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* =========================
+   MAIN LAYOUT
+========================= */
+.cConcerns-main {
+  margin-left: 280px;
+  padding: var(--spacing-xxl);
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+/* =========================
+   CONTAINER (LIST STYLE)
+========================= */
+.cConcerns-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* =========================
+   CONCERN CARD (GLASS FEEDBACK STYLE)
+========================= */
+.cConcerns-card {
+  position: relative;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+
+  padding: var(--spacing-xl);
+
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+
+  transition: var(--transition);
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* hover */
+.cConcerns-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* soft glow */
+.cConcerns-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(37, 99, 235, 0.15),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* =========================
+   HEADER (NAME LEFT)
+========================= */
+.cConcerns-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+
+  margin-bottom: 5px;
+}
+
+.cConcerns-card h3 i {
+  color: var(--primary);
+}
+
+/* =========================
+   TEXT
+========================= */
+.cConcerns-card p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 2px 0;
+}
+
+/* =========================
+   REPLY BOX
+========================= */
+.cConcerns-replyBox {
+  width: 100%;
+  min-height: 90px;
+
+  padding: 12px;
+
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+
+  background: var(--bg);
+  color: var(--text);
+
+  font-size: 14px;
+
+  resize: none;
+  outline: none;
+
+  transition: var(--transition);
+}
+
+.cConcerns-replyBox:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* =========================
+   BUTTON (RIGHT ALIGNED FIX)
+========================= */
+.cConcerns-btn {
+  align-self: flex-end;   /* 🔥 THIS MOVES BUTTON TO RIGHT */
+
+  padding: 10px 16px;
+
+  border: none;
+  border-radius: var(--radius);
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+  color: white;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+
+  transition: 0.2s ease;
+}
+
+.cConcerns-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+.cConcerns-btn:active {
+  transform: scale(0.98);
+}
+
+/* =========================
+   RESULT MESSAGE
+========================= */
+.cConcerns-result {
+  font-size: 13px;
+  font-weight: 500;
+  color: #22c55e;
+  margin-top: 5px;
+}
+
+
+/* =====================================================
+   MAIN LAYOUT
+===================================================== */
+
+.cStudentList-main {
+  margin-left: 280px;
+  padding: 40px 28px;
+
+  background: var(--bg);
+  min-height: 100vh;
+
+  display: flex;
+  justify-content: center;
+}
+
+.cStudentList-container {
+  width: 100%;
+  max-width: 900px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* =====================================================
+   STUDENT CARD (GLASS)
+===================================================== */
+
+.cStudentList-item {
+  padding: 20px;
+
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(14px);
+
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+
+  transition: 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* glow */
+.cStudentList-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(73,136,196,0.18),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+.cStudentList-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+}
+
+/* =====================================================
+   CONTENT FIX (IMPORTANT)
+===================================================== */
+
+.cStudentList-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.cStudentList-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* =====================================================
+   AVATAR
+===================================================== */
+
+.cStudentList-avatar {
+  width: 52px;
+  height: 52px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 700;
+  color: white;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+
+  box-shadow: 0 6px 14px rgba(17,63,103,0.3);
+}
+
+/* =====================================================
+   LEFT SIDE
+===================================================== */
+
+.cStudentList-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cStudentList-nameRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cStudentList-nameRow h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.cStudentList-left p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* =====================================================
+   RIGHT SIDE
+===================================================== */
+
+.cStudentList-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.cStudentList-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* =====================================================
+   STATUS TAG
+===================================================== */
+
+.tag {
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  width: fit-content;
+}
+
+.tag.stable {
+  background: rgba(76,175,80,0.15);
+  color: #4CAF50;
+}
+
+/* =====================================================
+   BUTTON
+===================================================== */
+
+.btn-small {
+  padding: 6px 12px;
+
+  border-radius: 10px;
+  border: none;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+  color: white;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+
+  box-shadow: 0 6px 12px rgba(17,63,103,0.25);
+
+  transition: 0.2s ease;
+}
+
+.btn-small:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px rgba(17,63,103,0.35);
+}
+
+.btn-small:active {
+  transform: scale(0.96);
+}
+
+/* =====================================================
+   MODAL
+===================================================== */
+
+.cStudentModal {
+  position: fixed;
+  inset: 0;
+
+  background: rgba(0,0,0,0.45);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition: 0.25s ease;
+}
+
+.cStudentModal.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* modal box */
+.cStudentModal-container {
+  width: 95%;
+  max-width: 650px;
+
+  padding: 22px;
+
+  border-radius: 20px;
+
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(16px);
+
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+
+/* header */
+.cStudentModal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.cStudentModal-header h2 {
+  font-size: 18px;
+}
+
+.cStudentModal-header button {
+  border: none;
+  background: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* profile */
+.cStudentModal-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+/* boxes */
+.cStudentModal-box {
+  padding: 16px;
+  border-radius: 16px;
+
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(10px);
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  margin-bottom: 14px;
+}
+
+/* grid */
+.cStudentModal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* progress */
+.cStudentModal-progressBar {
+  width: 100%;
+  height: 10px;
+
+  border-radius: 999px;
+  background: rgba(0,0,0,0.08);
+
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.cStudentModal-progressFill {
+  width: 82%;
+  height: 100%;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 768px) {
+  .cStudentList-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .cStudentList-right {
+    align-items: flex-start;
+  }
+
+  .cStudentList-meta {
+    text-align: left;
+  }
+
+  .cStudentModal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =====================================================
+   REPORTS PAGE - FEEDBACK THEME STYLE (FIXED CENTER)
+===================================================== */
+.cReports-main {
+  margin-left: 280px;
+  padding: 40px 28px;
+
+  min-height: 100vh;
+  background: var(--bg);
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column; /* IMPORTANT */
+}
+
+/* HEADER stays at top */
+.cReports-pageHeader {
+  margin-bottom: 20px;
+}
+
+/* CENTER AREA ONLY centers the card */
+.cReports-center {
+  flex: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* =====================================================
+   CONTAINER
+===================================================== */
+
+.cReports-grid {
+  width: 100%;
+  max-width: 760px;
+
+  /* ensures true centering stability */
+  margin: 0 auto;
+}
+
+/* =====================================================
+   MODERN GLASS CARD
+===================================================== */
+
+.cReports-card {
+   width: 100%;
+  max-width: 900px;
+
+  padding: 36px;
+
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  transition: 0.25s ease;
+  overflow: hidden;
+}
+
+/* glow */
+.cReports-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(73, 136, 196, 0.18),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* hover */
+.cReports-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* =====================================================
+   TEXT
+===================================================== */
+
+.cReports-card h3 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.cReports-card p,
+.cReports-muted {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 22px;
+}
+
+/* =====================================================
+   TEXTAREA
+===================================================== */
+
+.cReports-textarea {
+  width: 100%;
+  min-height: 140px;
+
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+
+  color: var(--text);
+  font-size: 14px;
+
+  outline: none;
+
+  transition: 0.2s ease;
+  resize: vertical;
+}
+
+/* focus */
+.cReports-textarea:focus {
+  border-color: #4988C4;
+  box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
+}
+
+
+/* =====================================================
+   BUTTON
+===================================================== */
+
+.cReports-btn {
+  margin-top: 14px;
+
+  padding: 14px;
+  width: 100%;
+
+  border: none;
+  border-radius: 14px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: #fff;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+
+  transition: 0.2s ease;
+}
+
+.cReports-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+.cReports-btn:active {
+  transform: scale(0.98);
+}
+
+/* =====================================================
+   STATUS
+===================================================== */
+
+.cReports-status {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+
+/* =====================================================
+   ANNOUNCEMENTS PAGE - MODERN FEEDBACK THEME
+===================================================== */
+
+.cAnnouncements-main {
+  margin-left: 280px;
+  padding: 40px 28px;
+
+  min-height: 100vh;
+  background: var(--bg);
+  box-sizing: border-box;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* =====================================================
+   CONTAINER CARD (GLASS STYLE LIKE FEEDBACK)
+===================================================== */
+
+.cAnnouncements-card {
+  width: 100%;
+  max-width: 900px;
+
+  padding: 36px;
+
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  transition: 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* SOFT GLOW EFFECT (same as feedback card) */
+.cAnnouncements-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(73, 136, 196, 0.18),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* hover lift */
+.cAnnouncements-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* =====================================================
+   TITLE (MATCH FEEDBACK STYLE)
+===================================================== */
+
+.cAnnouncements-card h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+/* =====================================================
+   FORM INPUTS (UNIFIED STYLE)
+===================================================== */
+
+.cAnnouncements-input,
+.cAnnouncements-textarea {
+  width: 100%;
+
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+
+  font-size: 14px;
+  color: var(--text);
+
+  outline: none;
+  transition: 0.2s ease;
+  margin-bottom: 14px;
+}
+
+/* FOCUS GLOW (same system as feedback) */
+.cAnnouncements-input:focus,
+.cAnnouncements-textarea:focus {
+  border-color: #4988C4;
+  box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
+}
+
+/* TEXTAREA SIZE */
+.cAnnouncements-textarea {
+  min-height: 160px;
+  resize: vertical;
+}
+
+/* =====================================================
+   BUTTON (SAME FEEDBACK CTA STYLE)
+===================================================== */
+
+.cAnnouncements-btn {
+  width: 100%;
+  padding: 14px;
+
+  border: none;
+  border-radius: 14px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: #fff;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+
+  transition: 0.2s ease;
+}
+
+/* hover */
+.cAnnouncements-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+/* click */
+.cAnnouncements-btn:active {
+  transform: scale(0.98);
+}
+
+
+
+/* =====================================================
+   REFERRAL PAGE - FEEDBACK MODERN THEME
+===================================================== */
+
+.cReferral-main {
+  margin-left: 280px;
+  padding: 40px 28px;
+
+  min-height: 100vh;
+  background: var(--bg);
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  box-sizing: border-box;
+}
+
+/* =====================================================
+   MAIN CARD (GLASS STYLE LIKE FEEDBACK)
+===================================================== */
+
+.cReferral-card {
+  width: 100%;
+  max-width: 900px;
+
+  padding: 36px;
+
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  position: relative;
+  overflow: hidden;
+
+  transition: 0.25s ease;
+}
+
+/* soft glow like feedback */
+.cReferral-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(73, 136, 196, 0.18),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* hover lift */
+.cReferral-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* =====================================================
+   TITLE
+===================================================== */
+
+.cReferral-card h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+/* section headers */
+.cReferral-card h3 {
+  font-size: 15px;
+  font-weight: 600;
+
+  color: var(--text);
+  margin: 18px 0 10px;
+  opacity: 0.9;
+}
+
+/* =====================================================
+   FORM ROW LAYOUT
+===================================================== */
+
+.slip-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  margin-bottom: 12px;
+}
+
+.slip-row label {
+  width: 140px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  color: var(--text);
+  opacity: 0.85;
+}
+
+/* =====================================================
+   INPUTS (FEEDBACK STYLE UNIFIED)
+===================================================== */
+
+.slip-input,
+.slip-textarea {
+  width: 100%;
+
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+
+  font-size: 14px;
+  color: var(--text);
+
+  outline: none;
+  transition: 0.2s ease;
+}
+
+/* focus glow */
+.slip-input:focus,
+.slip-textarea:focus {
+  border-color: #4988C4;
+  box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
+}
+
+/* textarea sizing */
+.slip-textarea {
+  min-height: 120px;
+  resize: vertical;
+  margin-bottom: 12px;
+}
+
+/* =====================================================
+   SIGNATURE SECTION
+===================================================== */
+
+.signature-img {
+  width: 160px;
+  margin-top: 10px;
+  margin-bottom: 6px;
+
+  opacity: 0.95;
+}
+
+.cReferral-card p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.85;
+}
+
+/* =====================================================
+   BUTTON (FEEDBACK CTA STYLE)
+===================================================== */
+
+.cReferral-btn {
+  width: 100%;
+  margin-top: 20px;
+
+  padding: 14px;
+
+  border: none;
+  border-radius: 14px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: #fff;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+
+  transition: 0.2s ease;
+}
+
+/* hover */
+.cReferral-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+/* click */
+.cReferral-btn:active {
+  transform: scale(0.98);
+}
+
+/* =====================================================
+   RESPONSIVE (IMPORTANT)
+===================================================== */
+
+@media (max-width: 768px) {
+  .slip-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .slip-row label {
+    width: 100%;
+  }
+}
+
+/* =====================================================
+   PROFILE PAGE - FEEDBACK MODERN THEME
+===================================================== */
+
+.cProfile-main {
+  margin-left: 280px;
+  padding: 40px 28px;
+
+  min-height: 100vh;
+  background: var(--bg);
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  box-sizing: border-box;
+}
+
+/* container */
+.cProfile-container {
+  width: 100%;
+  max-width: 900px;
+}
+
+/* =====================================================
+   MAIN CARD (GLASS FEEDBACK STYLE)
+===================================================== */
+
+.cProfile-card {
+  padding: 36px;
+
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  position: relative;
+  overflow: hidden;
+
+  transition: 0.25s ease;
+}
+
+/* glow effect like feedback */
+.cProfile-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    rgba(73, 136, 196, 0.18),
+    transparent 60%
+  );
+
+  pointer-events: none;
+}
+
+/* hover lift */
+.cProfile-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* =====================================================
+   HEADER SECTION
+===================================================== */
+
+.cProfile-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  margin-bottom: 24px;
+}
+
+/* avatar */
+.cProfile-avatar {
+  position: relative;
+}
+
+.cProfile-avatar img {
+  width: 110px;
+  height: 110px;
+
+  border-radius: 50%;
+  object-fit: cover;
+
+  border: 3px solid rgba(73, 136, 196, 0.4);
+}
+
+/* upload button */
+.cProfile-upload {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+
+  width: 34px;
+  height: 34px;
+
+  border-radius: 50%;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  box-shadow: 0 6px 16px rgba(17, 63, 103, 0.25);
+}
+
+/* name */
+.cProfile-header h3 {
+  font-size: 20px;
+  font-weight: 700;
+
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+/* subtitle */
+.cProfile-muted {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* =====================================================
+   FORM
+===================================================== */
+
+.cProfile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* form group (shared system like feedback) */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+
+  color: var(--text);
+  opacity: 0.9;
+}
+
+/* inputs */
+.form-group input {
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+
+  font-size: 14px;
+  color: var(--text);
+
+  outline: none;
+  transition: 0.2s ease;
+}
+
+/* focus glow */
+.form-group input:focus {
+  border-color: #4988C4;
+  box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
+}
+
+/* readonly style */
+.form-group input[readonly] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* =====================================================
+   SAVE BUTTON (FEEDBACK CTA STYLE)
+===================================================== */
+
+.cProfile-saveBtn {
+  margin-top: 10px;
+
+  padding: 14px;
+
+  border: none;
+  border-radius: 14px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: white;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+
+  transition: 0.2s ease;
+}
+
+/* hover */
+.cProfile-saveBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+/* click */
+.cProfile-saveBtn:active {
+  transform: scale(0.98);
+}
+
+/* =====================================================
+   STATUS TAGS
+===================================================== */
+
+.cProfile-status {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.tag {
+  padding: 6px 10px;
+  border-radius: 10px;
+  display: inline-block;
+  font-weight: 600;
+}
+
+/* success/info/warning styles */
+.tag.info {
+  background: rgba(73, 136, 196, 0.15);
+  color: #4988C4;
+}
+
+.tag.warning {
+  background: rgba(255, 165, 0, 0.15);
+  color: orange;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 768px) {
+  .cProfile-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cProfile-avatar img {
+    width: 90px;
+    height: 90px;
+  }
+}
+
+/* =====================================================
+   HISTORY PAGE (cHistory) - FEEDBACK THEME
+===================================================== */
+
+/* MAIN */
+.cHistory-main {
+  margin-left: 280px;
+  padding: 40px 28px;
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* =====================================================
+   TABS
+===================================================== */
+.cHistory-tabs {
+  display: flex;
+  gap: 10px;
+  background: #fff;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid #e3e8ef;
+  width: fit-content;
+}
+
+.cHistory-tabs button {
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 600;
+  color: #555;
+}
+
+.cHistory-tabs button:hover {
+  background: #f3f6fb;
+  color: #113F67;
+}
+
+.cHistory-tabs button.active {
+  background: #113F67;
+  color: #fff;
+}
+
+/* =====================================================
+   FILTER BAR
+===================================================== */
+.cHistory-filterBar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  background: #fff;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid #e3e8ef;
+}
+
+.cHistory-filterBar input,
+.cHistory-filterBar select {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid #e3e8ef;
+  outline: none;
+}
+
+.cHistory-filterBar input:focus,
+.cHistory-filterBar select:focus {
+  border-color: #113F67;
+  box-shadow: 0 0 0 3px rgba(17,63,103,0.15);
+}
+
+/* =====================================================
+   CONTENT
+===================================================== */
+.cHistory-tabContent {
+  background: #fff;
+  border: 1px solid #e3e8ef;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.hidden {
+  display: none;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #f7f9fc;
+}
+
+th, td {
+  padding: 14px 16px;
+  text-align: left;
+}
+
+th {
+  color: #113F67;
+  font-weight: 700;
+}
+
+tbody tr {
+  border-top: 1px solid #eef2f7;
+}
+
+tbody tr:hover {
+  background: #f9fbff;
+}
+
+.empty {
+  text-align: center;
+  padding: 30px;
+  color: #888;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+@media (max-width: 768px) {
+  .cHistory-main {
+    margin-left: 0;
+    padding: 20px;
+  }
+
+  .cHistory-tabs {
+    flex-wrap: wrap;
+  }
+
+  .cHistory-filterBar {
+    flex-direction: column;
+  }
+}
