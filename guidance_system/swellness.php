@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wellness Check - UNITYCARE</title>
+<title>UNITYCARE | Wellness Check</title>
 
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="sWellness.css">
-
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
+
 <body class="body">
 
-<!-- ================= SIDEBAR ================= -->
+<!-- ========================= SIDEBAR ========================= -->
 <aside class="sidebar">
 
   <div class="sidebar-logoBar">
@@ -38,7 +38,6 @@
   </div>
 
   <nav class="sidebar-menu">
-
     <a href="dashboard.html"><i class="fa fa-th-large"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
@@ -51,40 +50,22 @@
     <a href="announcements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
-    <a href="ticket.html"><i class="fa fa-ticket"></i> Tickets</a>
+    <a href="sreports.html"><i class="fa fa-ticket"></i> Reports</a>
 
     <p class="sidebar-title">SYSTEM</p>
-    <a href="feedback.html"><i class="fa fa-comment"></i> Feedback</a>
-
+    <a href="feedback.html"><i class="fa fa-comment"></i> Session Feedback</a>
   </nav>
 
 </aside>
 
-<!-- ================= TOPBAR ================= -->
- <header class="topbar">
+<!-- ========================= TOPBAR ========================= -->
+<header class="topbar">
 
   <div class="topbar-left">
     <h1>Wellness Check</h1>
   </div>
 
   <div class="topbar-right">
-
-    <div class="topbar-searchBox">
-      <i class="fa fa-search"></i>
-      <input type="text" placeholder="Search...">
-    </div>
-
-    <div class="topbar-icons">
-      <div class="topbar-icon">
-        <i class="fa fa-envelope"></i>
-        <span class="badge">3</span>
-      </div>
-
-      <div class="topbar-icon">
-        <i class="fa fa-bell"></i>
-        <span class="badge">5</span>
-      </div>
-    </div>
 
     <div class="topbar-user">
       <img src="student.jpg" alt="user">
@@ -98,32 +79,30 @@
 
 </header>
 
-  <!-- INFO -->
-   <main class="sWellness-main">
+<!-- ========================= MAIN ========================= -->
+<main class="sWellness-main">
 
-    <div class=sWellness-card>
+  <!-- WELLNESS CARD -->
+  <section class="sWellness-card">
 
-  <!-- FORM -->
-  <div class="card sWellness-form">
-   <h3>💡 Tip of the Day</h3>
-    <p>Take deep breaths for 5 minutes to reduce stress.</p>
-    <h2 class="sWellness-form-title">How are you feeling today?</h2>
+    <h2>How are you feeling today?</h2>
 
-    <!-- MOOD -->
+    <!-- MOOD SELECTOR -->
     <div class="sWellness-mood-container">
-      <button class="sWellness-mood-btn" onclick="setMood('😢')">😢</button>
-      <button class="sWellness-mood-btn" onclick="setMood('😕')">😕</button>
-      <button class="sWellness-mood-btn" onclick="setMood('😐')">😐</button>
-      <button class="sWellness-mood-btn" onclick="setMood('🙂')">🙂</button>
-      <button class="sWellness-mood-btn" onclick="setMood('😁')">😁</button>
+      <button class="sWellness-mood-btn" onclick="setMood('😢','Very Sad')">😢</button>
+      <button class="sWellness-mood-btn" onclick="setMood('😕','Sad')">😕</button>
+      <button class="sWellness-mood-btn" onclick="setMood('😐','Neutral')">😐</button>
+      <button class="sWellness-mood-btn" onclick="setMood('🙂','Happy')">🙂</button>
+      <button class="sWellness-mood-btn" onclick="setMood('😁','Very Happy')">😁</button>
     </div>
 
-    <p class="sWellness-mood-display">
-      Selected Mood: <strong id="moodValue">🙂</strong>
-    </p>
+    <!-- MOOD DISPLAY -->
+    <div class="sWellness-mood-display">
+      Selected Mood: <strong id="moodValue">🙂 Neutral</strong>
+    </div>
 
     <!-- STRESS -->
-    <div class="form-group sWellness-form-group">
+    <div class="sWellness-form-group">
       <label>Stress Level</label>
       <input type="range" min="0" max="100" value="50"
         oninput="updateStress(this.value)">
@@ -133,7 +112,7 @@
     </div>
 
     <!-- SLEEP -->
-    <div class="form-group sWellness-form-group">
+    <div class="sWellness-form-group">
       <label>Sleep Quality</label>
       <select>
         <option>Good</option>
@@ -142,24 +121,19 @@
       </select>
     </div>
 
-    <!-- MESSAGE -->
-    <div class="form-group sWellness-form-group">
-      <label>Message</label>
-      <textarea rows="4"></textarea>
-    </div>
+  </section>
 
-    <button class="btn sWellness-submit-btn">Submit Check-in</button>
-
-  </div>
-</div>
 </main>
 
+<!-- ========================= SCRIPT ========================= -->
 <script>
+// ================= SETTINGS MENU =================
 function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
+// ================= THEME TOGGLE =================
 function toggleTheme(){
   const html = document.documentElement;
   html.setAttribute(
@@ -168,11 +142,13 @@ function toggleTheme(){
   );
 }
 
+// ================= LOGOUT =================
 function logout(){
   localStorage.clear();
   window.location.href = "login.html";
 }
 
+// ================= CLOSE MENU =================
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
   const btn = document.querySelector(".sidebar-settingsButton");
@@ -181,12 +157,29 @@ document.addEventListener("click", e => {
     menu.classList.remove("show");
   }
 });
-function setMood(m){
-  document.getElementById("moodValue").innerText=m;
+
+// ================= MOOD SYSTEM =================
+function setMood(emoji, text) {
+  localStorage.setItem("userMoodEmoji", emoji);
+  localStorage.setItem("userMoodText", text);
+
+  document.getElementById("moodValue").innerText = `${emoji} ${text}`;
 }
+
+// ================= LOAD MOOD =================
+window.addEventListener("load", () => {
+  const emoji = localStorage.getItem("userMoodEmoji");
+  const text = localStorage.getItem("userMoodText");
+
+  if (emoji && text) {
+    document.getElementById("moodValue").innerText = `${emoji} ${text}`;
+  }
+});
+
+// ================= STRESS =================
 function updateStress(v){
-  let t=v<30?"Low 😌":v<70?"Moderate 😐":"High 😰";
-  document.getElementById("stressValue").innerText=`${t} (${v}%)`;
+  let t = v < 30 ? "Low 😌" : v < 70 ? "Moderate 😐" : "High 😰";
+  document.getElementById("stressValue").innerText = `${t} (${v}%)`;
 }
 </script>
 

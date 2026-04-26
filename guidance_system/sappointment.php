@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UNITYCARE - Booking</title>
+<title>UNITYCARE | Appointment Booking</title>
 
 <link rel="stylesheet" href="styles.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -48,10 +48,10 @@
     <a href="announcements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
-    <a href="ticket.html"><i class="fa fa-ticket"></i> Tickets</a>
+    <a href="sreports.html"><i class="fa fa-ticket"></i> Reports</a>
 
     <p class="sidebar-title">SYSTEM</p>
-    <a href="feedback.html"><i class="fa fa-comment"></i> Feedback</a>
+    <a href="feedback.html"><i class="fa fa-comment"></i> Session Feedback</a>
   </nav>
 </aside>
 
@@ -62,23 +62,6 @@
   </div>
 
   <div class="topbar-right">
-
-    <div class="topbar-searchBox">
-      <i class="fa fa-search"></i>
-      <input type="text" placeholder="Search...">
-    </div>
-
-    <div class="topbar-icons">
-      <div class="topbar-icon">
-        <i class="fa fa-envelope"></i>
-        <span class="badge">3</span>
-      </div>
-
-      <div class="topbar-icon">
-        <i class="fa fa-bell"></i>
-        <span class="badge">5</span>
-      </div>
-    </div>
 
    <div class="topbar-user">
       <img src="student.jpg" alt="user">
@@ -94,30 +77,6 @@
 <!-- MAIN -->
 <main class="sBooking-main">
 
-  <!-- COUNSELORS -->
-  <div class="sBooking-card">
-    <h3>Counselors</h3>
-    <p>Select a counselor</p>
-
-    <div class="sBooking-counselorList">
-
-      <div class="sBooking-counselorCard" onclick="selectCounselor('Tricia Ann Cruz', this)">
-        <strong>Dr. Tricia Ann Cruz</strong>
-        <span>Psychologist</span>
-      </div>
-
-      <div class="sBooking-counselorCard" onclick="selectCounselor('Francine Dela Rosa', this)">
-        <strong>Dr. Francine Dela Rosa</strong>
-        <span>Therapist</span>
-      </div>
-
-      <div class="sBooking-counselorCard">
-        <strong>Dr. Anne Dela Cruz</strong>
-        <span>Unavailable</span>
-      </div>
-
-    </div>
-  </div>
 
 <!-- BOOKING -->
 <div class="sBooking-card sBooking-booking">
@@ -219,51 +178,70 @@ document.addEventListener("click", e => {
   }
 });
 
-/* ===== BOOKING LOGIC ===== */
-let selectedCounselor = "";
-let selectedCounselorCard = null;
+/* =========================
+   BOOKING SYSTEM
+========================= */
+
+/* 24-hour internal storage ONLY */
+function generateSlots() {
+  return [
+    "10:00",
+    "11:00",
+    "14:00",
+    "15:00",
+    "16:00",
+    "17:00"
+  ];
+}
+
+const defaultSlots = generateSlots();
+
+let bookedSlots = [];
 let selectedSlotBtn = null;
 
-const availability = {
-  "Tricia Ann Cruz": ["09:00", "10:30", "14:30"],
-  "Francine Dela Rosa": ["10:30", "13:00", "16:00"]
-};
+/* =========================
+   AM/PM FORMAT (DISPLAY ONLY)
+========================= */
+function formatTime(time) {
+  const [h, m] = time.split(":");
+  let hour = parseInt(h);
 
-function selectCounselor(name, element) {
-  selectedCounselor = name;
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
 
-  if (selectedCounselorCard) {
-    selectedCounselorCard.classList.remove("active");
-  }
+  return `${hour}:${m} ${ampm}`;
+}
 
-  element.classList.add("active");
-  selectedCounselorCard = element;
-
+/* =========================
+   RENDER SLOTS
+========================= */
+function renderSlots() {
   const container = document.getElementById("slots");
   container.innerHTML = "";
 
-  const slots = availability[name] || [];
-
-  if (slots.length === 0) {
-    container.innerHTML = "<p>No available slots</p>";
-    return;
-  }
-
-  slots.forEach(time => {
+  defaultSlots.forEach(time => {
     const btn = document.createElement("button");
     btn.className = "sBooking-slotBtn";
-    btn.textContent = time;
 
-    btn.onclick = () => {
-      document.getElementById("time").value = time;
+    if (bookedSlots.includes(time)) {
+      btn.textContent = formatTime(time) + " ❌ Taken";
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+      btn.style.cursor = "not-allowed";
+    } else {
+      btn.textContent = formatTime(time);
 
-      if (selectedSlotBtn) {
-        selectedSlotBtn.classList.remove("active-slot");
-      }
+      btn.onclick = () => {
+        document.getElementById("time").value = time; // KEEP 24H FOR INPUT
 
-      btn.classList.add("active-slot");
-      selectedSlotBtn = btn;
-    };
+        if (selectedSlotBtn) {
+          selectedSlotBtn.classList.remove("active-slot");
+        }
+
+        btn.classList.add("active-slot");
+        selectedSlotBtn = btn;
+      };
+    }
 
     container.appendChild(btn);
   });
@@ -273,28 +251,27 @@ function bookAppointment() {
   const d = document.getElementById("date").value;
   const t = document.getElementById("time").value;
 
-  document.getElementById("bookingResult").innerHTML =
-    "✔ Booked for " + (d || "No date") + " at " + (t || "No time");
-}
-
-/* ===== FILE UPLOAD (FRONTEND ONLY) ===== */
-function showFileName(event){
-  const file = event.target.files[0];
-  document.getElementById("fileName").textContent =
-    file ? file.name : "";
-}
-
-function uploadFile(){
-  const file = document.getElementById("fileInput").files[0];
-
-  if (!file) {
-    alert("Please select a file first.");
+  if (!t || !d) {
+    alert("Please select date and time.");
     return;
   }
 
-  alert("Uploaded: " + file.name);
-}
+  let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
 
+  const newAppointment = {
+    id: "APP-" + Math.floor(Math.random() * 100000),
+    date: d,
+    time: t,
+    status: "pending"
+  };
+
+  appointments.push(newAppointment);
+  localStorage.setItem("appointments", JSON.stringify(appointments));
+
+  alert("Appointment submitted. Waiting for counselor approval.");
+}
+/* INIT */
+window.onload = renderSlots;
 </script>
 
 </body>

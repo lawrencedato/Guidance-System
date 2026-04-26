@@ -1,14 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reports - Counselor</title>
+
+<title>UNITYCARE | Announcements</title>
 
 <link rel="stylesheet" href="styles.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-</head>
 
 <body class="body">
 
@@ -28,7 +27,7 @@
 
       <div class="sidebar-settingsDropdown" id="settingsMenu">
         <a href="profile.html"><i class="fa fa-user"></i> Profile</a>
-        <a href="history.html"><i class="fa fa-clock"></i> Session History</a>
+        <a href="chistory.html"><i class="fa fa-clock"></i> Session History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -47,10 +46,10 @@
     <a href="students.html"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
-    <a href="creports.html" class="active"><i class="fa fa-file"></i> Reports</a>
+    <a href="creports.html"><i class="fa fa-file"></i> Reports</a>
 
     <p class="sidebar-title">INFORMATION</p>
-    <a href="cannouncements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
+    <a href="cannouncements.html" class="active"><i class="fa fa-bullhorn"></i> Announcements</a>
     <a href="creferral.html"><i class="fa fa-route"></i> Referrals</a>
   </nav>
 </aside>
@@ -58,27 +57,33 @@
 <!-- ================= TOPBAR ================= -->
 <header class="topbar">
   <div class="topbar-left">
-    <h3>Appointment Request</h3>
+    <h2>Announcement</h2>
   </div>
 
   <div class="topbar-right">
 
-    <div class="topbar-searchBox">
-      <i class="fa fa-search"></i>
-      <input type="text" placeholder="Search...">
-    </div>
+    <!-- FEEDBACK NOTIFICATIONS -->
+<div class="topbar-icon" onclick="toggleDropdown('feedbackDropdown', event)">
+  <i class="fa fa-envelope"></i>
+  <span class="badge" id="feedbackCount">0</span>
 
-    <div class="topbar-icons">
-      <div class="topbar-icon">
-        <i class="fa fa-envelope"></i>
-        <span class="badge">2</span>
-      </div>
-
-      <div class="topbar-icon">
-        <i class="fa fa-bell"></i>
-        <span class="badge">4</span>
-      </div>
+  <div class="icon-dropdown" id="feedbackDropdown">
+    <div class="notif-header">New Feedback</div>
+    <div id="notifList">
+      <div class="notif-empty">No new feedback</div>
     </div>
+  </div>
+</div>
+
+<!-- BELL NOTIFICATIONS -->
+<div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
+  <i class="fa fa-bell"></i>
+  <span class="badge">4</span>
+
+  <div class="icon-dropdown" id="notifDropdown">
+    <p>No new notifications</p>
+  </div>
+</div>
 
     <div class="topbar-user">
       <img src="counselor.jpg" alt="user">
@@ -92,67 +97,130 @@
 </header>
 
 <!-- MAIN -->
-<main class="cReports-main">
+<main class="cAnnouncements-main">
 
-  <p class="cReports-muted">
-    Counseling summaries and student progress reports
-  </p>
+  <div class="cAnnouncements-card">
 
-  <div class="cReports-grid">
-<!-- SESSION NOTES CARD -->
-<div class="cReports-card">
+    <h2>Create Announcement</h2>
 
-  <h3>Session Notes</h3>
-  <p>Add counselor notes after each session</p>
+    <input id="title" placeholder="Announcement Title" class="cAnnouncements-input">
 
-  <textarea class="cReports-textarea" placeholder="Write session notes here..."></textarea>
+    <textarea id="message" placeholder="Write announcement..." class="cAnnouncements-textarea"></textarea>
 
-  <button class="cReports-btn" onclick="saveNotes(this)">
-    Save Notes
-  </button>
+    <input type="file" id="imageFile" accept="image/*" class="cAnnouncements-input">
 
-  <div class="cReports-status"></div>
+    <button class="cAnnouncements-btn" onclick="postAnnouncement()">
+      Post Announcement
+    </button>
 
-</div>
-
-<!-- TICKET GENERATOR CARD -->
-<div class="cReports-card">
-
-  <h3>Generate Case Ticket</h3>
-  <p>Create a formal student concern ticket</p>
-
-  <input class="cReports-input" placeholder="Student Name">
-  <input class="cReports-input" placeholder="Concern Type (Stress, Anxiety, etc.)">
-
-  <textarea class="cReports-textarea" placeholder="Case description..."></textarea>
-
-  <button class="cReports-btn" onclick="generateTicket(this)">
-    Generate Ticket
-  </button>
-
-  <div class="cReports-status"></div>
-
-</div>
-
+  </div>
 
 </main>
 
 <script>
-function toggleSettings() {
-  const menu = document.getElementById("settingsMenu");
-  menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+
+  function toggleSettingsMenu(e){
+  e.stopPropagation();
+  document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
-function toggleTheme() {
+function toggleTheme(){
   const html = document.documentElement;
   html.setAttribute(
     "data-theme",
-    html.getAttribute("data-theme") === "dark" ? "light" : "dark"
+    html.getAttribute("data-theme") === "light" ? "dark" : "light"
   );
 }
 
-function logout() {
-  window.location.href = "role.html";
+function logout(){
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+document.addEventListener("click", e => {
+  const menu = document.getElementById("settingsDropdown");
+  const btn = document.querySelector(".sidebar-settingsButton");
+
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove("show");
+  }
+});
+
+
+/* =========================
+   FIREBASE CONFIG (PUT YOURS HERE)
+========================= */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+/* =========================
+   POST ANNOUNCEMENT WITH IMAGE
+========================= */
+
+function postAnnouncement(){
+
+  const title = document.getElementById("title").value;
+  const message = document.getElementById("message").value;
+  const file = document.getElementById("imageFile").files[0];
+
+  if(!title || !message){
+    alert("Please fill all fields");
+    return;
+  }
+
+  // NO IMAGE CASE
+  if(!file){
+    db.collection("announcements").add({
+      title,
+      message,
+      imageUrl: "",
+      status: "active",
+      createdAt: new Date()
+    });
+
+    alert("Announcement posted!");
+    return;
+  }
+
+  // IMAGE UPLOAD
+  const storageRef = storage.ref("announcements/" + Date.now() + "_" + file.name);
+  const uploadTask = storageRef.put(file);
+
+  uploadTask.on("state_changed",
+    null,
+    (error) => {
+      alert("Upload failed");
+    },
+    () => {
+      uploadTask.snapshot.ref.getDownloadURL().then((url) => {
+
+        db.collection("announcements").add({
+          title,
+          message,
+          imageUrl: url,
+          status: "active",
+          createdAt: new Date()
+        });
+
+        alert("Announcement posted!");
+
+        document.getElementById("title").value = "";
+        document.getElementById("message").value = "";
+        document.getElementById("imageFile").value = "";
+      });
+    }
+  );
 }
 </script>
 

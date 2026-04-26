@@ -26,8 +26,8 @@
       </button>
 
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
-        <a href="profile.html"><i class="fa fa-user"></i> Profile</a>
-        <a href="history.html"><i class="fa fa-clock"></i> Session History</a>
+        <a href="cprofile.html"><i class="fa fa-user"></i> Profile</a>
+        <a href="chistory.html"><i class="fa fa-clock"></i> Session History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -46,7 +46,7 @@
     <a href="students.html"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
-    <a href="reports.html"><i class="fa fa-file"></i> Reports</a>
+    <a href="creports.html"><i class="fa fa-file"></i> Reports</a>
 
     <p class="sidebar-title">INFORMATION</p>
     <a href="cannouncements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
@@ -90,7 +90,7 @@
 
   <div class="cReferral-card slip">
 
-    <h2>📄 MENTAL HEALTH REFERRAL SLIP</h2>
+    <h2>REFERRAL SLIP</h2>
 
     <!-- DATE -->
     <div class="slip-row">
@@ -139,23 +139,33 @@
 
 <script>
 
-function toggleSettings() {
-  const menu = document.getElementById("settingsDropdown");
-  menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+function toggleSettingsMenu(e){
+  e.stopPropagation();
+  document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
-function toggleTheme() {
-  document.documentElement.setAttribute(
+function toggleTheme(){
+  const html = document.documentElement;
+  html.setAttribute(
     "data-theme",
-    document.documentElement.getAttribute("data-theme") === "dark"
-      ? "light"
-      : "dark"
+    html.getAttribute("data-theme") === "light" ? "dark" : "light"
   );
 }
 
-function logout() {
-  window.location.href = "role.html";
+function logout(){
+  localStorage.clear();
+  window.location.href = "login.html";
 }
+
+document.addEventListener("click", e => {
+  const menu = document.getElementById("settingsDropdown");
+  const btn = document.querySelector(".sidebar-settingsButton");
+
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove("show");
+  }
+});
+
 
 /* SUBMIT REFERRAL */
 function submitReferralForm() {

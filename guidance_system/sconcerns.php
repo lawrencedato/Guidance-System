@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Submit Concern - UNITYCARE</title>
+<title>UNITYCARE | Submit Concern</title>
 
 <link rel="stylesheet" href="styles.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -50,10 +50,10 @@
     <a href="announcements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
-    <a href="ticket.html"><i class="fa fa-ticket"></i> Tickets</a>
+    <a href="sreports.html"><i class="fa fa-ticket"></i> Reports</a>
 
     <p class="sidebar-title">SYSTEM</p>
-    <a href="feedback.html"><i class="fa fa-comment"></i> Feedback</a>
+    <a href="feedback.html"><i class="fa fa-comment"></i> Session Feedback</a>
 
   </nav>
 
@@ -68,22 +68,6 @@
 
   <div class="topbar-right">
 
-    <div class="topbar-searchBox">
-      <i class="fa fa-search"></i>
-      <input type="text" placeholder="Search...">
-    </div>
-
-    <div class="topbar-icons">
-      <div class="topbar-icon">
-        <i class="fa fa-envelope"></i>
-        <span class="badge">3</span>
-      </div>
-
-      <div class="topbar-icon">
-        <i class="fa fa-bell"></i>
-        <span class="badge">5</span>
-      </div>
-    </div>
 
    <div class="topbar-user">
       <img src="student.jpg" alt="user">

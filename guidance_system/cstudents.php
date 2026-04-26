@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Students - UNITYCARE</title>
+<title>UNITYCARE | Students List</title>
 
 <link rel="stylesheet" href="styles.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -28,7 +28,7 @@
 
       <div class="sidebar-settingsDropdown" id="settingsMenu">
         <a href="profile.html"><i class="fa fa-user"></i> Profile</a>
-        <a href="history.html"><i class="fa fa-clock"></i> Session History</a>
+        <a href="chistory.html"><i class="fa fa-clock"></i> Session History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -47,7 +47,7 @@
     <a href="students.html" class="active"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
-    <a href="reports.html"><i class="fa fa-file"></i> Reports</a>
+    <a href="creports.html"><i class="fa fa-file"></i> Reports</a>
 
     <p class="sidebar-title">INFORMATION</p>
     <a href="cannouncements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
@@ -98,23 +98,37 @@
   <div class="cStudentList-container">
 
     <div class="cStudentList-item">
-      <div class="cStudentList-info">
-        <div class="cStudentList-avatar">JS</div>
-        <div>
-          <h3>Adolf </h3>
-          <p>BSIT • 2nd Year</p>
-          <span class="tag stable">Stable</span>
+  <div class="cStudentList-info">
+
+    <div class="cStudentList-avatar">JS</div>
+
+    <!-- CONTENT WRAPPER (IMPORTANT) -->
+    <div class="cStudentList-content">
+
+      <!-- LEFT -->
+      <div class="cStudentList-left">
+        <div class="cStudentList-nameRow">
+          <h3>Adolf</h3>
+          <button class="btn-small" onclick="openStudentModal()">
+            View Profile
+          </button>
+        </div>
+
+        <p>BSIT • 2nd Year</p>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="cStudentList-right">
+        <span class="tag stable">Stable</span>
+        <div class="cStudentList-meta">
+          Last Session: Apr 10, 2026
         </div>
       </div>
 
-      <div class="cStudentList-meta">
-        Last Session: Apr 10, 2026<br>
-        <button class="btn-small" onclick="openStudentModal()">View Profile</button>
-      </div>
-    </div>
+    </div> <!-- END content -->
 
   </div>
-
+</div>
 </main>
 
 <!-- =========================

@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UNITYCARE | Session Feedback</title>
+<title>UNITYCARE | Session History</title>
 
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="sHistory.css">
+
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -27,7 +29,7 @@
 
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
         <a href="profile.html"><i class="fa fa-user"></i> Profile</a>
-        <a href="history.html"><i class="fa fa-clock"></i> Session History</a>
+        <a href="history.html" class="active"><i class="fa fa-clock"></i> Session History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -48,10 +50,10 @@
     <a href="announcements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
-    <a href="sreports.html"><i class="fa fa-ticket"></i> Reports</a>
+    <a href="sreports.html"><i class="fa fa-ticket"></i> Tickets</a>
 
     <p class="sidebar-title">SYSTEM</p>
-    <a href="feedback.html" class="active"><i class="fa fa-comment"></i> Session Feedback</a>
+    <a href="feedback.html"><i class="fa fa-comment"></i> Feedback</a>
   </nav>
 </aside>
 
@@ -59,7 +61,7 @@
 <header class="topbar">
 
   <div class="topbar-left">
-    <h1>Session Feedback</h1>
+    <h1>Student Profile</h1>
   </div>
 
   <div class="topbar-right">
@@ -77,44 +79,35 @@
 </header>
 
 <!-- MAIN -->
-<main class="sFeedback-main">
+<main class="sHistory-main">
 
-  <div class="sFeedback-container">
+  <div class="sHistory-container">
 
-    <!-- CARD -->
-    <div class="card sFeedback-card">
+    <!-- CARD 1 -->
+    <div class="sHistory-card">
+      <h3>Guidance Counseling</h3>
+      <span class="tag info">Completed</span>
 
-      <h3 class="sFeedback-title">How was your session?</h3>
+      <p><b>Date:</b> January 10, 2026</p>
+      <p><b>Counselor:</b> Dr. Maria Santos</p>
+    </div>
 
-      <p class="sFeedback-muted">
-        Rate your experience and leave your comments
-      </p>
+    <!-- CARD 2 -->
+    <div class="sHistory-card">
+      <h3>Wellness Check</h3>
+      <span class="tag warning">Completed</span>
 
-      <!-- FORM -->
-      <div class="sFeedback-form">
+      <p><b>Date:</b> February 02, 2026</p>
+      <p><b>Status:</b> Stable</p>
+    </div>
 
-        <div class="form-group">
-          <label>Rating</label>
-          <select>
-            <option>⭐ Poor</option>
-            <option>⭐⭐ Fair</option>
-            <option>⭐⭐⭐ Good</option>
-            <option>⭐⭐⭐⭐ Very Good</option>
-            <option>⭐⭐⭐⭐⭐ Excellent</option>
-          </select>
-        </div>
+    <!-- CARD 3 -->
+    <div class="sHistory-card">
+      <h3>Follow-up Session</h3>
+      <span class="tag info">Completed</span>
 
-        <div class="form-group">
-          <label>Feedback</label>
-          <textarea rows="6" placeholder="Write your feedback here..."></textarea>
-        </div>
-
-        <button class="sFeedback-btn sFeedback-submit">
-          Submit Feedback
-        </button>
-
-      </div>
-
+      <p><b>Date:</b> March 15, 2026</p>
+      <p><b>Notes:</b> Improvement observed</p>
     </div>
 
   </div>
@@ -122,13 +115,12 @@
 </main>
 
 <script>
-function toggleSettingsMenu(e) {
+  function toggleSettingsMenu(e){
   e.stopPropagation();
-  const menu = document.getElementById("settingsDropdown");
-  menu.style.display = menu.style.display === "block" ? "none" : "block";
+  document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
-function toggleTheme() {
+function toggleTheme(){
   const html = document.documentElement;
   html.setAttribute(
     "data-theme",
@@ -136,17 +128,17 @@ function toggleTheme() {
   );
 }
 
-function logout() {
+function logout(){
   localStorage.clear();
   window.location.href = "login.html";
 }
+/* dropdown close fix */
+document.addEventListener("click", e => {
+  const menu = document.getElementById("settingsDropdown");
+  const btn = document.querySelector(".sidebar-settingsButton");
 
-document.addEventListener("click", function(e) {
-  const dropdown = document.getElementById("settingsDropdown");
-  const btn = document.querySelector(".settings-icon");
-
-  if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
-    dropdown.style.display = "none";
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove("show");
   }
 });
 </script>

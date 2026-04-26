@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>UNITYCARE - Student Dashboard</title>
+<title>UNITYCARE | Student Dashboard</title>
 
 <link rel="stylesheet" href="styles.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -12,9 +11,8 @@
 
 <body class="body">
 
-<!-- ================= SIDEBAR ================= -->
+<!-- SIDEBAR -->
 <aside class="sidebar">
-
   <div class="sidebar-logoBar">
 
     <div class="sidebar-logo">
@@ -38,7 +36,6 @@
   </div>
 
   <nav class="sidebar-menu">
-
     <a href="dashboard.html" class="active"><i class="fa fa-gauge"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
@@ -51,54 +48,31 @@
     <a href="announcements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
-    <a href="ticket.html"><i class="fa fa-ticket"></i> Tickets</a>
+    <a href="sreports.html"><i class="fa fa-ticket"></i> Reports</a>
 
     <p class="sidebar-title">SYSTEM</p>
-    <a href="feedback.html"><i class="fa fa-comment"></i> Feedback</a>
-
+    <a href="feedback.html"><i class="fa fa-comment"></i> Session Feedback</a>
   </nav>
-
 </aside>
 
-<!-- ================= TOPBAR ================= -->
+<!-- TOPBAR -->
 <header class="topbar">
-
   <div class="topbar-left">
-    <h3>Welcome back, Vincent! 👋</h3>
+    <h2>Hello, Vincent!</h2>
   </div>
 
   <div class="topbar-right">
-
-    <div class="topbar-searchBox">
-      <i class="fa fa-search"></i>
-      <input type="text" placeholder="Search...">
-    </div>
-
-    <div class="topbar-icons">
-      <div class="topbar-icon">
-        <i class="fa fa-envelope"></i>
-        <span class="badge">3</span>
-      </div>
-
-      <div class="topbar-icon">
-        <i class="fa fa-bell"></i>
-        <span class="badge">5</span>
-      </div>
-    </div>
-
-   <div class="topbar-user">
+    <div class="topbar-user">
       <img src="student.jpg" alt="user">
       <div>
-        <strong>Vincent Aldolf Sablay</strong>
-        <p>vincentsablay@gmail.com</p>
+        <strong>Student Name</strong>
+        <p>student@email.com</p>
       </div>
     </div>
-
   </div>
-
 </header>
 
-<!-- ================= MAIN ================= -->
+<!-- MAIN -->
 <main class="sDashboard-main">
 
   <!-- STATS -->
@@ -106,27 +80,23 @@
     <div class="sDashboard-card">
       <h4>Upcoming Appointments</h4>
       <h2>2</h2>
-      <small>Next: Apr 20, 10:00 AM</small>
     </div>
 
     <div class="sDashboard-card">
       <h4>Completed Sessions</h4>
       <h2>5</h2>
-      <small>Total counseling sessions attended</small>
     </div>
 
     <div class="sDashboard-card">
       <h4>Active Referrals</h4>
       <h2>1</h2>
-      <small>External professional assigned</small>
     </div>
 
     <div class="sDashboard-card">
       <h4>Pending Concerns</h4>
       <h2>3</h2>
-      <small>Awaiting counselor response</small>
     </div>
-
+    
     <div class="card-emergency">
       <h4>Need immediate help?</h4>
       <p>Contact your counselor or hotline</p>
@@ -134,35 +104,49 @@
     </div>
   </section>
 
-  <!-- CONTENT GRID -->
+  <!-- CONTENT -->
   <section class="sDashboard-content">
 
-    <!-- LEFT -->
     <div class="sDashboard-announcement">
-      <h4>Announcement</h4>
-      <h4>Mental Health Awareness Seminar</h4>
-      <p>Stress management, emotional balance, and self-care strategies for academic pressure.</p>
 
+  <!-- IMAGE -->
+  <img 
+    src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d"
+    alt="Announcement Image"
+    class="sDashboard-announcement-img"
+  >
 
-   <a class="btn"
-         href="announcements.html?open=mental-health-seminar">
-        View Details
-      </a>
-    </div>
+  <h4>Announcement</h4>
+  <h4>Mental Health Awareness Seminar</h4>
+  <p>Stress management, emotional balance, and self-care strategies.</p>
 
-    <!-- RIGHT -->
+  <a class="btn" href="announcements.html?open=mental-health-seminar">
+    View Details
+  </a>
+</div>
+
     <div class="sDashboard-side">
 
-      <div class="sDashboard-card">
-        <h4>Wellness</h4>
-        <div class="sDashboard-progress">75%</div>
-      </div>
+      <!-- MOOD -->
+<div class="sDashboard-card">
+  <h4>Mood</h4>
 
-      <div class="sDashboard-card">
-        <h4>Mood</h4>
-        <div class="sDashboard-mood">😊</div>
-      </div>
+  <!-- DISPLAYED MOOD -->
+  <div class="sDashboard-mood-display" id="moodDisplay">
+    No mood recorded yet
+  </div>
 
+  <!-- MOOD BUTTONS -->
+  <div class="sDashboard-mood">
+    <button class="sWellness-mood-btn" onclick="setMood('😢', 'Very Sad')">😢</button>
+    <button class="sWellness-mood-btn" onclick="setMood('😕', 'Sad')">😕</button>
+    <button class="sWellness-mood-btn" onclick="setMood('😐', 'Neutral')">😐</button>
+    <button class="sWellness-mood-btn" onclick="setMood('🙂', 'Happy')">🙂</button>
+    <button class="sWellness-mood-btn" onclick="setMood('😁', 'Very Happy')">😁</button>
+  </div>
+</div>
+
+      <!-- ACTIVITY -->
       <div class="sDashboard-card">
         <h4>Activity</h4>
 
@@ -179,11 +163,9 @@
     </div>
 
   </section>
-
 </main>
-<!-- ================= SCRIPT ================= -->
-    <script>
 
+<script>
 function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
@@ -191,7 +173,8 @@ function toggleSettingsMenu(e){
 
 function toggleTheme(){
   const html = document.documentElement;
-  html.setAttribute("data-theme",
+  html.setAttribute(
+    "data-theme",
     html.getAttribute("data-theme") === "light" ? "dark" : "light"
   );
 }
@@ -211,8 +194,131 @@ document.addEventListener("click", e => {
 });
 
 
+/* =========================
+   MOOD DISPLAY
+   CONNECTED TO WELLNESS PAGE
+========================= */
+
+/*
+IMPORTANT:
+Your wellness.html should save mood like this:
+
+localStorage.setItem("userMoodEmoji", "🙂");
+localStorage.setItem("userMoodText", "Good");
+
+This dashboard will automatically load it.
+*/
+
+function setMood(emoji, text) {
+  const moodDisplay = document.getElementById("moodDisplay");
+
+  // Save mood so BOTH dashboard + wellness page use same data
+  localStorage.setItem("userMoodEmoji", emoji);
+  localStorage.setItem("userMoodText", text);
+
+  // Display centered emoji + text
+  moodDisplay.innerHTML = `
+    <div style="font-size: 42px;">${emoji}</div>
+    <div style="margin-top: 8px; font-weight: 600;">${text}</div>
+  `;
+  moodDisplay.style.opacity = "1";
+}
+
+
+/* LOAD SAVED MOOD FROM WELLNESS PAGE */
+window.addEventListener("load", () => {
+  const emoji = localStorage.getItem("userMoodEmoji");
+  const text = localStorage.getItem("userMoodText");
+  const moodDisplay = document.getElementById("moodDisplay");
+
+  if (emoji && text) {
+    moodDisplay.innerHTML = `
+      <div style="font-size: 42px;">${emoji}</div>
+      <div style="margin-top: 8px; font-weight: 600;">${text}</div>
+    `;
+    moodDisplay.style.opacity = "1";
+  } else {
+    moodDisplay.innerHTML = `
+      <div style="font-size: 16px; opacity: 0.7;">
+        No mood recorded yet
+      </div>
+    `;
+  }
+});
+
+function isStrongPassword(password) {
+  return /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{6,}$/.test(password);
+}
+
+/* FORCE MODAL ON FIRST LOGIN */
+window.addEventListener("load", () => {
+  const passwordChanged = localStorage.getItem("passwordChanged");
+
+  if (!passwordChanged) {
+    document.getElementById("resetModal").style.display = "flex";
+
+    // block dashboard interaction
+    document.body.style.pointerEvents = "none";
+    document.getElementById("resetModal").style.pointerEvents = "auto";
+  }
+});
+
+/* SAVE NEW PASSWORD */
+function saveNewPassword() {
+  const pass = document.getElementById("newPassword").value.trim();
+  const error = document.getElementById("resetError");
+
+  error.textContent = "";
+
+  if (!pass) {
+    error.textContent = "Password is required.";
+    return;
+  }
+
+  if (!isStrongPassword(pass)) {
+    error.textContent =
+      "Must include uppercase, number, symbol (min 6 chars).";
+    return;
+  }
+
+  // save final password
+  localStorage.setItem("finalPassword", pass);
+  localStorage.setItem("passwordChanged", "true");
+
+  // hide modal
+  document.getElementById("resetModal").style.display = "none";
+
+  // unlock dashboard
+  document.body.style.pointerEvents = "auto";
+
+  alert("Password updated successfully!");
+}
 </script>
+<!-- =========================
+     RESET PASSWORD MODAL
+========================= -->
+<div class="reset-modal" id="resetModal">
 
+  <div class="reset-box">
 
+    <h2>Security Required</h2>
+
+    <p>
+  You must reset your password before continuing. Your temporary password is no longer valid.
+</p>
+
+<p>
+  Your new password must include an uppercase letter, a number, and a special symbol, with a minimum of 6 characters.
+</p>
+
+    <input type="password" id="newPassword" placeholder="Enter new password">
+
+    <div id="resetError" style="color:red; font-size:13px; margin-top:8px;"></div>
+
+    <button onclick="saveNewPassword()">Update Password</button>
+
+  </div>
+
+</div>
 </body>
 </html>

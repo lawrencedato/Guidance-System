@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UNITYCARE - Referral</title>
+<title>UNITYCARE | Referral</title>
 
 <link rel="stylesheet" href="styles.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -15,7 +15,6 @@
 <aside class="sidebar">
 
   <div class="sidebar-logoBar">
-
     <div class="sidebar-logo">
       <img src="logo.png" alt="logo">
       <span class="sidebar-logoText">UNITYCARE</span>
@@ -33,58 +32,39 @@
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
     </div>
-
   </div>
 
   <nav class="sidebar-menu">
-
     <a href="dashboard.html"><i class="fa fa-th-large"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
     <a href="booking.html"><i class="fa fa-calendar"></i> Book Appointment</a>
     <a href="sconcerns.html"><i class="fa fa-headset"></i> Submit Concern</a>
     <a href="wellness.html"><i class="fa fa-heart"></i> Wellness Check</a>
-    <a href="referral.html" class="active"><i class="fa fa-route"></i> Referral</a>
+    <a href="referral.html" class="active">
+      <i class="fa fa-route"></i> Referral
+      <span class="referral-badge" id="referralBadge">1</span>
+    </a>
 
     <p class="sidebar-title">UPDATES</p>
     <a href="announcements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
-    <a href="ticket.html"><i class="fa fa-ticket"></i> Tickets</a>
+    <a href="sreports.html"><i class="fa fa-ticket"></i> Reports</a>
 
     <p class="sidebar-title">SYSTEM</p>
-    <a href="feedback.html"><i class="fa fa-comment"></i> Feedback</a>
-
+    <a href="feedback.html"><i class="fa fa-comment"></i> Session Feedback</a>
   </nav>
 
 </aside>
 
 <!-- ================= TOPBAR ================= -->
- <header class="topbar">
-
+<header class="topbar">
   <div class="topbar-left">
-    <h1>Referral</h1>
+    <h1>Referral Slip</h1>
   </div>
 
   <div class="topbar-right">
-
-    <div class="topbar-searchBox">
-      <i class="fa fa-search"></i>
-      <input type="text" placeholder="Search...">
-    </div>
-
-    <div class="topbar-icons">
-      <div class="topbar-icon">
-        <i class="fa fa-envelope"></i>
-        <span class="badge">3</span>
-      </div>
-
-      <div class="topbar-icon">
-        <i class="fa fa-bell"></i>
-        <span class="badge">5</span>
-      </div>
-    </div>
-
     <div class="topbar-user">
       <img src="student.jpg" alt="user">
       <div>
@@ -92,77 +72,98 @@
         <p>vincentsablay@gmail.com</p>
       </div>
     </div>
-
   </div>
-
 </header>
 
 <!-- ================= MAIN ================= -->
 <main class="sReferral-main">
 
-  <!-- ================= CONTENT ================= -->
-  <section class="sReferral-container">
-    <p class="sReferral-subtext">
-This referral was made by your assigned counselor to a recommended professional. You may choose to proceed with or decline the referral.
-</p>
-    
-     <div class="sReferral-actions">
-    <button class="sReferralexp-button" onclick="exportReferralPDF()">
-     Export
+  <!-- REFERRAL CARD -->
+  <section class="sReferral-card" id="sReferral-slip">
+
+    <h2 class="sReferral-title">REFERRAL SLIP</h2>
+
+    <p class="sReferral-date">
+      <b>Date:</b> <span id="sReferral-date"></span>
+    </p>
+
+    <hr>
+
+    <!-- STUDENT INFO -->
+    <h3>Student Information</h3>
+    <p><b>Name:</b> <span id="sReferral-name"></span></p>
+    <p><b>Year Level:</b> <span id="sReferral-year"></span></p>
+    <p><b>Program:</b> <span id="sReferral-course"></span></p>
+    <p><b>Contact:</b> <span id="sReferral-contact"></span></p>
+
+    <hr>
+
+    <!-- DETAILS -->
+    <h3>Referral Details</h3>
+    <p><b>Reason:</b></p>
+    <p id="sReferral-reason"></p>
+
+    <p><b>Concern:</b></p>
+    <p id="sReferral-concern"></p>
+
+    <hr>
+
+    <!-- SIGNATURE -->
+    <h3>Referred By</h3>
+    <img src="images/signature.png" class="sReferral-signature">
+
+    <p><b>Counselor:</b> Dr. Lawrence Dato</p>
+    <p><b>Office:</b> Guidance Office</p>
+
+    <!-- ACTION -->
+    <button class="sReferral-btn" onclick="exportPDF()">
+      Export as PDF
     </button>
-  </div>
-
-    <div class="sReferral-card">
-
-      <h3>Assigned Counselor</h3>
-
-      <div class="sReferral-counselor">
-
-        <div class="sReferral-avatar">DR</div>
-
-        <div>
-          <h4>Dr. Maria Santos</h4>
-          <p>Licensed Counselor</p>
-        </div>
-
-      </div>
-
-      <div class="sReferral-info">
-        <p><b>Status:</b> Active</p>
-        <p><b>Availability:</b> Mon–Fri 9AM–5PM</p>
-      </div>
-
-      <hr>
-
-      <h3>Schedule Appointment</h3>
-
-      <label>Date</label>
-      <input type="date" id="date">
-
-      <label>Time</label>
-      <select id="time">
-        <option value="">Select Time</option>
-        <option>9:00 AM</option>
-        <option>10:00 AM</option>
-        <option>11:00 AM</option>
-        <option>1:00 PM</option>
-        <option>2:00 PM</option>
-        <option>3:00 PM</option>
-      </select>
-
-      <button class="sReferral-button" onclick="submitReferral()">
-        Request Appointment
-      </button>
-
-      <p id="status"></p>
-
-    </div>
 
   </section>
 
 </main>
 
+<!-- ================= SCRIPT ================= -->
 <script>
+function loadReferral() {
+  let data = JSON.parse(localStorage.getItem("referrals")) || [];
+  if (!data.length) return;
+
+  let r = data[0];
+
+  document.getElementById("sReferral-name").textContent = r.studentName;
+  document.getElementById("sReferral-year").textContent = r.yearLevel;
+  document.getElementById("sReferral-course").textContent = r.course;
+  document.getElementById("sReferral-contact").textContent = r.contact;
+  document.getElementById("sReferral-reason").textContent = r.reason;
+  document.getElementById("sReferral-concern").textContent = r.concern;
+  document.getElementById("sReferral-date").textContent = r.date;
+}
+
+function exportPDF() {
+  const element = document.getElementById("sReferral-slip");
+
+  html2pdf().set({
+    margin: 10,
+    filename: "Referral_Slip.pdf",
+    image: { type: "jpeg", quality: 1 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+  }).from(element).save();
+}
+
+function updateReferralBadge() {
+  let count = parseInt(localStorage.getItem("referralCount")) || 0;
+  const badge = document.getElementById("referralBadge");
+
+  if (badge) {
+    badge.style.display = count > 0 ? "flex" : "none";
+    badge.textContent = count;
+  }
+}
+
+// ================= UI HELPERS =================
 function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
@@ -190,34 +191,8 @@ document.addEventListener("click", e => {
   }
 });
 
-function exportReferralPDF() {
-  const element = document.querySelector(".sReferral-card");
-
-  const opt = {
-    margin: 10,
-    filename: 'Referral.pdf',
-    image: { type: 'jpeg', quality: 1 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-
-  html2pdf().set(opt).from(element).save();
-}
-
-function submitReferral(){
-  const d=document.getElementById("date").value;
-  const t=document.getElementById("time").value;
-  const status=document.getElementById("status");
-
-  if(!d||!t){
-    status.style.color="red";
-    status.textContent="Select date and time.";
-    return;
-  }
-
-  status.style.color="green";
-  status.textContent="Referral request submitted.";
-}
+loadReferral();
+updateReferralBadge();
 </script>
 
 </body>

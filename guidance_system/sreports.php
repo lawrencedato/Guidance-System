@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Session Reports</title>
+<title>UNITYCARE | Session Reports</title>
 
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="sReports.css">
@@ -51,10 +51,10 @@
     <a href="announcements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
-    <a href="ticket.html" class="active"><i class="fa fa-ticket"></i> Tickets</a>
+    <a href="sreports.html" class="active"><i class="fa fa-ticket"></i> Reports</a>
 
     <p class="sidebar-title">SYSTEM</p>
-    <a href="feedback.html"><i class="fa fa-comment"></i> Feedback</a>
+    <a href="feedback.html"><i class="fa fa-comment"></i> Session Feedback</a>
   </nav>
 </aside>
 
@@ -62,27 +62,10 @@
 <header class="topbar">
 
   <div class="topbar-left">
-    <h1>Tickets</h1>
+    <h1>Reports</h1>
   </div>
 
   <div class="topbar-right">
-
-    <div class="topbar-searchBox">
-      <i class="fa fa-search"></i>
-      <input type="text" placeholder="Search...">
-    </div>
-
-    <div class="topbar-icons">
-      <div class="topbar-icon">
-        <i class="fa fa-envelope"></i>
-        <span class="badge">3</span>
-      </div>
-
-      <div class="topbar-icon">
-        <i class="fa fa-bell"></i>
-        <span class="badge">5</span>
-      </div>
-    </div>
 
     <div class="topbar-user">
       <img src="student.jpg" alt="user">
@@ -211,27 +194,30 @@ function exportNotesPDF() {
 
 /* LOAD TICKETS */
 function updateTicketUI() {
-  let tickets = JSON.parse(localStorage.getItem("tickets")) || [];
+  let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
 
-  document.getElementById("ticketCount").innerText = tickets.length;
+  const approved = appointments.filter(a => a.status === "approved");
 
-  if (tickets.length > 0) {
-    const latest = tickets[tickets.length - 1];
-    document.getElementById("ticket").innerText = latest.id;
-    document.getElementById("status").innerText = latest.status;
-  }
+  document.getElementById("ticketCount").innerText = approved.length;
 
   const list = document.getElementById("ticketList");
   list.innerHTML = "";
 
-  tickets.forEach(t => {
+  if (approved.length > 0) {
+    const latest = approved[approved.length - 1];
+    document.getElementById("ticket").innerText = latest.id;
+    document.getElementById("status").innerText = latest.status;
+  } else {
+    document.getElementById("ticket").innerText = "---";
+    document.getElementById("status").innerText = "Waiting for approval...";
+  }
+
+  approved.forEach(t => {
     const li = document.createElement("li");
-    li.innerText = `${t.id} • ${t.status} • ${t.date}`;
+    li.innerText = `${t.id} • ${t.status} • ${t.date} • ${t.time}`;
     list.appendChild(li);
   });
 }
-
-updateTicketUI();
 </script>
 
 </body>

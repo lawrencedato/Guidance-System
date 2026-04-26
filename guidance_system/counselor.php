@@ -26,8 +26,8 @@
       </button>
 
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
-        <a href="profile.html"><i class="fa fa-user"></i> Profile</a>
-        <a href="history.html"><i class="fa fa-clock"></i> Session History</a>
+        <a href="cprofile.html"><i class="fa fa-user"></i> Profile</a>
+        <a href="chistory.html"><i class="fa fa-clock"></i> Session History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -46,7 +46,7 @@
     <a href="students.html"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
-    <a href="reports.html"><i class="fa fa-file"></i> Reports</a>
+    <a href="creports.html"><i class="fa fa-file"></i> Reports</a>
 
     <p class="sidebar-title">INFORMATION</p>
     <a href="cannouncements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
@@ -56,31 +56,42 @@
 
 <!-- ================= TOPBAR ================= -->
 <header class="topbar">
+
   <div class="topbar-left">
     <h3>Welcome!</h3>
   </div>
 
- <div class="topbar-icons">
+  <!-- RIGHT SIDE WRAPPER (FIXED) -->
+  <div class="topbar-right">
 
-  <div class="topbar-icon" onclick="toggleDropdown('messageDropdown', event)">
-    <i class="fa fa-envelope"></i>
-    <span class="badge">2</span>
+    <div class="topbar-icons">
 
-    <div class="icon-dropdown" id="messageDropdown">
-      <p>No new messages</p>
+      <div class="topbar-icons">
+
+ <!-- FEEDBACK NOTIFICATIONS -->
+<div class="topbar-icon" onclick="toggleDropdown('feedbackDropdown', event)">
+  <i class="fa fa-envelope"></i>
+  <span class="badge" id="feedbackCount">0</span>
+
+  <div class="icon-dropdown" id="feedbackDropdown">
+    <div class="notif-header">New Feedback</div>
+    <div id="notifList">
+      <div class="notif-empty">No new feedback</div>
     </div>
   </div>
-
-  <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
-    <i class="fa fa-bell"></i>
-    <span class="badge">4</span>
-
-    <div class="icon-dropdown" id="notifDropdown">
-      <p>No new notifications</p>
-    </div>
-  </div>
-
 </div>
+
+<!-- BELL NOTIFICATIONS -->
+<div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
+  <i class="fa fa-bell"></i>
+  <span class="badge">4</span>
+
+  <div class="icon-dropdown" id="notifDropdown">
+    <p>No new notifications</p>
+  </div>
+</div>
+
+    </div>
 
     <div class="topbar-user">
       <img src="counselor.jpg" alt="user">
@@ -91,6 +102,7 @@
     </div>
 
   </div>
+
 </header>
 
 <!-- MAIN -->
@@ -140,7 +152,6 @@ function toggleTheme(){
   );
 }
 
-
 function logout(){
   localStorage.clear();
   window.location.href = "login.html";
@@ -150,10 +161,11 @@ document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
   const btn = document.querySelector(".sidebar-settingsButton");
 
-  if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
     menu.classList.remove("show");
   }
 });
+
 </script>
 
 </body>

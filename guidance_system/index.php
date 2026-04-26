@@ -1,73 +1,84 @@
-<?php
-include "connect.php";
-
-if(isset($_POST['submit'])){
-
-    $name = $_POST['student_name'];
-    $id = $_POST['student_id'];
-    $concern = $_POST['concern'];
-
-    $sql = "INSERT INTO counseling_requests (student_name, student_id, concern)
-            VALUES ('$name','$id','$concern')";
-
-    $conn->query($sql);
-}
-?>
-
 <!DOCTYPE html>
-<html>
+<html lang="en" data-theme="light">
 <head>
-<title>Guidance Counseling System</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="UNITYCARE Role Selection Portal">
+  <title>UNITYCARE | Account Type</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 
-<body>
+<body class="accType-body">
 
-<div class="container">
+  <main class="accType-main-content">
 
-<h1>Guidance Counseling Request</h1>
+    <section class="accType-section-wrapper">
 
-<form method="POST">
+      <header class="accType-header-brand">
+        <figure class="accType-header-logoWrapper">
+          <img class="accType-header-logoImage" src="logo.png" alt="UNITYCARE Logo">
+          <figcaption>
+            <h1 class="accType-header-title">UNITYCARE</h1>
+          </figcaption>
+        </figure>
+      </header>
 
-<input type="text" name="student_name" placeholder="Student Name" required>
+      <article class="accType-card-container">
 
-<input type="text" name="student_id" placeholder="Student ID" required>
+        <header class="accType-card-header">
+          <h2 class="accType-card-title">Choose account type</h2>
+          <p class="accType-card-subtitle">Please choose your account type to continue</p>
+        </header>
 
-<textarea name="concern" placeholder="Enter your concern" required></textarea>
+        <div class="accType-card-buttons">
 
-<button type="submit" name="submit">Submit Request</button>
+          <button class="accType-card-button accType-card-button-student"
+            onclick="handleRoleSelection('student')">
+            Student
+          </button>
 
-</form>
+          <button class="accType-card-button accType-card-button-counselor"
+            onclick="handleRoleSelection('counselor')">
+            Counselor
+          </button>
 
-<h2>Submitted Requests</h2>
+          <button class="accType-card-button accType-card-button-admin"
+            onclick="handleRoleSelection('admin')">
+            Administrator
+          </button>
 
-<table>
+        </div>
 
-<tr>
-<th>Name</th>
-<th>Student ID</th>
-<th>Concern</th>
-<th>Date</th>
-</tr>
+      </article>
 
-<?php
+      <footer class="accType-footer">
+        <p class="accType-footer-text">© 2026 UNITYCARE. All rights reserved.</p>
+      </footer>
 
-$result = $conn->query("SELECT * FROM counseling_requests");
+    </section>
 
-while($row = $result->fetch_assoc()){
-echo "<tr>
-<td>".$row['student_name']."</td>
-<td>".$row['student_id']."</td>
-<td>".$row['concern']."</td>
-<td>".$row['date_submitted']."</td>
-</tr>";
-}
+  </main>
 
-?>
+  <script>
+    function handleRoleSelection(role) {
+      localStorage.setItem("userRole", role);
 
-</table>
-
-</div>
+      switch (role) {
+        case "student":
+          window.location.href = "login.html";
+          break;
+        case "counselor":
+          window.location.href = "clogin.html";
+          break;
+        case "admin":
+        default:
+          window.location.href = "admin-dashboard.html";
+          break;
+      }
+    }
+  </script>
 
 </body>
 </html>

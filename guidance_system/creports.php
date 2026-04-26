@@ -21,13 +21,13 @@
     </div>
 
     <div class="sidebar-settings">
-      <button class="sidebar-settingsButton" onclick="toggleSettings()">
+      <button class="sidebar-settingsButton" onclick="toggleSettingsMenu(event)">
         <i class="fa fa-gear"></i>
       </button>
 
       <div class="sidebar-settingsDropdown" id="settingsMenu">
         <a href="profile.html"><i class="fa fa-user"></i> Profile</a>
-        <a href="history.html"><i class="fa fa-clock"></i> Session History</a>
+        <a href="chistory.html"><i class="fa fa-clock"></i> Session History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -57,7 +57,7 @@
 <!-- ================= TOPBAR ================= -->
 <header class="topbar">
   <div class="topbar-left">
-    <h3>Appointment Request</h3>
+    <h2>Reports</h2>
   </div>
 
   <div class="topbar-right">
@@ -67,17 +67,29 @@
       <input type="text" placeholder="Search...">
     </div>
 
-    <div class="topbar-icons">
-      <div class="topbar-icon">
-        <i class="fa fa-envelope"></i>
-        <span class="badge">2</span>
-      </div>
 
-      <div class="topbar-icon">
-        <i class="fa fa-bell"></i>
-        <span class="badge">4</span>
-      </div>
+    <!-- FEEDBACK NOTIFICATIONS -->
+<div class="topbar-icon" onclick="toggleDropdown('feedbackDropdown', event)">
+  <i class="fa fa-envelope"></i>
+  <span class="badge" id="feedbackCount">0</span>
+
+  <div class="icon-dropdown" id="feedbackDropdown">
+    <div class="notif-header">New Feedback</div>
+    <div id="notifList">
+      <div class="notif-empty">No new feedback</div>
     </div>
+  </div>
+</div>
+
+<!-- BELL NOTIFICATIONS -->
+<div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
+  <i class="fa fa-bell"></i>
+  <span class="badge">4</span>
+
+  <div class="icon-dropdown" id="notifDropdown">
+    <p>No new notifications</p>
+  </div>
+</div>
 
     <div class="topbar-user">
       <img src="counselor.jpg" alt="user">
@@ -93,66 +105,73 @@
 <!-- MAIN -->
 <main class="cReports-main">
 
-  <p class="cReports-muted">
-    Counseling summaries and student progress reports
-  </p>
+  <!-- PAGE HEADER (OUTSIDE CENTER BLOCK) -->
+  <div class="cReports-pageHeader">
+    <p class="cReports-muted">
+      Counseling summaries and student progress reports
+    </p>
+  </div>
 
-  <div class="cReports-grid">
-<!-- SESSION NOTES CARD -->
-<div class="cReports-card">
+  <!-- CENTER CONTENT -->
+  <div class="cReports-center">
 
-  <h3>Session Notes</h3>
-  <p>Add counselor notes after each session</p>
+    <div class="cReports-card">
 
-  <textarea class="cReports-textarea" placeholder="Write session notes here..."></textarea>
+      <h3>Session Notes</h3>
+      <p>Add counselor notes after each session</p>
 
-  <button class="cReports-btn" onclick="saveNotes(this)">
-    Save Notes
-  </button>
+      <textarea class="cReports-textarea" placeholder="Write session notes here..."></textarea>
 
-  <div class="cReports-status"></div>
+      <button class="cReports-btn" onclick="saveNotes(this)">
+        Save Notes
+      </button>
 
-</div>
+      <div class="cReports-status"></div>
 
-<!-- TICKET GENERATOR CARD -->
-<div class="cReports-card">
+    </div>
 
-  <h3>Generate Case Ticket</h3>
-  <p>Create a formal student concern ticket</p>
-
-  <input class="cReports-input" placeholder="Student Name">
-  <input class="cReports-input" placeholder="Concern Type (Stress, Anxiety, etc.)">
-
-  <textarea class="cReports-textarea" placeholder="Case description..."></textarea>
-
-  <button class="cReports-btn" onclick="generateTicket(this)">
-    Generate Ticket
-  </button>
-
-  <div class="cReports-status"></div>
-
-</div>
-
+  </div>
 
 </main>
 
 <script>
-function toggleSettings() {
-  const menu = document.getElementById("settingsMenu");
-  menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+function toggleSettingsMenu(e){
+  e.stopPropagation();
+  document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
-function toggleTheme() {
+function toggleTheme(){
   const html = document.documentElement;
   html.setAttribute(
     "data-theme",
-    html.getAttribute("data-theme") === "dark" ? "light" : "dark"
+    html.getAttribute("data-theme") === "light" ? "dark" : "light"
   );
 }
 
-function logout() {
-  window.location.href = "role.html";
+function logout(){
+  localStorage.clear();
+  window.location.href = "login.html";
 }
+
+document.addEventListener("click", e => {
+  const menu = document.getElementById("settingsDropdown");
+  const btn = document.querySelector(".sidebar-settingsButton");
+
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove("show");
+  }
+});
+
+function postAnnouncement() {
+  db.collection("announcements").add({
+    title: titleInput.value,
+    message: messageInput.value,
+    status: "active",
+    createdAt: new Date(),
+    eventDate: eventDateInput.value
+  });
+}
+
 </script>
 
 </body>
