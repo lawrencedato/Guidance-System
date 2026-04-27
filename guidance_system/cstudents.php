@@ -35,7 +35,7 @@
     </div>
 
   </div>
-
+  
   <nav class="sidebar-menu">
     <a href="counselor.php"><i class="fa fa-gauge"></i> Dashboard</a>
 
@@ -128,6 +128,7 @@
     </div> <!-- END content -->
 
   </div>
+</div>
 </div>
 </main>
 

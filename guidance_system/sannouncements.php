@@ -52,7 +52,7 @@
     <a href="sreports.php"><i class="fa fa-ticket"></i> Reports</a>
 
     <p class="sidebar-title">SYSTEM</p>
-    <a href="sfeedback.php"><i class="fa fa-comment"></i> Feedback</a>
+    <a href="sfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
   </nav>
 </aside>
 
