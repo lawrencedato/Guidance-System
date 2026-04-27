@@ -28,8 +28,8 @@
       </button>
 
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
-        <a href="sprofile.html"><i class="fa fa-user"></i> Profile</a>
-        <a href="shistory.html"><i class="fa fa-clock"></i> Session History</a>
+        <a href="profile.html"><i class="fa fa-user"></i> Profile</a>
+        <a href="history.html"><i class="fa fa-clock"></i> Session History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -38,22 +38,22 @@
   </div>
 
   <nav class="sidebar-menu">
-    <a href="dashboard.html"><i class="fa fa-th-large"></i> Dashboard</a>
+    <a href="dashboard.php"><i class="fa fa-gauge"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
-    <a href="sappointment.html"><i class="fa fa-calendar"></i> Book Appointment</a>
+    <a href="booking.html"><i class="fa fa-calendar"></i> Book Appointment</a>
     <a href="sconcerns.html"><i class="fa fa-headset"></i> Submit Concern</a>
-    <a href="swellness.html" class="active"><i class="fa fa-heart"></i> Wellness Check</a>
-    <a href="sreferral.html"><i class="fa fa-route"></i> Referral</a>
+    <a href="wellness.html" class="active"><i class="fa fa-heart"></i> Wellness Check</a>
+    <a href="referral.html"><i class="fa fa-route"></i> Referral</a>
 
     <p class="sidebar-title">UPDATES</p>
-    <a href="sannouncements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
+    <a href="announcements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
-    <a href="sreports.html"><i class="fa fa-ticket"></i> Reports</a>
+    <a href="sreports.php"><i class="fa fa-ticket"></i> Reports</a>
 
     <p class="sidebar-title">SYSTEM</p>
-    <a href="sfeedback.html"><i class="fa fa-comment"></i> Session Feedback</a>
+    <a href="feedback.html"><i class="fa fa-comment"></i> Session Feedback</a>
   </nav>
 </aside>
 
