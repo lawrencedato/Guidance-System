@@ -3,114 +3,213 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Counselor Login | UNITYCARE</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<title>UNITYCARE | History</title>
+
 <link rel="stylesheet" href="styles.css">
-
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<link rel="stylesheet" href="history.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
-<body class="auth-body">
+<body class="body">
 
-<div class="auth-container">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logoBar">
 
-  <!-- LEFT -->
-  <section class="auth-left">
-    <div class="auth-overlay"></div>
-
-    <div class="auth-brand">
-      <img class="auth-brand-logo" src="logo.png">
-      <h1 class="auth-brand-title">UNITYCARE</h1>
-      <p class="auth-brand-subtitle">Support • Care • Connection</p>
-    </div>
-  </section>
-
-  <!-- RIGHT -->
-  <section class="auth-right">
-
-    <div class="auth-box">
-
-      <h2 class="auth-title">Counselor Login</h2>
-      <p class="auth-subtitle">Secure access required</p>
-
-      <form class="auth-form" onsubmit="event.preventDefault(); loginCounselor();">
-
-        <label>Name</label>
-        <input type="text" id="name" class="auth-input" required placeholder="Enter your full name">
-
-        <label>Password</label>
-        <input type="password" id="password" class="auth-input" required placeholder="Enter password">
-
-        <!-- CAPTCHA -->
-        <div style="margin: 10px 0;">
-          <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY_HERE"></div>
-        </div>
-
-        <button class="auth-btn" type="submit">Login</button>
-
-        <div id="error" class="auth-error"></div>
-
-      </form>
-
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="logo">
+      <span class="sidebar-logoText">UNITYCARE</span>
     </div>
 
-  </section>
+    <div class="sidebar-settings">
+      <button class="sidebar-settingsButton" onclick="toggleSettingsMenu()">
+        <i class="fa fa-gear"></i>
+      </button>
 
-</div>
+      <div class="sidebar-settingsDropdown" id="settingsDropdown">
+        <a href="cprofile.html"><i class="fa fa-user"></i> Profile</a>
+        <a href="chistory.html" class="active"><i class="fa fa-clock"></i> Session History</a>
+        <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
+        <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="sidebar-menu">
+    <a href="counselor.html"><i class="fa fa-gauge"></i> Dashboard</a>
+
+    <p class="sidebar-title">SESSIONS</p>
+    <a href="cappointments.html"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
+    <a href="cconcerns.html"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
+
+    <p class="sidebar-title">STUDENTS</p>
+    <a href="students.html"><i class="fa fa-users"></i> Students</a>
+
+    <p class="sidebar-title">REPORTS</p>
+    <a href="reports.html"><i class="fa fa-file"></i> Reports</a>
+
+    <p class="sidebar-title">INFORMATION</p>
+    <a href="cannouncements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
+    <a href="creferral.html"><i class="fa fa-route"></i> Referrals</a>
+  </nav>
+</aside>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-left">
+    <h3>History</h3>
+  </div>
+
+  <div class="topbar-right">
+
+    <div class="topbar-icons">
+      <div class="topbar-icon">
+        <i class="fa fa-envelope"></i>
+        <span class="badge">2</span>
+      </div>
+
+      <div class="topbar-icon">
+        <i class="fa fa-bell"></i>
+        <span class="badge">4</span>
+      </div>
+    </div>
+
+    <div class="topbar-user">
+      <img src="counselor.jpg" alt="user">
+      <div>
+        <strong>Dr. Lawrence Dato</strong>
+        <p>lawrencedato@gmail.com</p>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="cHistory-main">
+
+  <!-- TABS -->
+  <div class="cHistory-tabs">
+    <button class="active" onclick="switchTab(event,'sessions')">Past Sessions</button>
+    <button onclick="switchTab(event,'announcements')">Announcements</button>
+    <button onclick="switchTab(event,'referrals')">Referrals</button>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="cHistory-filterBar">
+
+    <input type="date">
+
+    <!-- YEAR LEVEL -->
+    <select>
+      <option value="">Year Levels</option>
+      <option>1st Year</option>
+      <option>2nd Year</option>
+      <option>3rd Year</option>
+      <option>4th Year</option>
+    </select>
+
+    <!-- PROGRAM -->
+    <select>
+      <option value="">Programs</option>
+      <option>BSIT</option>
+      <option>BSCS</option>
+      <option>BSA</option>
+      <option>BSBA</option>
+      <option>BEED</option>
+    </select>
+
+    <select>
+      <option>Status</option>
+      <option>Completed</option>
+      <option>Expired</option>
+    </select>
+
+  </div>
+
+  <!-- SESSIONS -->
+  <div id="sessions" class="cHistory-tabContent">
+    <table>
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Type</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="5" class="empty">No past sessions found</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ANNOUNCEMENTS -->
+  <div id="announcements" class="cHistory-tabContent hidden">
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Post Date</th>
+          <th>Year Level</th>
+          <th>Reach</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="4" class="empty">No past announcements found</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- REFERRALS -->
+  <div id="referrals" class="cHistory-tabContent hidden">
+    <table>
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Referred To</th>
+          <th>Reason</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="4" class="empty">No past referrals found</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
 
 <script>
-/* -------------------------------
-   DEMO: ADMIN SETS PASSWORD
-   (run once in console or admin page)
-   localStorage.setItem("adminPassword", "yourChosenPassword");
-----------------------------------*/
+function toggleSettingsMenu() {
+  const menu = document.getElementById("settingsDropdown");
+  menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+}
 
-// LOGIN FUNCTION
-function loginCounselor() {
-  const name = document.getElementById("name").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const error = document.getElementById("error");
+function switchTab(event, tabId) {
+  document.querySelectorAll(".cHistory-tabContent")
+    .forEach(t => t.classList.add("hidden"));
 
-  error.style.color = "red";
-  error.textContent = "";
+  document.getElementById(tabId).classList.remove("hidden");
 
-  const storedPassword = localStorage.getItem("adminPassword");
+  document.querySelectorAll(".cHistory-tabs button")
+    .forEach(b => b.classList.remove("active"));
 
-  // CHECK INPUTS
-  if (!name || !password) {
-    error.textContent = "Please fill in all fields.";
-    return;
-  }
+  event.target.classList.add("active");
+}
 
-  // CHECK IF ADMIN HAS SET PASSWORD
-  if (!storedPassword) {
-    error.textContent = "No admin password set yet.";
-    return;
-  }
+function toggleTheme() {
+  const html = document.documentElement;
+  html.setAttribute("data-theme",
+    html.getAttribute("data-theme") === "dark" ? "light" : "dark"
+  );
+}
 
-  // CHECK PASSWORD MATCH
-  if (password !== storedPassword) {
-    error.textContent = "Incorrect password.";
-    return;
-  }
-
-  // CHECK CAPTCHA
-  const captchaResponse = grecaptcha.getResponse();
-  if (!captchaResponse || captchaResponse.length === 0) {
-    error.textContent = "Please complete reCAPTCHA.";
-    return;
-  }
-
-  // SUCCESS
-  localStorage.setItem("counselorName", name);
-
-  error.style.color = "green";
-  error.textContent = "Login successful...";
-
-  setTimeout(() => {
-    window.location.href = "counselor.html";
-  }, 800);
+function logout() {
+  window.location.href = "role.html";
 }
 </script>
 
