@@ -10,48 +10,50 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body>
+<body class="body">
 
-<!-- ================= SIDEBAR ================= -->
-<nav class="sidebar">
+<!-- SIDEBAR -->
+<aside class="sidebar">
 
-  <div class="logo-bar">
-    <div class="logo">
-      <img src="logo.png">
-      <h3>UNITYCARE</h3>
+  <div class="sidebar-logoBar">
+
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="logo">
+      <span class="sidebar-logoText">UNITYCARE</span>
     </div>
+
   </div>
-    
-  <div class="menu">
+
+  <nav class="sidebar-menu">
 
     <a class="active" href="admin.html">
       <i class="fa fa-gauge"></i> Dashboard
     </a>
 
-    <p class="menu-title">MANAGEMENT</p>
+    <p class="sidebar-title">MANAGEMENT</p>
 
     <a href="adminusers.html"><i class="fa fa-users"></i> Users</a>
     <a href="adminstudents.html"><i class="fa fa-user-graduate"></i> Students</a>
     <a href="admincounselors.html"><i class="fa fa-user-doctor"></i> Counselors</a>
     <a href="adminappointments.html"><i class="fa fa-calendar"></i> Appointments</a>
 
-    <p class="menu-title">SYSTEM</p>
+    <p class="sidebar-title">SYSTEM</p>
 
     <a href="adminreports.html"><i class="fa fa-chart-line"></i> Reports</a>
 
-  </div>
+  </nav>
 
   <button class="btn btn-error btn-sm" onclick="logout()">
     <i class="fa fa-right-from-bracket"></i> Logout
   </button>
 
-</nav>
+</aside>
 
 <!-- ================= MAIN ================= -->
 <main class="main">
 
   <!-- TOPBAR -->
-  <div class="topbar">
+  <header class="topbar">
     <div>
       <h2>Admin Dashboard</h2>
       <p class="muted">System overview & performance monitoring</p>
