@@ -40,13 +40,13 @@
     <a href="dashboard.php"><i class="fa fa-gauge"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
-    <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
+    <a href="sappointment.php" class="active"><i class="fa fa-calendar"></i> Book Appointment</a>
     <a href="sconcerns.php"><i class="fa fa-headset"></i> Submit Concern</a>
     <a href="swellness.php"><i class="fa fa-heart"></i> Wellness Check</a>
-    <a href="sreferral.php" class="active"><i class="fa fa-route"></i> Referral</a>
+    <a href="sreferral.php"><i class="fa fa-route"></i> Referral</a>
 
     <p class="sidebar-title">UPDATES</p>
-    <a href="sannouncement.php"><i class="fa fa-bullhorn"></i> Announcements</a>
+    <a href="sannouncement.php" class="active"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
     <a href="sreports.php"><i class="fa fa-ticket"></i> Reports</a>
