@@ -27,9 +27,9 @@
         <i class="fa fa-gear"></i>
       </button>
 
-      <div class="sidebar-settingsDropdown" id="settingsDropdown">
+      <div class="sidebar-settingsDropdown" id="settingsMenu">
         <a href="cprofile.html"><i class="fa fa-user"></i> Profile</a>
-        <a href="chistory.html" class="active"><i class="fa fa-clock"></i> Session History</a>
+        <a href="chistory.html" class="active"><i class="fa fa-clock"></i> History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -43,12 +43,13 @@
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.html"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
     <a href="cconcerns.html"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
+    <a href="cfeedback.html"><i class="fa fa-comment"></i> Session Feedback</a>
 
     <p class="sidebar-title">STUDENTS</p>
-    <a href="students.html"><i class="fa fa-users"></i> Students</a>
+    <a href="cstudents.html"><i class="fa fa-users"></i> Student List</a>
 
     <p class="sidebar-title">REPORTS</p>
-    <a href="reports.html"><i class="fa fa-file"></i> Reports</a>
+    <a href="creports.html"><i class="fa fa-file"></i> Reports</a>
 
     <p class="sidebar-title">INFORMATION</p>
     <a href="cannouncements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
