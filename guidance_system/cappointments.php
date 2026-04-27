@@ -28,8 +28,8 @@
       </button>
 
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
-        <a href="profile.html"><i class="fa fa-user"></i> Profile</a>
-        <a href="chistory.html"><i class="fa fa-clock"></i> Session History</a>
+        <a href="cprofile.php"><i class="fa fa-user"></i> Profile</a>
+        <a href="chistory.php"><i class="fa fa-clock"></i> Session History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -41,11 +41,11 @@
     <a href="counselor.php"><i class="fa fa-gauge"></i> Dashboard</a>
 
     <p class="sidebar-title">SESSIONS</p>
-    <a href="cappointments.html" class="active"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
-    <a href="cconcerns.html"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
+    <a href="cappointments.php" class="active"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
+    <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
 
     <p class="sidebar-title">STUDENTS</p>
-    <a href="students.html"><i class="fa fa-users"></i> Students</a>
+    <a href="cstudents.php"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
     <a href="creports.php"><i class="fa fa-file"></i> Reports</a>

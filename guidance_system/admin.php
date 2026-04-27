@@ -26,20 +26,20 @@
 
   <nav class="sidebar-menu">
 
-    <a class="active" href="admin.html">
+    <a class="active" href="admin.php">
       <i class="fa fa-gauge"></i> Dashboard
     </a>
 
     <p class="sidebar-title">MANAGEMENT</p>
 
-    <a href="adminusers.html"><i class="fa fa-users"></i> Users</a>
-    <a href="adminstudents.html"><i class="fa fa-user-graduate"></i> Students</a>
-    <a href="admincounselors.html"><i class="fa fa-user-doctor"></i> Counselors</a>
-    <a href="adminappointments.html"><i class="fa fa-calendar"></i> Appointments</a>
+    <a href="ausers.php"><i class="fa fa-users"></i> Users</a>
+    <a href="astudents.php"><i class="fa fa-user-graduate"></i> Students</a>
+    <a href="acounselors.php"><i class="fa fa-user-doctor"></i> Counselors</a>
+    <a href="aappointments.php"><i class="fa fa-calendar"></i> Appointments</a>
 
     <p class="sidebar-title">SYSTEM</p>
 
-    <a href="adminreports.html"><i class="fa fa-chart-line"></i> Reports</a>
+    <a href="areports.php"><i class="fa fa-chart-line"></i> Reports</a>
 
   </nav>
 
