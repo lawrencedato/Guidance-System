@@ -64,17 +64,15 @@
 
   <div class="topbar-right">
 
-<div class="topbar-icons">
-  <a href="cfeedback.html" class="topbar-icon">
-    <i class="fa fa-envelope"></i>
-    <span class="badge">2</span>
-  </a>
-</div>
+  <div class="topbar-icons">
+  <!-- NOTIFICATIONS -->
+    <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
+      <i class="fa fa-bell"></i>
+      <span class="badge">4</span>
 
-      <div class="topbar-icon">
-        <i class="fa fa-bell"></i>
-        <span class="badge">4</span>
-      </div>
+    <div class="icon-dropdown" id="notifDropdown">
+      <p>No new notifications</p>
+    </div>
     </div>
 
     <div class="topbar-user">

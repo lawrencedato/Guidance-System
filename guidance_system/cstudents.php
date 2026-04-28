@@ -42,6 +42,7 @@
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
     <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
+    <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
 
     <p class="sidebar-title">STUDENTS</p>
     <a href="cstudents.php" class="active"><i class="fa fa-users"></i> Students</a>
@@ -68,16 +69,14 @@
       <input type="text" placeholder="Search...">
     </div>
 
-    <div class="topbar-icons">
-      <div class="topbar-icon">
-        <i class="fa fa-envelope"></i>
-        <span class="badge">2</span>
-      </div>
+    <!-- NOTIFICATIONS -->
+    <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
+      <i class="fa fa-bell"></i>
+      <span class="badge">4</span>
 
-      <div class="topbar-icon">
-        <i class="fa fa-bell"></i>
-        <span class="badge">4</span>
-      </div>
+    <div class="icon-dropdown" id="notifDropdown">
+      <p>No new notifications</p>
+    </div>
     </div>
 
     <div class="topbar-user">
@@ -119,45 +118,57 @@
 
       <!-- RIGHT -->
       <div class="cStudentList-right">
-        <span class="tag stable">Stable</span>
-        <div class="cStudentList-meta">
-          Last Session: Apr 10, 2026
-        </div>
-      </div>
+  
+  <div class="cStudentList-topRight">
+    <span class="tag stable">Stable</span>
+  </div>
+
+  <div class="cStudentList-bottomRight">
+    <p>Last Session: Apr 10, 2026</p>
+  </div>
+
+</div>
 
     </div> <!-- END content -->
 
   </div>
 </div>
-</div>
 </main>
 
-<!-- =========================
-     MODAL (WELLNESS VIEW ONLY)
-========================= -->
 <div class="cStudentModal" id="studentModal">
 
   <div class="cStudentModal-container">
 
-    <div class="cStudentModal-header">
-      <h2>Student Profile</h2>
-      <button onclick="closeStudentModal()">✕</button>
+
+<div class="cStudentModal-header">
+  <h2>Student Profile</h2>
+  <button onclick="closeStudentModal()">✕</button>
+</div>
+
+<div class="cStudentModal-body">
+
+  <!-- PROFILE -->
+<div class="cStudentModal-profile">
+
+  <div class="cStudentModal-avatar">JS</div>
+
+  <div class="cStudentModal-profileText">
+
+    <div class="cStudentModal-nameRow">
+      <h3>Adolf</h3>
+
+      <span id="studentStatusTag" class="tag stable">
+        Stable
+      </span>
     </div>
 
-    <div class="cStudentModal-body">
+    <p>BSIT • 2nd Year</p>
 
-      <div class="cStudentModal-profile">
-        <div class="cStudentModal-avatar">JS</div>
-        <div>
-          <h3>Adolf</h3>
-          <p>BSIT • 2nd Year</p>
-          <span class="tag stable">Stable</span>
-        </div>
-      </div>
+  </div>
 
-      <!-- =========================
-           WELLNESS PROGRESS SECTION
-      ========================== -->
+</div>
+
+      <!-- WELLNESS -->
       <div class="cStudentModal-box">
         <h4>Wellness Progress: Good</h4>
 
@@ -166,6 +177,7 @@
         <div class="cStudentModal-progressBar">
           <div class="cStudentModal-progressFill"></div>
         </div>
+
         <p><b>Recent Check-in:</b> April 22</p>
       </div>
 
@@ -176,7 +188,6 @@
           <p><b>Program:</b> BSIT</p>
           <p><b>Year Level:</b> 2nd Year</p>
         </div>
-
 
         <div class="cStudentModal-box">
           <h4>Emergency Contact</h4>
@@ -190,9 +201,6 @@
     </div>
 
   </div>
-
-</div>
-
 </div>
 
 <script>

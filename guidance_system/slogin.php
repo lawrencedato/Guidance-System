@@ -3,89 +3,126 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Account Activation</title>
-\
-<link rel="stylesheet" href="styles.css">
+
+<title>UNITYCARE | Student Login</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="auth-body">
+
+<div class="auth-container">
+
+  <!-- LEFT -->
+  <section class="auth-left">
+    <div class="auth-left-overlay"></div>
+
+    <div class="auth-brand">
+      <img class="auth-brand-logo" src="logo.png" alt="logo">
+      <h1 class="auth-brand-title">UNITYCARE</h1>
+      <p class="auth-brand-subtitle">Support • Care • Connection</p>
+    </div>
+  </section>
+
+  <!-- RIGHT -->
+  <section class="auth-right">
+
+    <div class="auth-box">
+
+      <h2 class="auth-title">Student Login</h2>
+      <p class="auth-subtitle">Welcome back! Please sign in.</p>
+
+      <!-- FORM -->
+      <form class="auth-form" onsubmit="event.preventDefault(); loginStudent();">
+
+        <label class="auth-label">Email</label>
+        <input class="auth-input" id="email" type="email" placeholder="Enter your email" required>
+
+        <label class="auth-label">Password</label>
+        <input class="auth-input" id="password" type="password" placeholder="Enter your password" required>
+
+        <!-- CAPTCHA -->
+        <div style="margin: 10px 0;">
+          <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY_HERE"></div>
+        </div>
+
+        <button class="auth-btn" type="submit">Login</button>
+
+        <div id="error" class="auth-error"></div>
 
 
-<body>
+      </form>
 
-<!-- TRIGGER BUTTON (demo only) -->
-<div style="padding:40px;">
-  <button onclick="activateAccount()">Activate Account</button>
-</div>
+      <!-- FOOTER -->
+      <div class="auth-footer">
+        <div class="auth-footer-text">Don’t have an account?</div>
+        <a class="auth-footer-link" href="activate.html">Activate</a>
+      </div>
 
-<!-- MODAL -->
-<div class="reset-overlay" id="modal">
-  <div class="reset-box">
+    </div>
 
-    <h2>Set Your Password</h2>
+  </section>
 
-    <p>
-      Password must include:<br>
-      ✔ 1 uppercase letter<br>
-      ✔ 1 number<br>
-      ✔ 1 symbol
-    </p>
-
-    <input type="password" id="password" placeholder="Create password">
-
-    <p id="error" style="color:red; font-size:13px;"></p>
-
-    <button onclick="savePassword()">Save Password</button>
-
-  </div>
 </div>
 
 <script>
-/* --------------------------
-   PASSWORD VALIDATION
----------------------------*/
-function isStrongPassword(password) {
-  const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{6,}$/;
-  return regex.test(password);
-}
-
-/* --------------------------
-   FIRST TIME ACTIVATION
----------------------------*/
-function activateAccount() {
-  const modal = document.getElementById("modal");
-
-  if (!localStorage.getItem("accountActivated")) {
-    modal.style.display = "flex";
-  } else {
-    alert("Account already activated.");
-  }
-}
-
-/* --------------------------
-   SAVE PASSWORD
----------------------------*/
-function savePassword() {
+function loginStudent() {
+  const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
-  const error = document.getElementById("error");
+  const error = document.getElementById("regError");
 
+  error.style.color = "red";
   error.textContent = "";
 
-  if (!password) {
-    error.textContent = "Password is required.";
+  const savedEmail = localStorage.getItem("registeredEmail");
+  const tempPassword = localStorage.getItem("tempPassword");
+  const finalPassword = localStorage.getItem("finalPassword");
+
+  if (!email || !password) {
+    error.textContent = "Please fill in all fields.";
     return;
   }
 
-  if (!isStrongPassword(password)) {
-    error.textContent =
-      "Must include uppercase, number, and symbol (min 6 chars).";
+  if (email !== savedEmail) {
+    error.textContent = "Invalid email.";
+    return;
+  }
+  
+    // CHECK CAPTCHA
+  const captchaResponse = grecaptcha.getResponse();
+  if (!captchaResponse || captchaResponse.length === 0) {
+    error.textContent = "Please complete reCAPTCHA.";
     return;
   }
 
-  localStorage.setItem("adminPassword", password);
-  localStorage.setItem("accountActivated", "true");
+  /* =========================
+     FIRST LOGIN FLOW
+  ========================= */
+  if (!finalPassword) {
+    if (password !== tempPassword) {
+      error.textContent = "Invalid temporary password.";
+      return;
+    }
 
-  document.getElementById("modal").style.display = "none";
+    localStorage.setItem("firstLogin", "true");
+    localStorage.setItem("passwordChanged", "false");
+  }
 
-  alert("Account activated successfully!");
+  /* =========================
+     AFTER RESET PASSWORD
+  ========================= */
+  if (finalPassword && password !== finalPassword) {
+    error.textContent = "Invalid password.";
+    return;
+  }
+
+  error.style.color = "green";
+  error.textContent = "Login successful...";
+
+  setTimeout(() => {
+    window.location.href = "dashboard.html";
+  }, 800);
 }
 </script>
 

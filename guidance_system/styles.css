@@ -1,5 +1,5 @@
 /* =========================
-   ROOT DESIGN SYSTEM (FEEDBACK-STYLE GLASS SYSTEM)
+   ROOT DESIGN SYSTEM
 ========================= */
 :root {
 
@@ -13,7 +13,6 @@
   --bg: #f5f9ff;
   --bg-soft: #eef4fb;
 
-  /* glass-first system (like feedback card) */
   --card: rgba(255, 255, 255, 0.75);
   --glass: rgba(255, 255, 255, 0.55);
 
@@ -23,7 +22,7 @@
   --text-faint: #94a3b8;
   --text-inverse: #ffffff;
 
-  /* ================= BORDERS (SOFTER) ================= */
+  /* ================= BORDERS ================= */
   --border: rgba(15, 23, 42, 0.08);
   --border-strong: rgba(15, 23, 42, 0.14);
   --border-light: rgba(15, 23, 42, 0.05);
@@ -33,7 +32,7 @@
   --active: rgba(73, 136, 196, 0.14);
   --focus: rgba(73, 136, 196, 0.18);
 
-  /* ================= EFFECTS (SOFT LIKE FEEDBACK CARD) ================= */
+  /* ================= EFFECTS ================= */
   --glow: rgba(73, 136, 196, 0.18);
 
   --shadow-sm: 0 6px 16px rgba(0, 0, 0, 0.05);
@@ -96,7 +95,7 @@ img, video {
 }
 
 /* =========================
-   DARK MODE (SOFT GLASS VERSION)
+   DARK MODE 
 ========================= */
 [data-theme="dark"] {
 
@@ -137,7 +136,7 @@ img, video {
     radial-gradient(circle at top, #0f172a 0%, #0b1220 60%, #070b14 100%);
 }
 /* =========================
-   GLOBAL UI FIX (DEDUPED)
+   GLOBAL UI
 ========================= */
 .sidebar,
 .topbar,
@@ -160,7 +159,7 @@ i, svg {
 }
 
 /* =========================
-   SIDEBAR BASE (FEEDBACK GLASS THEME)
+   SIDEBAR BASE 
 ========================= */
 .sidebar {
   width: 280px;
@@ -176,7 +175,6 @@ i, svg {
   padding: var(--spacing-lg);
   gap: var(--spacing-lg);
 
-  /* FEEDBACK STYLE GLASS */
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -314,7 +312,7 @@ i, svg {
 }
 
 /* =========================
-   MENU ITEMS (GLASS CARD STYLE)
+   MENU ITEMS
 ========================= */
 .sidebar-menu a {
   display: flex;
@@ -371,7 +369,7 @@ i, svg {
 }
 
 /* =========================
-   TOPBAR (FEEDBACK GLASS SYSTEM)
+   TOPBAR 
 ========================= */
 .topbar {
   margin-left: 280px;
@@ -399,7 +397,7 @@ i, svg {
 }
 
 /* =========================
-   SEARCH BOX (FEEDBACK INPUT STYLE)
+   SEARCH BOX 
 ========================= */
 .topbar-searchBox {
   display: flex;
@@ -420,7 +418,7 @@ i, svg {
   transition: var(--transition);
 }
 
-/* focus state (feedback system glow) */
+/* focus state */
 .topbar-searchBox:focus-within {
   border-color: var(--primary);
   box-shadow: 0 0 0 4px var(--focus);
@@ -450,7 +448,7 @@ i, svg {
 }
 
 /* =========================
-   ICON GROUP (SOFT BUTTON STYLE)
+   ICON GROUP
 ========================= */
 .topbar-icons {
   display: flex;
@@ -458,7 +456,7 @@ i, svg {
   gap: 12px;
 }
 
-/* icon button (feedback soft hover) */
+/* icon button */
 .topbar-icon {
   position: relative;
 
@@ -488,7 +486,7 @@ i, svg {
 }
 
 /* =========================
-   BADGE (SYSTEM PRIMARY COLOR)
+   BADGE
 ========================= */
 .badge {
   position: absolute;
@@ -505,7 +503,7 @@ i, svg {
 }
 
 /* =========================
-   DROPDOWN (GLASS SYSTEM)
+   DROPDOWN
 ========================= */
 .icon-dropdown {
   display: none;
@@ -531,7 +529,7 @@ i, svg {
 }
 
 /* =========================
-   USER PROFILE (FEEDBACK CARD STYLE)
+   USER PROFILE 
 ========================= */
 .topbar-user {
   display: flex;
@@ -594,7 +592,7 @@ i, svg {
 }
 
 /* =========================
-   BUTTON (FEEDBACK CTA STYLE)
+   BUTTON 
 ========================= */
 .btn {
   padding: 10px 14px;
@@ -635,7 +633,7 @@ i, svg {
 }
 
 /* =========================
-   TAG (SYSTEM BADGE STYLE)
+   TAG 
 ========================= */
 .tag {
   background: var(--primary);
@@ -647,36 +645,68 @@ i, svg {
   border-radius: var(--radius-sm);
 
   margin-left: 10px;
-}
 
-
-/* =========================
-   ROLE SELECT PAGE BASE (FEEDBACK THEME)
-========================= */
-.roleSelect-body {
-  font-family: "Poppins", system-ui, sans-serif;
-  margin: 0;
-  min-height: 100vh;
-
-  background: var(--bg);
-
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Stable status */
+.tag.stable {
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+.tag.at-risk {
+  background: rgba(255,152,0,0.15);
+  color: #FF9800;
+}
+
+.tag.critical {
+  background: rgba(244,67,54,0.15);
+  color: #8f0808;
+}
+
+.tag.warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #F44336;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.tag.info {
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--primary);
+  border: 1px solid rgba(37, 99, 235, 0.3);
 }
 
 /* =========================
-   MAIN WRAPPER (FIXED CENTERING)
+   MAIN WRAPPER 
 ========================= */
 .accType-main-content {
   width: 100%;
   min-height: 100vh;
 
+  background: linear-gradient(
+    135deg,
+    rgba(17, 63, 103, 0.35),
+    rgba(73, 136, 196, 0.25),
+    rgba(255, 255, 255, 0.08)
+  );
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
   display: flex;
   justify-content: center;
-  align-items: center; /* FIX: vertical centering */
+  align-items: center;
 
-  padding: var(--spacing-xl); /* prevents sticking to top on small screens */
+  padding: var(--spacing-xl);
 }
 
 /* =========================
@@ -690,7 +720,6 @@ i, svg {
   margin-bottom: var(--spacing-xl);
 }
 
-/* FIX: logo spacing balance */
 .accType-header-logoImage {
   width: 120px;
   height: 110px;
@@ -700,7 +729,7 @@ i, svg {
 
   box-shadow: var(--shadow-sm);
 
-  margin-top: 10px; /* FIX: prevents “too high” feel */
+  margin-top: 10px;
 }
 
 /* =========================
@@ -732,7 +761,6 @@ i, svg {
   transition: var(--transition);
 }
 
-/* hover */
 .accType-card-container:hover {
   transform: translateY(-6px);
   box-shadow: var(--shadow-hover);
@@ -792,7 +820,6 @@ i, svg {
   transition: 0.2s ease;
 }
 
-/* hover */
 .accType-card-button:hover {
   transform: translateY(-3px);
   box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
@@ -815,7 +842,7 @@ i, svg {
 
 
 /* =========================
-   AUTH BASE (FEEDBACK THEME MATCH)
+   AUTH BASE
 ========================= */
 /* BODY */
 .auth-body {
@@ -851,13 +878,20 @@ i, svg {
 .auth-brand {
   text-align: center;
   z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* THIS centers the logo perfectly */
+  justify-content: center;
 }
 
 .auth-brand-logo {
-  width: 90px;
-  height: 90px;
+  width: 200px;
+  height: 200px;
   object-fit: contain;
+
   margin-bottom: 10px;
+  display: block;
 }
 
 .auth-brand-title {
@@ -909,7 +943,7 @@ i, svg {
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .auth-label {
@@ -1017,26 +1051,10 @@ i, svg {
   }
 }
 
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .auth-container {
-    flex-direction: column;
-  }
-
-  .auth-left {
-    min-height: 220px;
-  }
-
-  .auth-right {
-    padding: 20px;
-  }
-}
-
 /* =========================
-   RESET MODAL (FEEDBACK STYLE)
+   RESET MODAL
 ========================= */
 
-/* OVERLAY */
 .reset-modal {
   position: fixed;
   inset: 0;
@@ -1177,7 +1195,7 @@ i, svg {
 }
 
 /* =========================
-   BASE CARD STYLE (UNIFIED SYSTEM)
+   BASE CARD STYLE
 ========================= */
 .sDashboard-card,
 .card-emergency,
@@ -1198,9 +1216,6 @@ i, svg {
   cursor: pointer;
 }
 
-/* =========================
-   GLASS GLOW OVERLAY
-========================= */
 .sDashboard-card::after,
 .sDashboard-announcement::after,
 .card-emergency::after {
@@ -1217,9 +1232,6 @@ i, svg {
   pointer-events: none;
 }
 
-/* =========================
-   HOVER EFFECT
-========================= */
 .sDashboard-card:hover,
 .sDashboard-announcement:hover,
 .card-emergency:hover {
@@ -1243,7 +1255,7 @@ i, svg {
   height: 160px;
   object-fit: cover;
 
-  border-radius: var(--radius); /* FIXED */
+  border-radius: var(--radius);
   margin-bottom: var(--spacing-md);
 }
 
@@ -1366,7 +1378,7 @@ i, svg {
 }
 
 /* =========================
-   BOOKING CARD (FEEDBACK STYLE GLASS)
+   BOOKING CARD 
 ========================= */
 .sBooking-card {
   position: relative;
@@ -1387,8 +1399,6 @@ i, svg {
   overflow: hidden;
 }
 
-
-/* SOFT GLOW OVERLAY (like feedback) */
 .sBooking-card::before {
   content: "";
   position: absolute;
@@ -1403,7 +1413,6 @@ i, svg {
   pointer-events: none;
 }
 
-/* hover */
 .sBooking-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
@@ -1428,7 +1437,7 @@ i, svg {
 }
 
 /* =========================
-   GRID FORM SECTION (FEEDBACK INPUT STYLE)
+   GRID FORM SECTION
 ========================= */
 .sBooking-grid {
   display: grid;
@@ -1448,7 +1457,7 @@ i, svg {
 
 
 /* =========================
-   INPUT CONTROLS (FEEDBACK MATCH)
+   INPUT CONTROLS
 ========================= */
 .sBooking-grid input,
 .sBooking-grid select,
@@ -1471,8 +1480,6 @@ i, svg {
   transition: 0.2s ease;
 }
 
-
-/* focus (FEEDBACK STYLE GLOW) */
 .sBooking-grid input:focus,
 .sBooking-grid select:focus,
 .sBooking-grid textarea:focus {
@@ -1510,7 +1517,6 @@ i, svg {
   transition: 0.25s ease;
 }
 
-/* hover */
 .sBooking-slotBtn:hover {
   transform: scale(1.05);
   background: var(--primary);
@@ -1532,7 +1538,7 @@ i, svg {
 }
 
 /* =========================
-   BUTTON (FEEDBACK STYLE CTA)
+   BUTTON 
 ========================= */
 .sBooking-button {
   width: 100%;
@@ -1596,7 +1602,7 @@ i, svg {
 }
 
 /* =========================
-   CARD SYSTEM (FEEDBACK GLASS STYLE)
+   CARD SYSTEM 
 ========================= */
 .sConcern-card,
 .card-emergency {
@@ -1618,8 +1624,6 @@ i, svg {
   overflow: hidden;
 }
 
-
-/* SOFT GLASS GLOW (like feedback) */
 .sConcern-card::before,
 .card-emergency::before {
   content: "";
@@ -1635,7 +1639,6 @@ i, svg {
   pointer-events: none;
 }
 
-/* hover */
 .sConcern-card:hover,
 .card-emergency:hover {
   transform: translateY(-6px);
@@ -1643,7 +1646,7 @@ i, svg {
 }
 
 /* =========================
-   EMERGENCY CARD (NO ACCENT BAR, JUST COLOR DIFFERENCE)
+   EMERGENCY CARD
 ========================= */
 .card-emergency::before {
   background: radial-gradient(
@@ -1654,7 +1657,7 @@ i, svg {
 }
 
 /* =========================
-   FORM SYSTEM (FEEDBACK INPUT STYLE)
+   FORM SYSTEM
 ========================= */
 .sConcern-formGroup {
   display: flex;
@@ -1690,7 +1693,7 @@ i, svg {
   transition: 0.2s ease;
 }
 
-/* focus glow */
+/* focus */
 .sConcern-formGroup input:focus,
 .sConcern-formGroup textarea:focus {
   border-color: #4988C4;
@@ -1703,7 +1706,7 @@ i, svg {
 }
 
 /* =========================
-   BUTTON (FEEDBACK STYLE CTA)
+   BUTTON
 ========================= */
 .sConcern-button {
   margin-top: 15px;
@@ -1771,7 +1774,7 @@ i, svg {
 }
 
 /* =========================
-   MAIN CARD (FEEDBACK STYLE GLASS)
+   MAIN CARD
 ========================= */
 .sWellness-card {
   width: 100%;
@@ -1792,7 +1795,6 @@ i, svg {
   overflow: hidden;
 }
 
-/* SOFT GLOW OVERLAY (LIKE FEEDBACK) */
 .sWellness-card::before {
   content: "";
   position: absolute;
@@ -1807,7 +1809,6 @@ i, svg {
   pointer-events: none;
 }
 
-/* hover */
 .sWellness-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
@@ -1822,7 +1823,6 @@ i, svg {
   margin: 18px 0;
 }
 
-/* mood button (MATCH FEEDBACK INPUT STYLE) */
 .sWellness-mood-btn {
   flex: 1;
   font-size: 22px;
@@ -1841,8 +1841,6 @@ i, svg {
   color: var(--text);
 }
 
-
-/* hover */
 .sWellness-mood-btn:hover {
   transform: scale(1.08);
   background: #4988C4;
@@ -1868,7 +1866,7 @@ i, svg {
 }
 
 /* =========================
-   FORM GROUP (FEEDBACK STYLE)
+   FORM GROUP 
 ========================= */
 .sWellness-form-group {
   margin-bottom: 18px;
@@ -1883,7 +1881,7 @@ i, svg {
   color: var(--text);
 }
 
-/* inputs (MATCH FEEDBACK INPUT STYLE) */
+/* inputs */
 .sWellness-form-group input,
 .sWellness-form-group select {
   width: 100%;
@@ -1903,7 +1901,7 @@ i, svg {
 }
 
 
-/* focus (FEEDBACK GLOW) */
+/* focus */
 .sWellness-form-group input:focus,
 .sWellness-form-group select:focus {
   border-color: #4988C4;
@@ -1923,7 +1921,7 @@ i, svg {
 
 
 /* =========================
-   REFERRAL PAGE LAYOUT (FEEDBACK SYSTEM)
+   REFERRAL PAGE LAYOUT
 ========================= */
 .sReferral-main {
   margin-left: 280px;
@@ -1939,7 +1937,7 @@ i, svg {
 }
 
 /* =========================
-   REFERRAL CARD (GLASS STYLE - NO LEFT BAR)
+   REFERRAL CARD
 ========================= */
 .sReferral-card {
   width: 900px;
@@ -1960,8 +1958,6 @@ i, svg {
   transition: 0.25s ease;
 }
 
-
-/* SOFT GLOW OVERLAY (like feedback) */
 .sReferral-card::before {
   content: "";
   position: absolute;
@@ -1976,7 +1972,6 @@ i, svg {
   pointer-events: none;
 }
 
-/* hover */
 .sReferral-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
@@ -2043,7 +2038,7 @@ i, svg {
 }
 
 /* =========================
-   BUTTON (FEEDBACK STYLE PRIMARY CTA)
+   BUTTON
 ========================= */
 .sReferral-btn {
   margin-top: 30px;
@@ -2067,19 +2062,17 @@ i, svg {
   transition: 0.2s ease;
 }
 
-/* hover */
 .sReferral-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
 }
 
-/* click */
 .sReferral-btn:active {
   transform: scale(0.98);
 }
 
 /* =========================
-   PRINT MODE (CLEAN SYSTEM VERSION)
+   PRINT MODE
 ========================= */
 @media print {
   .sidebar,
@@ -2113,7 +2106,7 @@ i, svg {
 
 
 /* =========================
-   ANNOUNCEMENTS LAYOUT (FEEDBACK SYSTEM)
+   ANNOUNCEMENTS LAYOUT
 ========================= */
 .sAnnouncements-main {
   margin-left: 280px;
@@ -2141,7 +2134,7 @@ i, svg {
 }
 
 /* =========================
-   ANNOUNCEMENT CARD (GLASS - NO LEFT BAR)
+   ANNOUNCEMENT CARD
 ========================= */
 .sAnnouncements-card {
   position: relative;
@@ -2163,8 +2156,6 @@ i, svg {
   cursor: pointer;
 }
 
-
-/* SOFT GLOW OVERLAY (FEEDBACK STYLE) */
 .sAnnouncements-card::before {
   content: "";
   position: absolute;
@@ -2179,7 +2170,6 @@ i, svg {
   pointer-events: none;
 }
 
-/* HOVER */
 .sAnnouncements-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
@@ -2207,7 +2197,7 @@ i, svg {
 }
 
 /* =========================
-   MODAL (FEEDBACK STYLE)
+   MODAL
 ========================= */
 .announcement-modal {
   display: none;
@@ -2222,6 +2212,7 @@ i, svg {
 
   z-index: 9999;
 }
+
 
 /* MODAL CARD */
 .announcement-modal-content {
@@ -2241,7 +2232,7 @@ i, svg {
   animation: modalPop 0.25s ease;
 }
 
-/* CLOSE BUTTON (FIXED POSITIONING) */
+/* CLOSE BUTTON */
 .announcement-close {
   position: absolute;
   top: 14px;
@@ -2276,7 +2267,7 @@ i, svg {
   margin-bottom: 14px;
 }
 
-/* TITLE SPACE (optional improvement) */
+/* TITLE SPACE */
 .announcement-modal-content h3 {
   margin-top: 10px;
   color: var(--primary);
@@ -2299,7 +2290,7 @@ i, svg {
   align-items: center;
 }
 
-/* BUTTON (FEEDBACK CTA STYLE) */
+/* BUTTON */
 #interestBtn {
   background: var(--primary);
   color: white;
@@ -2339,7 +2330,7 @@ i, svg {
 
 
 /* =====================================================
-   REPORTS PAGE (FEEDBACK SYSTEM LAYOUT)
+   REPORTS PAGE
 ===================================================== */
 .sReports-main {
   margin-left: 280px;
@@ -2364,7 +2355,7 @@ i, svg {
 }
 
 /* =====================================================
-   REPORT CARD (GLASS STYLE - NO LEFT BAR)
+   REPORT CARD
 ===================================================== */
 .sReports-card {
   position: relative;
@@ -2385,8 +2376,6 @@ i, svg {
   overflow: hidden;
 }
 
-
-/* SOFT GLOW OVERLAY (FEEDBACK STYLE) */
 .sReports-card::before {
   content: "";
   position: absolute;
@@ -2401,7 +2390,6 @@ i, svg {
   pointer-events: none;
 }
 
-/* hover */
 .sReports-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
@@ -2431,7 +2419,7 @@ i, svg {
 }
 
 /* =====================================================
-   INPUT SYSTEM (FEEDBACK STYLE)
+   INPUT SYSTEM 
 ===================================================== */
 .sReports-notesBox {
   width: 100%;
@@ -2467,7 +2455,7 @@ textarea.sReports-notesBox {
 }
 
 /* =====================================================
-   BUTTON (FEEDBACK STYLE CTA)
+   BUTTON
 ===================================================== */
 .sReports-exportBtn {
   margin-top: 14px;
@@ -2491,13 +2479,11 @@ textarea.sReports-notesBox {
   transition: 0.2s ease;
 }
 
-/* hover */
 .sReports-exportBtn:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
 }
 
-/* click */
 .sReports-exportBtn:active {
   transform: scale(0.98);
 }
@@ -2525,7 +2511,7 @@ textarea.sReports-notesBox {
 }
 
 /* =====================================================
-   FEEDBACK PAGE - MODERN LAYOUT
+   FEEDBACK PAGE
 ===================================================== */
 
 .sFeedback-main {
@@ -2546,9 +2532,9 @@ textarea.sReports-notesBox {
   max-width: 760px;
 }
 
-/* =====================================================
-   MODERN CARD (GLASS + SOFT DEPTH)
-===================================================== */
+/* ===========================================
+   CARD
+=========================================== */
 
 .sFeedback-card {
   position: relative;
@@ -2569,8 +2555,6 @@ textarea.sReports-notesBox {
   overflow: hidden;
 }
 
-
-/* soft gradient edge glow */
 .sFeedback-card::before {
   content: "";
   position: absolute;
@@ -2589,7 +2573,6 @@ textarea.sReports-notesBox {
   pointer-events: none;
 }
 
-/* hover lift */
 .sFeedback-card:hover {
   transform: translateY(-6px);
   box-shadow:
@@ -2597,7 +2580,7 @@ textarea.sReports-notesBox {
 }
 
 /* =====================================================
-   TYPOGRAPHY (MODERN CLEAN)
+   TYPOGRAPHY
 ===================================================== */
 
 .sFeedback-title {
@@ -2640,7 +2623,7 @@ textarea.sReports-notesBox {
 }
 
 /* =====================================================
-   MODERN INPUT FIELDS
+   INPUT FIELDS
 ===================================================== */
 
 .form-group select,
@@ -2663,7 +2646,7 @@ textarea.sReports-notesBox {
   transition: 0.2s ease;
 }
 
-/* focus state (modern glow) */
+/* focus state */
 .form-group select:focus,
 .form-group textarea:focus {
   border-color: #4988C4;
@@ -2679,7 +2662,7 @@ textarea.sReports-notesBox {
 }
 
 /* =====================================================
-   MODERN BUTTON (PRIMARY CTA)
+   BUTTON
 ===================================================== */
 
 .sFeedback-btn {
@@ -2701,94 +2684,15 @@ textarea.sReports-notesBox {
   transition: 0.2s ease;
 }
 
-/* hover */
 .sFeedback-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
 }
 
-/* click feel */
 .sFeedback-btn:active {
   transform: scale(0.98);
 }
 
-/* =====================================================
-   TOPBAR (MODERN CLEAN HEADER)
-===================================================== */
-
-.topbar {
-  margin-left: 280px;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  padding: 20px 28px;
-
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(12px);
-
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-/* title */
-.topbar-left h1 {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-}
-
-/* user card */
-.topbar-user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  padding: 8px 12px;
-
-  border-radius: 14px;
-
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-
-  backdrop-filter: blur(10px);
-}
-
-.topbar-user img {
-  width: 38px;
-  height: 38px;
-
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.topbar-user p {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-/* =====================================================
-   RESPONSIVE
-===================================================== */
-
-@media (max-width: 768px) {
-
-  .sFeedback-main {
-    margin-left: 0;
-    padding: 20px;
-  }
-
-  .topbar {
-    margin-left: 0;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .sFeedback-container {
-    max-width: 100%;
-  }
-}
 
 /* =========================
    PROFILE LAYOUT
@@ -2803,7 +2707,7 @@ textarea.sReports-notesBox {
   align-items: flex-start;
 }
 
-/* container alignment fix */
+/* container */
 .sTicket-container {
   width: 100%;
   max-width: 900px;
@@ -2812,7 +2716,7 @@ textarea.sReports-notesBox {
 }
 
 /* =========================
-   PROFILE CARD (FEEDBACK GLASS SYSTEM)
+   PROFILE CARD
 ========================= */
 .sProfile-card {
   width: 100%;
@@ -2847,7 +2751,7 @@ textarea.sReports-notesBox {
 }
 
 /* =========================
-   AVATAR (CLEAN + CENTERED)
+   AVATAR
 ========================= */
 .sProfile-avatar {
   position: relative;
@@ -2928,7 +2832,7 @@ textarea.sReports-notesBox {
   color: var(--text-muted);
 }
 
-/* input style (FEEDBACK SYSTEM) */
+/* input */
 .form-group input {
   padding: 12px;
 
@@ -2953,9 +2857,14 @@ textarea.sReports-notesBox {
   opacity: 0.75;
   cursor: not-allowed;
 }
+.emergency-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
 
 /* =========================
-   BUTTON (FEEDBACK STYLE)
+   BUTTON
 ========================= */
 .sProfile-saveBtn {
   padding: 14px;
@@ -2981,11 +2890,9 @@ textarea.sReports-notesBox {
   box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
 }
 
-/* click feel */
 .sProfile-saveBtn:active {
   transform: scale(0.98);
 }
-
 
 /* =========================
    STATUS MESSAGE
@@ -2994,37 +2901,6 @@ textarea.sReports-notesBox {
   margin-top: var(--spacing-md);
   font-size: 13px;
 }
-
-/* =========================
-   TAG SYSTEM (FIXED FROM FEEDBACK UI)
-========================= */
-.tag {
-  display: inline-block;
-  padding: 6px 10px;
-
-  border-radius: var(--radius-sm);
-
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.tag.warning {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.tag.info {
-  background: rgba(37, 99, 235, 0.15);
-  color: var(--primary);
-  border: 1px solid rgba(37, 99, 235, 0.3);
-}
-
-
-/* =========================
-   GLOBAL FIX (IMPORTANT)
-   Fixes padding inconsistency issues
-========================= */
 * {
   box-sizing: border-box;
 }
@@ -3039,8 +2915,7 @@ textarea.sReports-notesBox {
 }
 
 /* =========================
-   LIST CONTAINER (FULL WIDTH SAFE)
-   FIX: removes centering imbalance
+   LIST CONTAINER
 ========================= */
 .sHistory-container {
   display: flex;
@@ -3070,7 +2945,6 @@ textarea.sReports-notesBox {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
 
-  /* FIX: equal left/right spacing */
   padding: var(--spacing-lg);
 
   box-shadow: var(--shadow);
@@ -3082,13 +2956,11 @@ textarea.sReports-notesBox {
   cursor: pointer;
 }
 
-/* hover */
 .sHistory-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-hover);
 }
 
-/* soft glow */
 .sHistory-card::after {
   content: "";
   position: absolute;
@@ -3113,42 +2985,8 @@ textarea.sReports-notesBox {
 
   margin: 0;
   padding-right: 80px; 
-  /* FIX: prevents overlap with top-right tag */
 }
 
-/* =========================
-   TAG (TOP RIGHT BADGE)
-========================= */
-.tag {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-
-  padding: 5px 10px;
-  border-radius: var(--radius-sm);
-
-  font-size: 12px;
-  font-weight: 600;
-
-  z-index: 2;
-
-  /* FIX: prevents visual “heavier right side” */
-  white-space: nowrap;
-}
-
-/* INFO */
-.tag.info {
-  background: rgba(37, 99, 235, 0.12);
-  color: var(--primary);
-  border: 1px solid rgba(37, 99, 235, 0.25);
-}
-
-/* WARNING */
-.tag.warning {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.25);
-}
 
 /* =========================
    TEXT
@@ -3158,11 +2996,10 @@ textarea.sReports-notesBox {
   color: var(--text-muted);
 
   margin: 6px 0 0 0;
-  /* FIX: removes default uneven spacing */
 }
 
 /* =========================
-   MAIN DASHBOARD LAYOUT
+  DASHBOARD LAYOUT
 ========================= */
 .cDashboard-main {
   margin-left: 280px;
@@ -3184,7 +3021,7 @@ textarea.sReports-notesBox {
 }
 
 /* =========================
-   DASHBOARD CARD (FEEDBACK GLASS STYLE)
+   DASHBOARD CARD
 ========================= */
 .cDashboard-card {
   position: relative;
@@ -3204,13 +3041,11 @@ textarea.sReports-notesBox {
   cursor: pointer;
 }
 
-/* hover */
 .cDashboard-card:hover {
   transform: translateY(-6px);
   box-shadow: var(--shadow-hover);
 }
 
-/* soft glow overlay */
 .cDashboard-card::after {
   content: "";
   position: absolute;
@@ -3226,7 +3061,7 @@ textarea.sReports-notesBox {
 }
 
 /* =========================
-   CARD TEXT STYLING
+   CARD TEXT 
 ========================= */
 .cDashboard-card h3 {
   font-size: 26px;
@@ -3249,103 +3084,7 @@ textarea.sReports-notesBox {
 }
 
 /* =========================
-   TOPBAR FIXES
-========================= */
-.topbar {
-  margin-left: 280px;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  padding: var(--spacing-lg) var(--spacing-xl);
-
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
-}
-
-/* right side alignment fix */
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-/* icons wrapper */
-.topbar-icons {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* icon button */
-.topbar-icon {
-  position: relative;
-  font-size: 18px;
-  cursor: pointer;
-
-  padding: 8px;
-  border-radius: var(--radius);
-  background: var(--card);
-  border: 1px solid var(--border);
-
-  transition: 0.2s ease;
-}
-
-.topbar-icon:hover {
-  transform: translateY(-2px);
-  background: var(--hover);
-}
-
-/* badge */
-.badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-
-  background: var(--primary);
-  color: white;
-
-  font-size: 10px;
-  padding: 3px 6px;
-  border-radius: 999px;
-}
-
-/* =========================
-   USER INFO CARD
-========================= */
-.topbar-user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  padding: 6px 10px;
-  border-radius: var(--radius);
-
-  background: var(--card);
-  border: 1px solid var(--border);
-}
-
-.topbar-user img {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.topbar-user strong {
-  font-size: 14px;
-  color: var(--text);
-}
-
-.topbar-user p {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-/* =========================
-   DROPDOWN FIX
+   DROPDOWN 
 ========================= */
 .icon-dropdown {
   position: absolute;
@@ -3408,7 +3147,7 @@ textarea.sReports-notesBox {
 }
 
 /* =========================
-   APPOINTMENT CARD (GLASS THEME)
+   APPOINTMENT CARD
 ========================= */
 .cAppointment-card {
   position: relative;
@@ -3430,13 +3169,11 @@ textarea.sReports-notesBox {
   gap: 8px;
 }
 
-/* hover */
 .cAppointment-card:hover {
   transform: translateY(-6px);
   box-shadow: var(--shadow-hover);
 }
 
-/* soft glow */
 .cAppointment-card::after {
   content: "";
   position: absolute;
@@ -3466,12 +3203,10 @@ textarea.sReports-notesBox {
   margin-bottom: 8px;
 }
 
-/* group icon + name together on the LEFT */
 .cAppointment-card h3 i {
   color: var(--primary);
 }
 
-/* push ONLY the button to the right */
 .cAppointment-card h3 .btn-small {
   margin-left: auto;
 }
@@ -3598,7 +3333,7 @@ textarea.sReports-notesBox {
 }
 
 /* =========================
-   CONTAINER (LIST STYLE)
+   CONTAINER
 ========================= */
 .cConcerns-container {
   display: flex;
@@ -3610,7 +3345,7 @@ textarea.sReports-notesBox {
 }
 
 /* =========================
-   CONCERN CARD (GLASS FEEDBACK STYLE)
+   CONCERN CARD
 ========================= */
 .cConcerns-card {
   position: relative;
@@ -3632,13 +3367,11 @@ textarea.sReports-notesBox {
   gap: 10px;
 }
 
-/* hover */
 .cConcerns-card:hover {
   transform: translateY(-5px);
   box-shadow: var(--shadow-hover);
 }
 
-/* soft glow */
 .cConcerns-card::after {
   content: "";
   position: absolute;
@@ -3654,7 +3387,7 @@ textarea.sReports-notesBox {
 }
 
 /* =========================
-   HEADER (NAME LEFT)
+   HEADER
 ========================= */
 .cConcerns-card h3 {
   display: flex;
@@ -3710,10 +3443,10 @@ textarea.sReports-notesBox {
 }
 
 /* =========================
-   BUTTON (RIGHT ALIGNED FIX)
+   BUTTON
 ========================= */
 .cConcerns-btn {
-  align-self: flex-end;   /* 🔥 THIS MOVES BUTTON TO RIGHT */
+  align-self: flex-end;
 
   padding: 10px 16px;
 
@@ -3777,9 +3510,9 @@ textarea.sReports-notesBox {
   gap: 18px;
 }
 
-/* =====================================================
-   STUDENT CARD (GLASS)
-===================================================== */
+/* ==================================
+   STUDENT CARD 
+================================== */
 
 .cStudentList-item {
   padding: 20px;
@@ -3797,7 +3530,6 @@ textarea.sReports-notesBox {
   overflow: hidden;
 }
 
-/* glow */
 .cStudentList-item::before {
   content: "";
   position: absolute;
@@ -3817,9 +3549,9 @@ textarea.sReports-notesBox {
   box-shadow: 0 18px 40px rgba(0,0,0,0.12);
 }
 
-/* =====================================================
-   CONTENT FIX (IMPORTANT)
-===================================================== */
+/* =========================
+   CONTENT
+========================= */
 
 .cStudentList-info {
   display: flex;
@@ -3835,9 +3567,10 @@ textarea.sReports-notesBox {
   width: 100%;
 }
 
-/* =====================================================
+
+/* =================================
    AVATAR
-===================================================== */
+================================= */
 
 .cStudentList-avatar {
   width: 52px;
@@ -3888,37 +3621,41 @@ textarea.sReports-notesBox {
 /* =====================================================
    RIGHT SIDE
 ===================================================== */
-
 .cStudentList-right {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+
+  height: 70px; /* KEY: forces separation */
   align-items: flex-end;
-  gap: 6px;
 }
 
-.cStudentList-meta {
+.cStudentList-topRight {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cStudentList-bottomRight {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cStudentList-bottomRight p {
+  margin: 0;
   font-size: 12px;
   color: var(--text-muted);
+}
+.cStudentList-meta {
+  margin-top: auto;
   text-align: right;
 }
 
-/* =====================================================
-   STATUS TAG
-===================================================== */
-
-.tag {
-  padding: 4px 10px;
-  border-radius: 999px;
-
-  font-size: 11px;
-  font-weight: 600;
-
-  width: fit-content;
-}
-
-.tag.stable {
-  background: rgba(76,175,80,0.15);
-  color: #4CAF50;
+.cStudentList-meta p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 /* =====================================================
@@ -3956,11 +3693,9 @@ textarea.sReports-notesBox {
 /* =====================================================
    MODAL
 ===================================================== */
-
 .cStudentModal {
   position: fixed;
   inset: 0;
-
   background: rgba(0,0,0,0.45);
 
   display: flex;
@@ -3970,77 +3705,143 @@ textarea.sReports-notesBox {
   opacity: 0;
   pointer-events: none;
 
-  transition: 0.25s ease;
+  transition: opacity 0.25s ease;
+  z-index: 999;
 }
 
 .cStudentModal.show {
   opacity: 1;
-  pointer-events: all;
+  pointer-events: auto;
 }
 
-/* modal box */
+/* =========================
+   MODAL CONTAINER
+========================= */
 .cStudentModal-container {
   width: 95%;
   max-width: 650px;
 
-  padding: 22px;
-
+  padding: 24px;
   border-radius: 20px;
 
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(16px);
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(18px);
 
   box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
-/* header */
+/* =========================
+   HEADER
+========================= */
 .cStudentModal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
   margin-bottom: 16px;
 }
 
 .cStudentModal-header h2 {
   font-size: 18px;
+  margin: 0;
 }
 
 .cStudentModal-header button {
   border: none;
-  background: none;
-  font-size: 18px;
+  background: transparent;
+  font-size: 20px;
   cursor: pointer;
+  line-height: 1;
+}
+.cStudentModal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-/* profile */
+/* =========================
+   PROFILE SECTION
+========================= */
 .cStudentModal-profile {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 18px;
+  gap: 12px;
 }
 
-/* boxes */
+.cStudentModal-profileText {
+  flex: 1;            
+  min-width: 0;         
+}
+
+.cStudentModal-profileText h3 {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.cStudentModal-profileText p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.cStudentModal-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: bold;
+  color: white;
+
+  background: linear-gradient(135deg, #113F67, #4988C4);
+}
+
+.cStudentModal-nameRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;        
+}
+
+
+/* =========================
+   BOXES
+========================= */
 .cStudentModal-box {
   padding: 16px;
   border-radius: 16px;
 
-  background: rgba(255,255,255,0.65);
+  background: rgba(255,255,255,0.7);
   backdrop-filter: blur(10px);
 
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(0,0,0,0.06);
 
   margin-bottom: 14px;
 }
 
-/* grid */
+.cStudentModal-box h4 {
+  margin: 0 0 10px;
+}
+
+/* =========================
+   GRID
+========================= */
 .cStudentModal-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 14px;
 }
 
-/* progress */
+/* =========================
+   PROGRESS BAR
+========================= */
 .cStudentModal-progressBar {
   width: 100%;
   height: 10px;
@@ -4057,34 +3858,24 @@ textarea.sReports-notesBox {
   height: 100%;
 
   background: linear-gradient(135deg, #113F67, #4988C4);
+  border-radius: 999px;
 }
 
-/* =====================================================
+/* =========================
    RESPONSIVE
-===================================================== */
-
-@media (max-width: 768px) {
-  .cStudentList-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .cStudentList-right {
-    align-items: flex-start;
-  }
-
-  .cStudentList-meta {
-    text-align: left;
-  }
-
+========================= */
+@media (max-width: 600px) {
   .cStudentModal-grid {
     grid-template-columns: 1fr;
   }
+
+  .cStudentModal-container {
+    padding: 18px;
+  }
 }
 
 /* =====================================================
-   REPORTS PAGE - FEEDBACK THEME STYLE (FIXED CENTER)
+   REPORTS PAGE
 ===================================================== */
 .cReports-main {
   margin-left: 280px;
@@ -4095,15 +3886,13 @@ textarea.sReports-notesBox {
   box-sizing: border-box;
 
   display: flex;
-  flex-direction: column; /* IMPORTANT */
+  flex-direction: column;
 }
 
-/* HEADER stays at top */
 .cReports-pageHeader {
   margin-bottom: 20px;
 }
 
-/* CENTER AREA ONLY centers the card */
 .cReports-center {
   flex: 1;
 
@@ -4120,12 +3909,11 @@ textarea.sReports-notesBox {
   width: 100%;
   max-width: 760px;
 
-  /* ensures true centering stability */
   margin: 0 auto;
 }
 
 /* =====================================================
-   MODERN GLASS CARD
+   CARD
 ===================================================== */
 
 .cReports-card {
@@ -4146,7 +3934,6 @@ textarea.sReports-notesBox {
   overflow: hidden;
 }
 
-/* glow */
 .cReports-card::before {
   content: "";
   position: absolute;
@@ -4161,7 +3948,6 @@ textarea.sReports-notesBox {
   pointer-events: none;
 }
 
-/* hover */
 .cReports-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
@@ -4266,7 +4052,7 @@ textarea.sReports-notesBox {
 
 
 /* =====================================================
-   ANNOUNCEMENTS PAGE - MODERN FEEDBACK THEME
+   ANNOUNCEMENTS PAGE
 ===================================================== */
 
 .cAnnouncements-main {
@@ -4283,7 +4069,7 @@ textarea.sReports-notesBox {
 }
 
 /* =====================================================
-   CONTAINER CARD (GLASS STYLE LIKE FEEDBACK)
+   CONTAINER CARD
 ===================================================== */
 
 .cAnnouncements-card {
@@ -4305,7 +4091,6 @@ textarea.sReports-notesBox {
   overflow: hidden;
 }
 
-/* SOFT GLOW EFFECT (same as feedback card) */
 .cAnnouncements-card::before {
   content: "";
   position: absolute;
@@ -4320,14 +4105,13 @@ textarea.sReports-notesBox {
   pointer-events: none;
 }
 
-/* hover lift */
 .cAnnouncements-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
 
 /* =====================================================
-   TITLE (MATCH FEEDBACK STYLE)
+   TITLE
 ===================================================== */
 
 .cAnnouncements-card h2 {
@@ -4340,7 +4124,7 @@ textarea.sReports-notesBox {
 }
 
 /* =====================================================
-   FORM INPUTS (UNIFIED STYLE)
+   FORM INPUTS
 ===================================================== */
 
 .cAnnouncements-input,
@@ -4363,7 +4147,6 @@ textarea.sReports-notesBox {
   margin-bottom: 14px;
 }
 
-/* FOCUS GLOW (same system as feedback) */
 .cAnnouncements-input:focus,
 .cAnnouncements-textarea:focus {
   border-color: #4988C4;
@@ -4377,7 +4160,7 @@ textarea.sReports-notesBox {
 }
 
 /* =====================================================
-   BUTTON (SAME FEEDBACK CTA STYLE)
+   BUTTON
 ===================================================== */
 
 .cAnnouncements-btn {
@@ -4400,21 +4183,17 @@ textarea.sReports-notesBox {
   transition: 0.2s ease;
 }
 
-/* hover */
 .cAnnouncements-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
 }
 
-/* click */
 .cAnnouncements-btn:active {
   transform: scale(0.98);
 }
 
-
-
 /* =====================================================
-   REFERRAL PAGE - FEEDBACK MODERN THEME
+   REFERRAL PAGE
 ===================================================== */
 
 .cReferral-main {
@@ -4432,7 +4211,7 @@ textarea.sReports-notesBox {
 }
 
 /* =====================================================
-   MAIN CARD (GLASS STYLE LIKE FEEDBACK)
+   MAIN CARD
 ===================================================== */
 
 .cReferral-card {
@@ -4455,7 +4234,6 @@ textarea.sReports-notesBox {
   transition: 0.25s ease;
 }
 
-/* soft glow like feedback */
 .cReferral-card::before {
   content: "";
   position: absolute;
@@ -4470,7 +4248,6 @@ textarea.sReports-notesBox {
   pointer-events: none;
 }
 
-/* hover lift */
 .cReferral-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
@@ -4489,7 +4266,6 @@ textarea.sReports-notesBox {
   margin-bottom: 20px;
 }
 
-/* section headers */
 .cReferral-card h3 {
   font-size: 15px;
   font-weight: 600;
@@ -4522,7 +4298,7 @@ textarea.sReports-notesBox {
 }
 
 /* =====================================================
-   INPUTS (FEEDBACK STYLE UNIFIED)
+   INPUTS
 ===================================================== */
 
 .slip-input,
@@ -4544,7 +4320,7 @@ textarea.sReports-notesBox {
   transition: 0.2s ease;
 }
 
-/* focus glow */
+/* focus */
 .slip-input:focus,
 .slip-textarea:focus {
   border-color: #4988C4;
@@ -4578,7 +4354,7 @@ textarea.sReports-notesBox {
 }
 
 /* =====================================================
-   BUTTON (FEEDBACK CTA STYLE)
+   BUTTON
 ===================================================== */
 
 .cReferral-btn {
@@ -4603,34 +4379,18 @@ textarea.sReports-notesBox {
   transition: 0.2s ease;
 }
 
-/* hover */
 .cReferral-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
 }
 
-/* click */
 .cReferral-btn:active {
   transform: scale(0.98);
 }
 
-/* =====================================================
-   RESPONSIVE (IMPORTANT)
-===================================================== */
-
-@media (max-width: 768px) {
-  .slip-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .slip-row label {
-    width: 100%;
-  }
-}
 
 /* =====================================================
-   PROFILE PAGE - FEEDBACK MODERN THEME
+   PROFILE PAGE
 ===================================================== */
 
 .cProfile-main {
@@ -4654,7 +4414,7 @@ textarea.sReports-notesBox {
 }
 
 /* =====================================================
-   MAIN CARD (GLASS FEEDBACK STYLE)
+   MAIN CARD
 ===================================================== */
 
 .cProfile-card {
@@ -4674,7 +4434,6 @@ textarea.sReports-notesBox {
   transition: 0.25s ease;
 }
 
-/* glow effect like feedback */
 .cProfile-card::before {
   content: "";
   position: absolute;
@@ -4689,7 +4448,6 @@ textarea.sReports-notesBox {
   pointer-events: none;
 }
 
-/* hover lift */
 .cProfile-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
@@ -4770,7 +4528,7 @@ textarea.sReports-notesBox {
   gap: 16px;
 }
 
-/* form group (shared system like feedback) */
+/* form group */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -4802,7 +4560,7 @@ textarea.sReports-notesBox {
   transition: 0.2s ease;
 }
 
-/* focus glow */
+/* focus */
 .form-group input:focus {
   border-color: #4988C4;
   box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
@@ -4815,7 +4573,7 @@ textarea.sReports-notesBox {
 }
 
 /* =====================================================
-   SAVE BUTTON (FEEDBACK CTA STYLE)
+   SAVE BUTTON
 ===================================================== */
 
 .cProfile-saveBtn {
@@ -4839,62 +4597,22 @@ textarea.sReports-notesBox {
   transition: 0.2s ease;
 }
 
-/* hover */
 .cProfile-saveBtn:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
 }
 
-/* click */
 .cProfile-saveBtn:active {
   transform: scale(0.98);
 }
-
-/* =====================================================
-   STATUS TAGS
-===================================================== */
 
 .cProfile-status {
   margin-top: 10px;
   font-size: 13px;
 }
 
-.tag {
-  padding: 6px 10px;
-  border-radius: 10px;
-  display: inline-block;
-  font-weight: 600;
-}
-
-/* success/info/warning styles */
-.tag.info {
-  background: rgba(73, 136, 196, 0.15);
-  color: #4988C4;
-}
-
-.tag.warning {
-  background: rgba(255, 165, 0, 0.15);
-  color: orange;
-}
-
 /* =====================================================
-   RESPONSIVE
-===================================================== */
-
-@media (max-width: 768px) {
-  .cProfile-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .cProfile-avatar img {
-    width: 90px;
-    height: 90px;
-  }
-}
-
-/* =====================================================
-   HISTORY PAGE (cHistory) - FEEDBACK THEME
+   HISTORY PAGE
 ===================================================== */
 
 /* MAIN */
@@ -5015,22 +4733,4 @@ tbody tr:hover {
   text-align: center;
   padding: 30px;
   color: #888;
-}
-
-/* =====================================================
-   RESPONSIVE
-===================================================== */
-@media (max-width: 768px) {
-  .cHistory-main {
-    margin-left: 0;
-    padding: 20px;
-  }
-
-  .cHistory-tabs {
-    flex-wrap: wrap;
-  }
-
-  .cHistory-filterBar {
-    flex-direction: column;
-  }
 }

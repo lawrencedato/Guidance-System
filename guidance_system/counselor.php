@@ -41,6 +41,7 @@
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
     <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
+    <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
 
     <p class="sidebar-title">STUDENTS</p>
     <a href="cstudents.php"><i class="fa fa-users"></i> Students</a>
@@ -66,31 +67,14 @@
 
     <div class="topbar-icons">
 
-      <div class="topbar-icons">
+    <!-- NOTIFICATIONS -->
+    <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
+      <i class="fa fa-bell"></i>
+      <span class="badge">4</span>
 
- <!-- FEEDBACK NOTIFICATIONS -->
-<div class="topbar-icon" onclick="toggleDropdown('feedbackDropdown', event)">
-  <i class="fa fa-envelope"></i>
-  <span class="badge" id="feedbackCount">0</span>
-
-  <div class="icon-dropdown" id="feedbackDropdown">
-    <div class="notif-header">New Feedback</div>
-    <div id="notifList">
-      <div class="notif-empty">No new feedback</div>
+    <div class="icon-dropdown" id="notifDropdown">
+      <p>No new notifications</p>
     </div>
-  </div>
-</div>
-
-<!-- BELL NOTIFICATIONS -->
-<div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
-  <i class="fa fa-bell"></i>
-  <span class="badge">4</span>
-
-  <div class="icon-dropdown" id="notifDropdown">
-    <p>No new notifications</p>
-  </div>
-</div>
-
     </div>
 
     <div class="topbar-user">

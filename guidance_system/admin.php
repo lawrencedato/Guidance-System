@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard - UNITYCARE</title>
+<title>UNITYCARE | Administrator Dashboard</title>
 
 <link rel="stylesheet" href="styles.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -55,7 +55,7 @@
   <!-- TOPBAR -->
   <header class="topbar">
     <div>
-      <h2>Admin Dashboard</h2>
+      <h2>Administrator Dashboard</h2>
       <p class="muted">System overview & performance monitoring</p>
     </div>
 
@@ -64,6 +64,7 @@
       System Active
     </div>
   </div>
+</header>
 
   <!-- ================= KPI STATS ================= -->
   <section class="card-grid stats">

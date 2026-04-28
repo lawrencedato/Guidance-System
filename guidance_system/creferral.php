@@ -41,6 +41,7 @@
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
     <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
+    <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
 
     <p class="sidebar-title">STUDENTS</p>
     <a href="cstudents.php"><i class="fa fa-users"></i> Students</a>
@@ -62,16 +63,16 @@
 
   <div class="topbar-right">
 
-    <div class="topbar-icons">
-      <div class="topbar-icon">
-        <i class="fa fa-envelope"></i>
-        <span class="badge">2</span>
-      </div>
+    <div class="topbar-icons">\
+      
+      <!-- NOTIFICATIONS -->
+    <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
+      <i class="fa fa-bell"></i>
+      <span class="badge">4</span>
 
-      <div class="topbar-icon">
-        <i class="fa fa-bell"></i>
-        <span class="badge">4</span>
-      </div>
+    <div class="icon-dropdown" id="notifDropdown">
+      <p>No new notifications</p>
+    </div>
     </div>
 
     <div class="topbar-user">
