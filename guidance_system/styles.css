@@ -5364,3 +5364,472 @@ tbody tr:hover {
   border-radius: 10px;
   cursor: pointer;
 }
+
+/* =========================================================
+   aStudents PAGE — STUDENT MANAGEMENT THEME
+========================================================= */
+
+.aStudents-main {
+  margin-left: 280px;
+  padding: var(--spacing-xxl);
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+.aStudents-card {
+  background: var(--card);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(37, 99, 235, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+/* HEADER */
+.aStudents-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.aStudents-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.aStudents-muted {
+  margin: 6px 0 0;
+  color: var(--text-light);
+  font-size: 0.95rem;
+}
+
+/* =========================================================
+   ACTION BUTTONS
+========================================================= */
+.aStudents-record-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ADD BUTTON */
+.aStudents-add-btn {
+  background: linear-gradient(135deg,#113F67,#4988C4);
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.aStudents-add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* CSV BUTTONS */
+.aStudents-csv-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.aStudents-btn-import,
+.aStudents-btn-export {
+  background: #fff;
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aStudents-btn-import:hover,
+.aStudents-btn-export:hover {
+  background: rgba(73, 136, 196, 0.08);
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   TABLE
+========================================================= */
+.aStudents-table-wrapper {
+  max-height: 400px; /* or 500px */
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.aStudents-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+}
+
+.aStudents-table th {
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  z-index: 2;
+  text-align: left;
+  padding: 14px;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+  color: var(--text);
+}
+
+.aStudents-table td {
+  padding: 14px;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.06);
+  color: var(--text);
+}
+
+.aStudents-table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.03);
+}
+
+/* ================= TABLE SCROLLBAR ONLY ================= */
+
+/* Chrome, Edge, Safari */
+.aStudents-table-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* track */
+.aStudents-table-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* thumb */
+.aStudents-table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(52, 105, 154, 0.15);
+  border-radius: 10px;
+  transition: 0.3s ease;
+}
+
+/* hover */
+.aStudents-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 105, 154, 0.35);
+}
+
+/* =========================================================
+   ACTION BUTTON
+========================================================= */
+.aStudents-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg,#113F67,#4988C4);
+  color: white;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.aStudents-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.aStudents-btn-sm {
+  padding: 6px 10px;
+}
+
+/* =========================================================
+   MODAL
+========================================================= */
+.aStudents-modal {
+  position: fixed;
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 9999;
+}
+
+.aStudents-modal.open {
+  display: flex;
+}
+
+.aStudents-modal-content {
+  width: 520px; /* SAME as counselors */
+
+  max-height: 85vh;   /* prevents it from overflowing screen */
+  display: flex;
+  flex-direction: column;
+
+  background: var(--card);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* MODAL HEADER */
+.aStudents-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.aStudents-modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.aStudents-modal-header p {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.aStudents-modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.aStudents-modal-close:hover {
+  color: var(--text);
+}
+
+/* MODAL BODY */
+.aStudents-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.aStudents-sec-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-faint);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  margin-top: 18px;
+  display: block;
+}
+
+.aStudents-sec-label:first-child {
+  margin-top: 0;
+}
+
+/* FORM FIELDS */
+.aStudents-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.aStudents-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.aStudents-field.full {
+  grid-column: span 2;
+}
+
+.aStudents-field label {
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.aStudents-field input,
+.aStudents-field select {
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  outline: none;
+  background: var(--bg-soft);
+  color: var(--text);
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.aStudents-field input:focus,
+.aStudents-field select:focus {
+  border-color: #113F67;
+  box-shadow: 0 0 0 3px rgba(17, 63, 103, 0.1);
+  background: var(--card);
+}
+
+/* MODAL FOOTER */
+.aStudents-modal-footer {
+  display: flex;
+  justify-content: flex-end; /* pushes buttons to the right */
+  align-items: center;
+  gap: 10px;
+
+  margin-top: 20px;
+}
+
+.aStudents-btn-cancel {
+  background: #fff;
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.aStudents-btn-cancel:hover {
+  background: rgba(73, 136, 196, 0.08);
+  transform: translateY(-2px);
+}
+
+.aStudents-btn-save {
+  background: linear-gradient(135deg,#113F67,#4988C4);
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.9rem;
+}
+
+.aStudents-btn-save:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.aStudents-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.aStudents-modal-body::-webkit-scrollbar-thumb {
+  background: rgba(52, 105, 154, 0.2);
+  border-radius: 10px;
+}
+
+.aStudents-modal-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 105, 154, 0.35);
+}
+
+/* =========================================================
+   FILTER BOX STYLING
+========================================================= */
+#filterBox {
+  position: absolute;
+  right: 0;
+  top: 45px;
+  background: var(--card);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  width: 250px;
+  box-shadow: var(--shadow-md);
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#filterBox.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  visibility: visible;
+  pointer-events: auto;
+}
+
+#filterBox p {
+  margin: 12px 0 8px;
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#filterBox p:first-child {
+  margin-top: 0;
+}
+
+#filterBox select {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  border: 1.5px solid rgba(37, 99, 235, 0.15);
+  border-radius: 9px;
+  background: var(--bg-soft);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+#filterBox select:hover {
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+#filterBox select:focus {
+  border-color: #113F67;
+  box-shadow: 0 0 0 3px rgba(17, 63, 103, 0.1);
+}
+
+/* ================= SCROLLBAR ================= */
+
+/* width (kept slim but usable) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* track */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* default thumb (very subtle) */
+::-webkit-scrollbar-thumb {
+  background: rgba(52, 105, 154, 0.15);
+  border-radius: 10px;
+  transition: 0.3s ease;
+}
+
+/* hover state (becomes visible) */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 105, 154, 0.35);
+}
+
+/* smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}

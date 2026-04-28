@@ -42,18 +42,18 @@
 
   <nav class="sidebar-menu">
 
-    <a href="admin.html"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="admin.php"><i class="fa fa-gauge"></i> Dashboard</a>
 
     <p class="sidebar-title">MANAGEMENT</p>
 
-    <a href="ausers.html"><i class="fa fa-users"></i> Users</a>
-    <a href="astudents.html"><i class="fa fa-user-graduate"></i> Students</a>
-    <a href="acounselors.html" class="active"><i class="fa fa-user-doctor"></i> Counselors</a>
-    <a href="aappointments.html"><i class="fa fa-calendar"></i> Appointments</a>
+    <a href="ausers.php"><i class="fa fa-users"></i> Users</a>
+    <a href="astudents.php"><i class="fa fa-user-graduate"></i> Students</a>
+    <a href="acounselors.php" class="active"><i class="fa fa-user-doctor"></i> Counselors</a>
+    <a href="aappointments.php"><i class="fa fa-calendar"></i> Appointments</a>
 
     <p class="sidebar-title">SYSTEM</p>
 
-    <a href="areports.html"><i class="fa fa-chart-line"></i> Reports</a>
+    <a href="areports.php"><i class="fa fa-chart-line"></i> Reports</a>
 
   </nav>
 
