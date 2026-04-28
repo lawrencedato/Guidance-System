@@ -12,7 +12,7 @@
 
 <body class="body">
 
-<!-- SIDEBAR -->
+<!-- ================= SIDEBAR ================= -->
 <aside class="sidebar">
 
   <div class="sidebar-logoBar">
@@ -22,162 +22,187 @@
       <span class="sidebar-logoText">UNITYCARE</span>
     </div>
 
+    <div class="sidebar-settings">
+      <button class="sidebar-settingsButton" onclick="toggleSettingsMenu(event)">
+        <i class="fa fa-gear"></i>
+      </button>
+
+      <div class="sidebar-settingsDropdown" id="settingsDropdown">
+        <button onclick="toggleTheme()">
+          <i class="fa fa-moon"></i> Theme
+        </button>
+
+        <button onclick="logout()">
+          <i class="fa fa-right-from-bracket"></i> Logout
+        </button>
+      </div>
+    </div>
+
   </div>
 
   <nav class="sidebar-menu">
 
-    <a class="active" href="admin.php">
-      <i class="fa fa-gauge"></i> Dashboard
-    </a>
+    <a href="admin.html" class="active"><i class="fa fa-gauge"></i> Dashboard</a>
 
     <p class="sidebar-title">MANAGEMENT</p>
 
-    <a href="ausers.php"><i class="fa fa-users"></i> Users</a>
-    <a href="astudents.php"><i class="fa fa-user-graduate"></i> Students</a>
-    <a href="acounselors.php"><i class="fa fa-user-doctor"></i> Counselors</a>
-    <a href="aappointments.php"><i class="fa fa-calendar"></i> Appointments</a>
+    <a href="ausers.html"><i class="fa fa-users"></i> Users</a>
+    <a href="astudents.html"><i class="fa fa-user-graduate"></i> Students</a>
+    <a href="acounselors.html"><i class="fa fa-user-doctor"></i> Counselors</a>
+    <a href="aappointments.html"><i class="fa fa-calendar"></i> Appointments</a>
 
     <p class="sidebar-title">SYSTEM</p>
 
-    <a href="areports.php"><i class="fa fa-chart-line"></i> Reports</a>
+    <a href="aeports.html"><i class="fa fa-chart-line"></i> Reports</a>
 
   </nav>
 
-  <button class="btn btn-error btn-sm" onclick="logout()">
-    <i class="fa fa-right-from-bracket"></i> Logout
-  </button>
-
 </aside>
 
-<!-- ================= MAIN ================= -->
-<main class="main">
 
-  <!-- TOPBAR -->
-  <header class="topbar">
-    <div>
+<!-- ================= TOPBAR ================= -->
+<header class="topbar">
+
+  <div class="topbar-left">
       <h2>Administrator Dashboard</h2>
-      <p class="muted">System overview & performance monitoring</p>
-    </div>
-
-    <div class="live-status">
-      <span class="pulse"></span>
-      System Active
-    </div>
+    <p class="aDashboard-muted">
+      System overview & performance monitoring
+    </p>
   </div>
+
+  <div class="aDashboard-live-status">
+    <span class="aDashboard-pulse"></span>
+    System Active
+  </div>
+
 </header>
 
-  <!-- ================= KPI STATS ================= -->
-  <section class="card-grid stats">
 
-    <!-- TOTAL STUDENTS -->
-    <div class="card">
+<!-- ================= MAIN ================= -->
+<main class="aDashboard-main">
+
+  <!-- KPI CARDS -->
+  <section class="aDashboard-stats">
+
+    <div class="aDashboard-card">
       <h3><i class="fa fa-user-graduate"></i> Students</h3>
       <h2 id="studentsCount">245</h2>
-      <p class="muted">Total students</p>
+      <p class="aDashboard-muted">Total students</p>
     </div>
 
-    <!-- TOTAL COUNSELORS -->
-    <div class="card">
+    <div class="aDashboard-card">
       <h3><i class="fa fa-user-doctor"></i> Counselors</h3>
       <h2 id="counselorsCount">12</h2>
-      <p class="muted">Active guidance counselors</p>
+      <p class="aDashboard-muted">Active guidance counselors</p>
     </div>
 
-    <!-- ACTIVATED ACCOUNTS -->
-    <div class="card">
+    <div class="aDashboard-card">
       <h3><i class="fa fa-user-check"></i> Accounts</h3>
       <h2 id="accountsCount">180</h2>
-      <p class="muted">Activated system users</p>
+      <p class="aDashboard-muted">Activated system users</p>
     </div>
 
-    <!-- APPOINTMENTS -->
-    <div class="card">
+    <div class="aDashboard-card">
       <h3><i class="fa fa-calendar"></i> Appointments</h3>
       <h2 id="appointmentsCount">128</h2>
-      <p class="muted">Total bookings</p>
+      <p class="aDashboard-muted">Total bookings</p>
     </div>
 
   </section>
 
-<!-- ================= QUICK ACTIONS ================= -->
-<section class="card" style="margin-bottom: 20px;">
 
-  <h3>Quick Actions</h3>
-  <p class="muted">Fast access to common admin tasks</p>
+  <!-- QUICK ACTIONS -->
+  <section class="aDashboard-card aDashboard-actions">
 
-  <div style="
-    display: flex;
-    justify-content: center;
-    margin-top: 15px;
-  ">
+    <h3>Quick Actions</h3>
+    <p class="aDashboard-muted">
+      Fast access to common admin tasks
+    </p>
 
-    <div style="
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-      max-width: 700px;
-    ">
+    <div class="aDashboard-actions-wrapper">
+      <div class="aDashboard-actions-group">
 
-      <button class="btn">
-        <i class="fa fa-user-graduate"></i> Add Student
-      </button>
+        <button class="aDashboard-btn">
+          <i class="fa fa-user-graduate"></i>
+          Add Student
+        </button>
 
-      <button class="btn btn-secondary">
-        <i class="fa fa-user-doctor"></i> Add Counselor
-      </button>
+        <button class="aDashboard-btn aDashboard-btn-secondary">
+          <i class="fa fa-user-doctor"></i>
+          Add Counselor
+        </button>
 
-    </div>
-
-  </div>
-
-</section>
-
-<!-- ================= ANALYTICS ================= -->
-<section class="card chart-section">
-
-  <h3>System Analytics</h3>
-  <p class="muted">Appointment trends & system status overview</p>
-
-  <div style="
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-top: 15px;
-  ">
-
-    <!-- LEFT: LINE CHART -->
-    <div class="chart-box" style="height: 320px; display:flex; flex-direction:column;">
-      <h4>Appointment Trends</h4>
-      <div style="flex:1;">
-        <canvas id="appointmentsChart"></canvas>
       </div>
     </div>
 
-    <!-- RIGHT: PIE CHART (PROPER SIZE) -->
-<div class="chart-box" style="height: 320px; display:flex; flex-direction:column;">
+  </section>
 
-  <h4>Appointment Status</h4>
 
-  <!-- CENTERED RESPONSIVE WRAPPER -->
-  <div style="flex:1; display:flex; align-items:center; justify-content:center;">
-    <div style="width: 100%; max-width: 260px;">
-      <canvas id="statusChart"></canvas>
+  <!-- ANALYTICS -->
+  <section class="aDashboard-card aDashboard-analytics">
+
+    <h3>System Analytics</h3>
+    <p class="aDashboard-muted">
+      Appointment trends & system status overview
+    </p>
+
+    <div class="aDashboard-chart-grid">
+
+      <div class="aDashboard-chart-box">
+        <h4>Appointment Trends</h4>
+        <div class="aDashboard-chart-container">
+          <canvas id="appointmentsChart"></canvas>
+        </div>
+      </div>
+
+      <div class="aDashboard-chart-box">
+        <h4>Appointment Status</h4>
+
+        <div class="aDashboard-chart-center">
+          <div class="aDashboard-chart-inner">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
     </div>
-  </div>
 
-</div>
+  </section>
 
-  </div>
+</main>
 
-</section>
+
 <!-- ================= SCRIPT ================= -->
 <script>
-function logout() {
-  window.location.href = "index.html";
+function toggleSettingsMenu(e){
+  e.stopPropagation();
+  document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
-/* COUNTERS */
+function toggleTheme(){
+  const html = document.documentElement;
+  html.setAttribute(
+    "data-theme",
+    html.getAttribute("data-theme") === "light" ? "dark" : "light"
+  );
+}
+
+function logout(){
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+document.addEventListener("click", e => {
+  const menu = document.getElementById("settingsDropdown");
+  const btn = document.querySelector(".sidebar-settingsButton");
+
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove("show");
+  }
+});
+
+/* COUNTER ANIMATION */
 function animateValue(id, start, end, duration) {
   let obj = document.getElementById(id);
   let current = start;
@@ -185,116 +210,71 @@ function animateValue(id, start, end, duration) {
 
   let timer = setInterval(() => {
     current += step;
+
     if (current >= end) {
       current = end;
       clearInterval(timer);
     }
+
     obj.innerText = Math.floor(current);
   }, 50);
 }
 
 window.onload = () => {
-  animateValue("usersCount", 200, 245, 1000);
-  animateValue("appointmentsCount", 100, 128, 1000);
-  animateValue("pendingCount", 5, 12, 1000);
-  animateValue("announcementCount", 1, 3, 1000);
+  animateValue("studentsCount", 200, 245, 1000);
+  animateValue("counselorsCount", 5, 12, 1000);
+  animateValue("accountsCount", 120, 180, 1000);
+  animateValue("appointmentsCount", 80, 128, 1000);
 };
 
-/* APPOINTMENT TREND */
-new Chart(document.getElementById('appointmentsChart'), {
-  type: 'line',
+
+/* LINE CHART */
+new Chart(document.getElementById("appointmentsChart"), {
+  type: "line",
   data: {
-    labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    labels: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
     datasets: [{
-      label: 'Appointments',
-      data: [12,19,8,15,22,18,25],
-      borderColor: '#34699A',
-      backgroundColor: 'rgba(52,105,154,0.2)',
+      label: "Appointments",
+      data: [12, 19, 8, 15, 22, 18, 25],
+      borderColor: "#34699A",
+      backgroundColor: "rgba(52,105,154,0.15)",
       fill: true,
       tension: 0.4
     }]
   },
   options: {
-    plugins: { legend: { display: false } }
+    plugins: {
+      legend: {
+        display: false
+      }
+    }
   }
 });
 
-/* STATUS BREAKDOWN */
-new Chart(document.getElementById('statusChart'), {
-  type: 'pie',
+
+/* PIE CHART */
+new Chart(document.getElementById("statusChart"), {
+  type: "pie",
   data: {
-    labels: ['Approved', 'Pending', 'Rejected'],
+    labels: ["Approved", "Pending", "Rejected"],
     datasets: [{
       data: [70, 20, 10],
-      backgroundColor: ['#2ecc71', '#f1c40f', '#e74c3c']
+      backgroundColor: [
+        "#2ecc71",
+        "#f1c40f",
+        "#e74c3c"
+      ]
     }]
   },
   options: {
-    plugins: { legend: { position: 'bottom' } }
+    plugins: {
+      legend: {
+        position: "bottom"
+      }
+    }
   }
 });
 </script>
 
-<style>
-  
-/* =========================
-   LIVE STATUS INDICATOR
-========================= */
-.live-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--text-light);
-}
-
-.pulse {
-  width: 10px;
-  height: 10px;
-  background: var(--success);
-  border-radius: 50%;
-  position: relative;
-}
-
-.pulse::after {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: var(--success);
-  border-radius: 50%;
-  animation: pulseAnim 1.5s infinite;
-}
-
-/* ================= SCROLLBAR ================= */
-
-/* width (kept slim but usable) */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-/* track */
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* default thumb (very subtle) */
-::-webkit-scrollbar-thumb {
-  background: rgba(52, 105, 154, 0.15);
-  border-radius: 10px;
-  transition: 0.3s ease;
-}
-
-/* hover state (becomes visible) */
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(52, 105, 154, 0.35);
-}
-
-/* smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-</style>
 </body>
 </html>
