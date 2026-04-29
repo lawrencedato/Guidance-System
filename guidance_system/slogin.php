@@ -57,7 +57,7 @@
       <!-- FOOTER -->
       <div class="auth-footer">
         <div class="auth-footer-text">Don’t have an account?</div>
-        <a class="auth-footer-link" href="activate.html">Activate</a>
+        <a class="auth-footer-link" href="activate.php">Activate</a>
       </div>
 
     </div>
