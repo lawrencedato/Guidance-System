@@ -39,10 +39,10 @@
     <a href="dashboard.php"><i class="fa fa-th-large"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
-    <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
-    <a href="sconcerns.php"><i class="fa fa-headset"></i> Submit Concern</a>
-    <a href="swellness.php"><i class="fa fa-heart"></i> Wellness Check</a>
-    <a href="sreferral.php"><i class="fa fa-route"></i> Referral</a>
+    <a href="booking.html"><i class="fa fa-calendar"></i> Book Appointment</a>
+    <a href="sconcerns.html"><i class="fa fa-headset"></i> Submit Concern</a>
+    <a href="wellness.html"><i class="fa fa-heart"></i> Wellness Check</a>
+    <a href="referral.html"><i class="fa fa-route"></i> Referral</a>
 
     <p class="sidebar-title">UPDATES</p>
     <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
