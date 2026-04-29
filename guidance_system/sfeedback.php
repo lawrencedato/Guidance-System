@@ -36,7 +36,7 @@
   </div>
 
   <nav class="sidebar-menu">
-    <a href="dashboard.php"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="dashboard.php"><i class="fa fa-th-large"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
     <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
@@ -59,7 +59,7 @@
 <header class="topbar">
 
   <div class="topbar-left">
-    <h1>Session Feedback</h1>
+    <h2>Session Feedback</h2>
   </div>
 
   <div class="topbar-right">
@@ -81,7 +81,6 @@
 
   <div class="sFeedback-container">
 
-    <!-- CARD -->
     <div class="card sFeedback-card">
 
       <h3 class="sFeedback-title">How was your session?</h3>
@@ -90,7 +89,6 @@
         Rate your experience and leave your comments
       </p>
 
-      <!-- FORM -->
       <div class="sFeedback-form">
 
         <div class="form-group">
@@ -143,7 +141,7 @@ function logout() {
 
 document.addEventListener("click", function(e) {
   const dropdown = document.getElementById("settingsDropdown");
-  const btn = document.querySelector(".settings-icon");
+  const btn = document.querySelector(".sidebar-settingsButton");
 
   if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
     dropdown.style.display = "none";

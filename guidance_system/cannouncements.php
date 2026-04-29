@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="styles.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
+</head>
+
 <body class="body">
 
 <!-- SIDEBAR -->
@@ -25,9 +27,9 @@
         <i class="fa fa-gear"></i>
       </button>
 
-      <div class="sidebar-settingsDropdown" id="settingsMenu">
+      <div class="sidebar-settingsDropdown" id="settingsDropdown">
         <a href="cprofile.php"><i class="fa fa-user"></i> Profile</a>
-        <a href="chistory.php"><i class="fa fa-clock"></i> Session History</a>
+        <a href="chistory.php"><i class="fa fa-clock"></i> History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -55,7 +57,7 @@
   </nav>
 </aside>
 
-<!-- ================= TOPBAR ================= -->
+<!-- TOPBAR -->
 <header class="topbar">
   <div class="topbar-left">
     <h2>Announcement</h2>
@@ -63,15 +65,14 @@
 
   <div class="topbar-right">
 
-<!-- NOTIFICATIONS -->
-<div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
-  <i class="fa fa-bell"></i>
-  <span class="badge">4</span>
+    <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
+      <i class="fa fa-bell"></i>
+      <span class="badge">4</span>
 
-  <div class="icon-dropdown" id="notifDropdown">
-    <p>No new notifications</p>
-  </div>
-</div>
+      <div class="icon-dropdown" id="notifDropdown">
+        <p>No new notifications</p>
+      </div>
+    </div>
 
     <div class="topbar-user">
       <img src="counselor.jpg" alt="user">
@@ -107,22 +108,10 @@
 
 <script>
 
-  function toggleSettingsMenu(e){
+// SETTINGS MENU
+function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
-}
-
-function toggleTheme(){
-  const html = document.documentElement;
-  html.setAttribute(
-    "data-theme",
-    html.getAttribute("data-theme") === "light" ? "dark" : "light"
-  );
-}
-
-function logout(){
-  localStorage.clear();
-  window.location.href = "login.html";
 }
 
 document.addEventListener("click", e => {
@@ -134,30 +123,22 @@ document.addEventListener("click", e => {
   }
 });
 
+// THEME
+function toggleTheme(){
+  const html = document.documentElement;
+  html.setAttribute(
+    "data-theme",
+    html.getAttribute("data-theme") === "light" ? "dark" : "light"
+  );
+}
 
-/* =========================
-   FIREBASE CONFIG (PUT YOURS HERE)
-========================= */
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
-};
-
-firebase.initializeApp(firebaseConfig);
-
-const db = firebase.firestore();
-const storage = firebase.storage();
-
-/* =========================
-   POST ANNOUNCEMENT WITH IMAGE
-========================= */
+// LOGOUT
+function logout(){
+  localStorage.clear();
+  window.location.href = "login.html";
+}
 
 function postAnnouncement(){
-
   const title = document.getElementById("title").value;
   const message = document.getElementById("message").value;
   const file = document.getElementById("imageFile").files[0];
@@ -167,49 +148,9 @@ function postAnnouncement(){
     return;
   }
 
-  // NO IMAGE CASE
-  if(!file){
-    db.collection("announcements").add({
-      title,
-      message,
-      imageUrl: "",
-      status: "active",
-      createdAt: new Date()
-    });
-
-    alert("Announcement posted!");
-    return;
-  }
-
-  // IMAGE UPLOAD
-  const storageRef = storage.ref("announcements/" + Date.now() + "_" + file.name);
-  const uploadTask = storageRef.put(file);
-
-  uploadTask.on("state_changed",
-    null,
-    (error) => {
-      alert("Upload failed");
-    },
-    () => {
-      uploadTask.snapshot.ref.getDownloadURL().then((url) => {
-
-        db.collection("announcements").add({
-          title,
-          message,
-          imageUrl: url,
-          status: "active",
-          createdAt: new Date()
-        });
-
-        alert("Announcement posted!");
-
-        document.getElementById("title").value = "";
-        document.getElementById("message").value = "";
-        document.getElementById("imageFile").value = "";
-      });
-    }
-  );
+  alert("Announcement posted (Firebase code not included in this version)");
 }
+
 </script>
 
 </body>

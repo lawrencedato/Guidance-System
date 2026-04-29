@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>UNITYCARE | Students Concerns</title>
+<title>UNITYCARE | Student Concerns</title>
 
 <link rel="stylesheet" href="styles.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -27,7 +27,7 @@
 
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
         <a href="cprofile.php"><i class="fa fa-user"></i> Profile</a>
-        <a href="chistory.php"><i class="fa fa-clock"></i> Session History</a>
+        <a href="chistory.php"><i class="fa fa-clock"></i> History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -58,25 +58,37 @@
 <!-- ================= TOPBAR ================= -->
 <header class="topbar">
   <div class="topbar-left">
-    <h3>Student Concerns</h3>
+    <h2>Student Concerns</h2>
   </div>
 
-   <div class="topbar-right">
-<div class="filter-wrapper">
+  <div class="topbar-right">
 
-  <button class="btn-filter" onclick="toggleFilterBox(show)">
-    <i class="fa fa-filter"></i> Filter
-  </button>
+    <!-- FILTER -->
+    <div class="filter-wrapper">
 
-</div>
-    <!-- NOTIFICATIONS -->
+      <button class="btn" onclick="toggleFilterBox()">
+        <i class="fa fa-filter"></i> Filter
+      </button>
+
+      <div id="filterBox" class="filter-box">
+        <input type="date" id="filterDate">
+
+        <div class="filter-actions">
+          <button onclick="applyConcernFilter()" class="btn-apply">Apply</button>
+          <button onclick="clearConcernFilter()" class="btn-clear">Clear</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BELL -->
     <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
       <i class="fa fa-bell"></i>
       <span class="badge">4</span>
 
-    <div class="icon-dropdown" id="notifDropdown">
-      <p>No new notifications</p>
-    </div>
+      <div class="icon-dropdown" id="notifDropdown">
+        <p>No new notifications</p>
+      </div>
     </div>
 
     <div class="topbar-user">
@@ -92,23 +104,7 @@
 
 <!-- MAIN -->
 <main class="cConcerns-main">
-<div id="filterBox" class="filter-box">
 
-  <select id="filterStatus">
-    <option value="all">Status</option>
-    <option>Pending</option>
-    <option>In Progress</option>
-    <option>Resolved</option>
-  </select>
-
-  <input type="date" id="filterDate">
-
-  <div class="filter-actions">
-    <button onclick="applyConcernFilter()" class="btn-apply">Apply</button>
-    <button onclick="clearConcernFilter()" class="btn-clear">Clear</button>
-  </div>
-
-</div>
   <div class="cConcerns-container">
 
     <!-- CONCERN CARD -->
@@ -120,7 +116,6 @@
       <p><b>Message:</b> I am feeling overwhelmed with school work and deadlines.</p>
       <p><b>Status:</b> Pending</p>
 
-      <!-- REPLY BOX -->
       <textarea class="cConcerns-replyBox" placeholder="Write your reply..."></textarea>
 
       <button class="cConcerns-btn" onclick="sendReply(this)">
@@ -131,10 +126,10 @@
 
     </div>
 
-    <!-- SAMPLE SECOND CARD -->
+    <!-- SECOND CARD -->
     <div class="cConcerns-card">
 
-      <h3><i class="fa fa-user"></i> Trish Rondolo </h3>
+      <h3><i class="fa fa-user"></i> Trish Rondolo</h3>
 
       <p><b>Subject:</b> Anxiety</p>
       <p><b>Message:</b> I have been feeling anxious lately.</p>
@@ -155,43 +150,28 @@
 </main>
 
 <script>
-  function toggleFilterBox() {
+
+function toggleFilterBox() {
   document.getElementById("filterBox").classList.toggle("show");
 }
 
 function applyConcernFilter() {
-
-  const status = document.getElementById("filterStatus").value.toLowerCase();
   const date = document.getElementById("filterDate").value;
-
-  const items = document.querySelectorAll(".concern-item");
+  const items = document.querySelectorAll(".cConcerns-card");
 
   items.forEach(item => {
-
-    const itemStatus = item.querySelector(".status")?.innerText.toLowerCase();
-    const itemDate = item.querySelector("[data-date]")?.dataset.date;
-
-    let matchStatus = status === "all" || itemStatus === status;
-    let matchDate = true;
-
-    if (date && itemDate) {
-      matchDate = new Date(itemDate).toDateString() === new Date(date).toDateString();
-    }
-
-    item.style.display = (matchStatus && matchDate) ? "block" : "none";
+    const matchDate = true; 
+    item.style.display = matchDate ? "block" : "none";
   });
 }
 
 function clearConcernFilter() {
-
-  document.getElementById("filterStatus").value = "all";
   document.getElementById("filterDate").value = "";
-
-  document.querySelectorAll(".concern-item").forEach(item => {
+  document.querySelectorAll(".cConcerns-card").forEach(item => {
     item.style.display = "block";
   });
-
 }
+
 function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
@@ -219,18 +199,20 @@ document.addEventListener("click", e => {
   }
 });
 
-function submitConcern() {
-  const subject = document.getElementById("subject").value;
-  const message = document.getElementById("message").value;
+function sendReply(btn){
+  const card = btn.closest(".cConcerns-card");
+  const textarea = card.querySelector(".cConcerns-replyBox");
+  const result = card.querySelector(".cConcerns-result");
 
-  if (!subject || !message) {
-    alert("Please complete all fields.");
+  if (!textarea.value.trim()) {
+    alert("Please write a reply first.");
     return;
   }
 
-  document.getElementById("result").innerHTML =
-    "✔ Concern submitted successfully.";
+  result.innerHTML = "✔ Reply sent successfully.";
+  textarea.value = "";
 }
+
 </script>
 
 </body>

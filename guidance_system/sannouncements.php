@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Announcements - Student</title>
+<title>UNITYCARE | Announcements</title>
 
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="sAnnouncements.css">
@@ -37,7 +37,7 @@
   </div>
 
   <nav class="sidebar-menu">
-    <a href="dashboard.php"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="dashboard.php"><i class="fa fa-th-large"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
     <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
@@ -60,27 +60,10 @@
 <header class="topbar">
 
   <div class="topbar-left">
-    <h1>Announcements</h1>
+    <h2>Announcements</h2>
   </div>
 
   <div class="topbar-right">
-
-    <div class="topbar-searchBox">
-      <i class="fa fa-search"></i>
-      <input type="text" placeholder="Search...">
-    </div>
-
-    <div class="topbar-icons">
-      <div class="topbar-icon">
-        <i class="fa fa-envelope"></i>
-        <span class="badge">3</span>
-      </div>
-
-      <div class="topbar-icon">
-        <i class="fa fa-bell"></i>
-        <span class="badge">5</span>
-      </div>
-    </div>
 
    <div class="topbar-user">
       <img src="student.jpg" alt="user">
@@ -289,17 +272,27 @@ document.addEventListener("DOMContentLoaded", () => {
 <div id="announcementModal" class="announcement-modal">
   <div class="announcement-modal-content">
 
-    <span class="announcement-close" onclick="closeModal()">&times;</span>
+    <!-- HEADER -->
+    <div class="announcement-header">
+      <h2 id="modalTitle"></h2>
+      <span class="announcement-close" onclick="closeModal()">&times;</span>
+    </div>
 
-    <!-- POSTER IMAGE -->
-    <img id="modalImage"
-         style="width:100%; border-radius:12px; margin-bottom:12px; display:none;">
+    <!-- IMAGE -->
+    <img id="modalImage">
 
-    <h2 id="modalTitle"></h2>
-
+    <!-- BODY -->
     <p id="modalBody"></p>
 
     <div id="modalExtra"></div>
+
+    <!-- INTEREST -->
+    <div class="modal-interest">
+      <button id="interestBtn" onclick="toggleInterest()">
+        ⭐ Interested
+      </button>
+      <p id="interestCount">0 interested</p>
+    </div>
 
   </div>
 </div>

@@ -36,7 +36,7 @@
   </div>
 
   <nav class="sidebar-menu">
-    <a href="dashboard.php"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="dashboard.php"><i class="fa fa-th-large"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
     <a href="sappointment.php" class="active"><i class="fa fa-calendar"></i> Book Appointment</a>
@@ -58,32 +58,27 @@
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="topbar-left">
-    <h1>Book Appointment</h1>
+    <h2>Book Appointment</h2>
   </div>
 
   <div class="topbar-right">
-
-   <div class="topbar-user">
+    <div class="topbar-user">
       <img src="student.jpg" alt="user">
       <div>
         <strong>Vincent Aldolf Sablay</strong>
         <p>vincentsablay@gmail.com</p>
       </div>
     </div>
-
   </div>
 </header>
 
 <!-- MAIN -->
 <main class="sBooking-main">
 
-
-<!-- BOOKING -->
 <div class="sBooking-card sBooking-booking">
 
   <h3>Schedule Appointment</h3>
 
-  <!-- AVAILABLE SLOTS -->
   <div class="sBooking-formGroup">
     <label>Available Slots</label>
     <div id="slots" class="sBooking-slots"></div>
@@ -91,24 +86,17 @@
 
   <div class="sBooking-grid">
 
-    <!-- PRIORITY -->
-    <div class="sBooking-priority">
-      <label>Priority</label>
-      <select id="priority">
-        <option>Low</option>
-        <option>Medium</option>
-        <option>High</option>
-      </select>
-    </div>
+    <div class="sBooking-left">
 
-    <!-- MESSAGE -->
-    <div class="sBooking-message">
-      <label>Message</label>
-      <textarea id="message" placeholder="Describe your concern..."></textarea>
-    </div>
-
-    <!-- DATE & TIME FIXED -->
-    <div class="sBooking-datetime">
+      <div class="sBooking-priority">
+        <label>Priority</label>
+        <select id="priority">
+          <option value="all">Priority</option>
+          <option>Low</option>
+          <option>Medium</option>
+          <option>High</option>
+        </select>
+      </div>
 
       <div class="sBooking-date">
         <label>Date</label>
@@ -122,9 +110,13 @@
 
     </div>
 
+    <div class="sBooking-message">
+      <label>Message</label>
+      <textarea id="message" placeholder="Describe your concern..."></textarea>
+    </div>
+
   </div>
 
-  <!-- CONFIRM -->
   <button class="sBooking-button" onclick="bookAppointment()">
     Confirm Booking
   </button>
@@ -133,19 +125,14 @@
 
 </div>
 
-<!-- ✅ INTEGRATED UPLOAD SECTION -->
 <div class="sBooking-card">
-
   <h3>Upload Documents</h3>
-  <p>If you have supporting documents for your appointment, you may upload them below.</p>
+  <p>You may upload supporting documents.</p>
 
-  <input type="file" id="fileInput" onchange="showFileName(event)">
+  <input type="file" id="fileInput">
   <p id="fileName"></p>
 
-  <button class="sBooking-button" onclick="uploadFile()">
-    Upload File
-  </button>
-
+  <button class="sBooking-button">Upload File</button>
 </div>
 
 </main>
@@ -178,44 +165,23 @@ document.addEventListener("click", e => {
   }
 });
 
-/* =========================
-   BOOKING SYSTEM
-========================= */
-
-/* 24-hour internal storage ONLY */
-function generateSlots() {
-  return [
-    "10:00",
-    "11:00",
-    "14:00",
-    "15:00",
-    "16:00",
-    "17:00"
-  ];
+/* SLOTS */
+function generateSlots(){
+  return ["10:00","11:00","14:00","15:00","16:00","17:00"];
 }
 
 const defaultSlots = generateSlots();
-
 let bookedSlots = [];
-let selectedSlotBtn = null;
 
-/* =========================
-   AM/PM FORMAT (DISPLAY ONLY)
-========================= */
-function formatTime(time) {
-  const [h, m] = time.split(":");
-  let hour = parseInt(h);
-
+function formatTime(time){
+  let [h,m] = time.split(":");
+  let hour = +h;
   const ampm = hour >= 12 ? "PM" : "AM";
   hour = hour % 12 || 12;
-
   return `${hour}:${m} ${ampm}`;
 }
 
-/* =========================
-   RENDER SLOTS
-========================= */
-function renderSlots() {
+function renderSlots(){
   const container = document.getElementById("slots");
   container.innerHTML = "";
 
@@ -223,23 +189,13 @@ function renderSlots() {
     const btn = document.createElement("button");
     btn.className = "sBooking-slotBtn";
 
-    if (bookedSlots.includes(time)) {
-      btn.textContent = formatTime(time) + " ❌ Taken";
+    if (bookedSlots.includes(time)){
+      btn.textContent = formatTime(time) + " Taken";
       btn.disabled = true;
-      btn.style.opacity = "0.5";
-      btn.style.cursor = "not-allowed";
     } else {
       btn.textContent = formatTime(time);
-
       btn.onclick = () => {
-        document.getElementById("time").value = time; // KEEP 24H FOR INPUT
-
-        if (selectedSlotBtn) {
-          selectedSlotBtn.classList.remove("active-slot");
-        }
-
-        btn.classList.add("active-slot");
-        selectedSlotBtn = btn;
+        document.getElementById("time").value = time;
       };
     }
 
@@ -247,30 +203,29 @@ function renderSlots() {
   });
 }
 
-function bookAppointment() {
+function bookAppointment(){
   const d = document.getElementById("date").value;
   const t = document.getElementById("time").value;
 
-  if (!t || !d) {
-    alert("Please select date and time.");
+  if (!d || !t){
+    alert("Select date and time");
     return;
   }
 
-  let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
+  let data = JSON.parse(localStorage.getItem("appointments")) || [];
 
-  const newAppointment = {
-    id: "APP-" + Math.floor(Math.random() * 100000),
+  data.push({
+    id: "APP-" + Math.floor(Math.random()*100000),
     date: d,
     time: t,
     status: "pending"
-  };
+  });
 
-  appointments.push(newAppointment);
-  localStorage.setItem("appointments", JSON.stringify(appointments));
+  localStorage.setItem("appointments", JSON.stringify(data));
 
-  alert("Appointment submitted. Waiting for counselor approval.");
+  alert("Appointment submitted");
 }
-/* INIT */
+
 window.onload = renderSlots;
 </script>
 

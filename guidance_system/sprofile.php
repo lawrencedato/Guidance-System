@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UNITYCARE | Student dProfile</title>
+<title>UNITYCARE | Student Profile</title>
 
 <link rel="stylesheet" href="styles.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -26,8 +26,8 @@
       </button>
 
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
-        <a href="profile.html" class="active"><i class="fa fa-user"></i> Profile</a>
-        <a href="history.html"><i class="fa fa-clock"></i> Session History</a>
+        <a href="sprofile.php" class="active"><i class="fa fa-user"></i> Profile</a>
+        <a href="shistory.php"><i class="fa fa-clock"></i> Session History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -36,22 +36,22 @@
   </div>
 
   <nav class="sidebar-menu">
-    <a href="dashboard.html"><i class="fa fa-th-large"></i> Dashboard</a>
+    <a href="dashboard.php"><i class="fa fa-th-large"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
-    <a href="booking.html"><i class="fa fa-calendar"></i> Book Appointment</a>
-    <a href="sconcerns.html"><i class="fa fa-headset"></i> Submit Concern</a>
-    <a href="wellness.html"><i class="fa fa-heart"></i> Wellness Check</a>
-    <a href="referral.html"><i class="fa fa-route"></i> Referral</a>
+    <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
+    <a href="sconcerns.php"><i class="fa fa-headset"></i> Submit Concern</a>
+    <a href="swellness.php"><i class="fa fa-heart"></i> Wellness Check</a>
+    <a href="sreferral.php"><i class="fa fa-route"></i> Referral</a>
 
     <p class="sidebar-title">UPDATES</p>
-    <a href="announcements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
+    <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
-    <a href="sreports.html"><i class="fa fa-ticket"></i> Tickets</a>
+    <a href="sreports.php"><i class="fa fa-ticket"></i> Tickets</a>
 
     <p class="sidebar-title">SYSTEM</p>
-    <a href="feedback.html"><i class="fa fa-comment"></i> Feedback</a>
+    <a href="sfeedback.php"><i class="fa fa-comment"></i> Feedback</a>
   </nav>
 </aside>
 
@@ -59,7 +59,7 @@
 <header class="topbar">
 
   <div class="topbar-left">
-    <h1>Student Profile</h1>
+    <h2>Student Profile</h2>
   </div>
 
   <div class="topbar-right">
@@ -87,17 +87,11 @@
         <div class="sProfile-avatar">
           <img id="preview" src="https://via.placeholder.com/120">
 
-          <!-- ONLY PROFILE PICTURE CAN BE CHANGED -->
           <label for="fileUpload" class="sProfile-upload">
             <i class="fa fa-camera"></i>
           </label>
 
-          <input
-            type="file"
-            id="fileUpload"
-            hidden
-            onchange="loadImage(event)"
-          >
+          <input type="file" id="fileUpload" hidden onchange="loadImage(event)">
         </div>
 
         <div>
@@ -111,79 +105,42 @@
 
       <div class="sProfile-form">
 
-        <!-- UNCHANGEABLE -->
         <div class="form-group">
           <label>Full Name</label>
-          <input
-            id="name"
-            type="text"
-            value="Vincent Aldolf Sablay"
-            readonly
-          >
+          <input id="name" type="text" value="Vincent Aldolf Sablay" readonly>
         </div>
 
-        <!-- UNCHANGEABLE -->
         <div class="form-group">
           <label>Email</label>
-          <input
-            id="email"
-            type="email"
-            value="vincentsablay@gmail.com"
-            readonly
-          >
+          <input id="email" type="email" value="vincentsablay@gmail.com" readonly>
         </div>
 
-        <!-- UNCHANGEABLE -->
         <div class="form-group">
           <label>Program</label>
-          <input
-            id="program"
-            type="text"
-            value="BS Information Technology"
-            readonly
-          >
+          <input id="program" type="text" value="BS Information Technology" readonly>
         </div>
 
-        <!-- EDITABLE -->
         <div class="form-group">
           <label>Phone Number</label>
-          <input
-            id="phone"
-            type="text"
-            placeholder="Change phone number"
-          >
+          <input id="phone" type="text" placeholder="Change phone number">
         </div>
-<!-- EMERGENCY CONTACT -->
-<div class="form-group">
-  <label>Emergency Contact Name</label>
-  <input
-    id="emergencyName"
-    type="text"
-    placeholder="Enter emergency contact name"
-  >
-</div>
 
-<div class="form-group">
-  <label>Relationship</label>
-  <input
-    id="emergencyRelation"
-    type="text"
-    placeholder="e.g. Mother, Father, Guardian"
-  >
-</div>
+        <div class="form-group">
+          <label>Emergency Contact Name</label>
+          <input id="emergencyName" type="text" placeholder="Enter emergency contact name">
+        </div>
 
-<div class="form-group">
-  <label>Emergency Contact Number</label>
-  <input
-    id="emergencyNumber"
-    type="text"
-    placeholder="Enter emergency contact number"
-  >
-</div>
-        <button
-          class="btn sProfile-saveBtn"
-          onclick="saveProfile()"
-        >
+        <div class="form-group">
+          <label>Relationship</label>
+          <input id="emergencyRelation" type="text" placeholder="e.g. Mother, Father, Guardian">
+        </div>
+
+        <div class="form-group">
+          <label>Emergency Contact Number</label>
+          <input id="emergencyNumber" type="text" placeholder="Enter emergency contact number">
+        </div>
+
+        <button class="btn sProfile-saveBtn" onclick="saveProfile()">
           Save Changes
         </button>
 
@@ -197,75 +154,43 @@
 </main>
 
 <script>
-function toggleSettingsMenu(e) {
+function toggleSettingsMenu(e){
   e.stopPropagation();
-  document
-    .getElementById("settingsDropdown")
-    .classList.toggle("show");
+  document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
-function toggleTheme() {
+function toggleTheme(){
   const html = document.documentElement;
-
   html.setAttribute(
     "data-theme",
-    html.getAttribute("data-theme") === "light"
-      ? "dark"
-      : "light"
+    html.getAttribute("data-theme") === "light" ? "dark" : "light"
   );
 }
 
-function logout() {
+function logout(){
   localStorage.clear();
   window.location.href = "login.html";
 }
 
-/* dropdown close fix */
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
   const btn = document.querySelector(".sidebar-settingsButton");
 
-  if (
-    !menu.contains(e.target) &&
-    !btn.contains(e.target)
-  ) {
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
     menu.classList.remove("show");
   }
 });
 
-/* profile picture preview */
-function loadImage(event) {
+function loadImage(event){
   document.getElementById("preview").src =
     URL.createObjectURL(event.target.files[0]);
 }
 
-function saveProfile() {
-  const phone = document.getElementById("phone").value;
-  const emergencyName = document.getElementById("emergencyName").value;
-  const emergencyRelation = document.getElementById("emergencyRelation").value;
-  const emergencyNumber = document.getElementById("emergencyNumber").value;
-
-  if (phone.trim() === "") {
-    document.getElementById("status").innerHTML =
-      "<span class='tag warning'>Please enter your phone number</span>";
-    return;
-  }
-
-  document.getElementById("status").innerHTML =
-    "<span class='tag info'>Profile updated successfully</span>";
-
-  console.log({
-    phone,
-    emergencyName,
-    emergencyRelation,
-    emergencyNumber
-  });
-}
-/* only phone number is saved */
-function saveProfile() {
+/* ONLY PHONE IS SAVED */
+function saveProfile(){
   const phone = document.getElementById("phone").value;
 
-  if (phone.trim() === "") {
+  if(phone.trim() === ""){
     document.getElementById("status").innerHTML =
       "<span class='tag warning'>Please enter your phone number</span>";
     return;

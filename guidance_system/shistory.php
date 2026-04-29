@@ -7,7 +7,6 @@
 
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="sHistory.css">
-
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -38,7 +37,7 @@
   </div>
 
   <nav class="sidebar-menu">
-    <a href="dashboard.php"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="dashboard.php"><i class="fa fa-th-large"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
     <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
@@ -61,10 +60,29 @@
 <header class="topbar">
 
   <div class="topbar-left">
-    <h1>Student Profile</h1>
+    <h2>Session History</h2>
   </div>
 
   <div class="topbar-right">
+
+    <div class="filter-wrapper">
+
+      <button class="btn" onclick="toggleFilterBox()">
+        <i class="fa fa-filter"></i> Filter
+      </button>
+
+      <div id="filterBox" class="filter-box">
+
+        <input type="date" id="filterDate">
+
+        <div class="filter-actions">
+          <button onclick="applyFilter()" class="btn-apply">Apply</button>
+          <button onclick="clearFilter()" class="btn-clear">Clear</button>
+        </div>
+
+      </div>
+
+    </div>
 
     <div class="topbar-user">
       <img src="student.jpg" alt="user">
@@ -81,31 +99,26 @@
 <!-- MAIN -->
 <main class="sHistory-main">
 
+  <!-- CARDS -->
   <div class="sHistory-container">
 
-    <!-- CARD 1 -->
-    <div class="sHistory-card">
-      <h3>Guidance Counseling</h3>
+    <div class="sHistory-card" data-date="2026-01-10">
+      <h3>Guidance Counselling</h3>
       <span class="tag info">Completed</span>
-
       <p><b>Date:</b> January 10, 2026</p>
-      <p><b>Counselor:</b> Dr. Maria Santos</p>
+      <p><b>Counselor:</b> Dr. Lawrence Dato</p>
     </div>
 
-    <!-- CARD 2 -->
-    <div class="sHistory-card">
-      <h3>Wellness Check</h3>
-      <span class="tag warning">Completed</span>
-
+    <div class="sHistory-card" data-date="2026-02-02">
+      <h3>Guidance Counselling</h3>
+      <span class="tag info">Completed</span>
       <p><b>Date:</b> February 02, 2026</p>
-      <p><b>Status:</b> Stable</p>
+      <p><b>Counselor:</b> Dr. Lawrence Dato</p>
     </div>
 
-    <!-- CARD 3 -->
-    <div class="sHistory-card">
+    <div class="sHistory-card" data-date="2026-03-15">
       <h3>Follow-up Session</h3>
       <span class="tag info">Completed</span>
-
       <p><b>Date:</b> March 15, 2026</p>
       <p><b>Notes:</b> Improvement observed</p>
     </div>
@@ -114,8 +127,47 @@
 
 </main>
 
+<!-- SCRIPT -->
 <script>
-  function toggleSettingsMenu(e){
+
+function toggleFilterBox() {
+  document.getElementById("filterBox").classList.toggle("show");
+}
+
+function applyFilter() {
+
+  const status = document.getElementById("filterStatus")?.value?.toLowerCase();
+  const date = document.getElementById("filterDate").value;
+
+  const items = document.querySelectorAll(".sHistory-card");
+
+  items.forEach(item => {
+
+    const itemDate = item.dataset.date;
+
+    let matchStatus = true; // no status field in cards
+    let matchDate = true;
+
+    if (date && itemDate) {
+      matchDate = new Date(itemDate).toDateString() === new Date(date).toDateString();
+    }
+
+    item.style.display = (matchStatus && matchDate) ? "block" : "none";
+  });
+}
+
+function clearFilter() {
+
+  document.getElementById("filterDate").value = "";
+
+  document.querySelectorAll(".sHistory-card").forEach(item => {
+    item.style.display = "block";
+  });
+
+}
+
+/* SETTINGS */
+function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
 }
@@ -132,7 +184,7 @@ function logout(){
   localStorage.clear();
   window.location.href = "login.html";
 }
-/* dropdown close fix */
+
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
   const btn = document.querySelector(".sidebar-settingsButton");
@@ -141,6 +193,7 @@ document.addEventListener("click", e => {
     menu.classList.remove("show");
   }
 });
+
 </script>
 
 </body>

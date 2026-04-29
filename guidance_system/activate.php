@@ -34,14 +34,11 @@
 
       <form class="auth-form" onsubmit="event.preventDefault(); login();">
 
+        <label class="auth-label">Student Number</label>
+        <input class="auth-input" id="studentNumber" type="text" placeholder="Enter your student number" required>
+
         <label class="auth-label">Email</label>
-        <input class="auth-input" id="email" type="email">
-
-        <label class="auth-label">Student-ID</label>
-        <input class="auth-input" id="studentId" type="text">
-
-        <label class="auth-label">Birthday</label>
-        <input class="auth-input" id="birthday" type="date">
+        <input class="auth-input" id="email" type="email" placeholder="Enter your email" required>
 
         <button class="auth-btn" type="submit">
           Activate Account
@@ -60,7 +57,7 @@
 
       <div class="auth-footer">
         <div class="auth-footer-text">Already have an account?</div>
-        <a class="auth-footer-link" href="slogin.php">Login</a>
+        <a class="auth-footer-link" href="login.html">Login</a>
       </div>
 
     </div>

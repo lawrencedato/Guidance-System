@@ -56,17 +56,17 @@
     <a href="sfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
 
   </nav>
+
 </aside>
 
 <!-- ================= TOPBAR ================= -->
 <header class="topbar">
 
   <div class="topbar-left">
-    <h1>Submit Concern</h1>
+    <h2>Submit Concern</h2>
   </div>
 
   <div class="topbar-right">
-
 
    <div class="topbar-user">
       <img src="student.jpg" alt="user">
@@ -79,7 +79,6 @@
   </div>
 
 </header>
-
 
 <!-- ================= CONTENT ================= -->
 <main class="sConcern-main">

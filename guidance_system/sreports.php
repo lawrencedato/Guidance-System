@@ -36,11 +36,10 @@
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
     </div>
-
   </div>
 
   <nav class="sidebar-menu">
-    <a href="dashboard.php"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="dashboard.php"><i class="fa fa-th-large"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
     <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
@@ -49,7 +48,7 @@
     <a href="sreferral.php"><i class="fa fa-route"></i> Referral</a>
 
     <p class="sidebar-title">UPDATES</p>
-    <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
+    <a href="sannouncements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
     <a href="sreports.php" class="active"><i class="fa fa-ticket"></i> Reports</a>
@@ -63,7 +62,7 @@
 <header class="topbar">
 
   <div class="topbar-left">
-    <h1>Reports</h1>
+    <h2>Reports</h2>
   </div>
 
   <div class="topbar-right">

@@ -38,7 +38,7 @@
   </div>
 
   <nav class="sidebar-menu">
-    <a href="dashboard.php"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="dashboard.php"><i class="fa fa-th-large"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
     <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
@@ -55,13 +55,14 @@
     <p class="sidebar-title">SYSTEM</p>
     <a href="sfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
   </nav>
+
 </aside>
 
 <!-- ========================= TOPBAR ========================= -->
 <header class="topbar">
 
   <div class="topbar-left">
-    <h1>Wellness Check</h1>
+    <h2>Wellness Check</h2>
   </div>
 
   <div class="topbar-right">
@@ -126,13 +127,11 @@
 
 <!-- ========================= SCRIPT ========================= -->
 <script>
-// ================= SETTINGS MENU =================
 function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
-// ================= THEME TOGGLE =================
 function toggleTheme(){
   const html = document.documentElement;
   html.setAttribute(
@@ -141,13 +140,11 @@ function toggleTheme(){
   );
 }
 
-// ================= LOGOUT =================
 function logout(){
   localStorage.clear();
   window.location.href = "login.html";
 }
 
-// ================= CLOSE MENU =================
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
   const btn = document.querySelector(".sidebar-settingsButton");
@@ -157,7 +154,6 @@ document.addEventListener("click", e => {
   }
 });
 
-// ================= MOOD SYSTEM =================
 function setMood(emoji, text) {
   localStorage.setItem("userMoodEmoji", emoji);
   localStorage.setItem("userMoodText", text);
@@ -165,7 +161,6 @@ function setMood(emoji, text) {
   document.getElementById("moodValue").innerText = `${emoji} ${text}`;
 }
 
-// ================= LOAD MOOD =================
 window.addEventListener("load", () => {
   const emoji = localStorage.getItem("userMoodEmoji");
   const text = localStorage.getItem("userMoodText");
@@ -175,7 +170,6 @@ window.addEventListener("load", () => {
   }
 });
 
-// ================= STRESS =================
 function updateStress(v){
   let t = v < 30 ? "Low 😌" : v < 70 ? "Moderate 😐" : "High 😰";
   document.getElementById("stressValue").innerText = `${t} (${v}%)`;

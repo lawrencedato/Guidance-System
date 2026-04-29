@@ -42,32 +42,32 @@
 
   <nav class="sidebar-menu">
 
-    <a href="admin.html"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="admin.php"><i class="fa fa-gauge"></i> Dashboard</a>
 
     <p class="sidebar-title">MANAGEMENT</p>
 
-    <a href="ausers.html" class="active"><i class="fa fa-users"></i> Users</a>
-    <a href="astudents.html"><i class="fa fa-user-graduate"></i> Students</a>
-    <a href="acounselors.html"><i class="fa fa-user-doctor"></i> Counselors</a>
-    <a href="aappointments.html"><i class="fa fa-calendar"></i> Appointments</a>
+    <a href="ausers.php" class="active"><i class="fa fa-users"></i> Users</a>
+    <a href="astudents.php"><i class="fa fa-user-graduate"></i> Students</a>
+    <a href="acounselors.php"><i class="fa fa-user-doctor"></i> Counselors</a>
+    <a href="aappointments.php"><i class="fa fa-calendar"></i> Appointments</a>
 
     <p class="sidebar-title">SYSTEM</p>
 
-    <a href="areports.html"><i class="fa fa-chart-line"></i> Reports</a>
+    <a href="areports.php"><i class="fa fa-chart-line"></i> Reports</a>
 
   </nav>
 
 </aside>
 
 <!-- ================= TOPBAR ================= -->
-  <header class="topbar">
+<header class="topbar">
 
-    <div class="topbar-left">
-      <h2>Users</h2>
-      <p class="topbar-muted">Manage system account by role.</p>
-    </div>
+  <div class="topbar-left">
+    <h2>Users</h2>
+    <p class="topbar-muted">Manage system account by role.</p>
+  </div>
 
-  </header>
+</header>
 
 <!-- ================= MAIN WRAPPER ================= -->
 <main class="aUsers-main">
@@ -235,15 +235,11 @@
 <!-- ================= SCRIPT ================= -->
 <script>
 
-/* =========================
-   SIDEBAR SETTINGS MENU
-========================= */
 function toggleSettingsMenu(e) {
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
-/* close settings dropdown when clicking outside */
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
   const btn = document.querySelector(".sidebar-settingsButton");
@@ -253,9 +249,6 @@ document.addEventListener("click", e => {
   }
 });
 
-/* =========================
-   THEME TOGGLE
-========================= */
 function toggleTheme() {
   const html = document.documentElement;
   html.setAttribute(
@@ -264,9 +257,6 @@ function toggleTheme() {
   );
 }
 
-/* =========================
-   TAB SWITCHING (FIXED)
-========================= */
 function showTab(event, tab) {
   const sections = document.querySelectorAll(".aUsers-tab");
   const buttons = document.querySelectorAll(".aUsers-tabs button");
@@ -275,29 +265,13 @@ function showTab(event, tab) {
   buttons.forEach(b => b.classList.remove("active"));
 
   document.getElementById(tab).classList.add("active");
-
-  // ensure correct button is activated
   event.currentTarget.classList.add("active");
-}
-
-/* =========================
-   PLACEHOLDER ACTIONS
-========================= */
-function addUser(type) {
-  alert(`Add new ${type} functionality - to be implemented`);
-}
-
-function importCsv(type) {
-  alert(`Import CSV for ${type} - to be implemented`);
 }
 
 function exportCsv(type) {
   alert(`Export ${type} to CSV - to be implemented`);
 }
 
-/* =========================
-   LOGOUT (FIXED - SINGLE VERSION)
-========================= */
 function logout() {
   if (confirm("Are you sure you want to logout?")) {
     localStorage.clear();

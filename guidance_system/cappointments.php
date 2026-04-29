@@ -29,7 +29,7 @@
 
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
         <a href="cprofile.php"><i class="fa fa-user"></i> Profile</a>
-        <a href="chistory.php"><i class="fa fa-clock"></i> Session History</a>
+        <a href="chistory.php"><i class="fa fa-clock"></i> History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -60,7 +60,7 @@
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="topbar-left">
-    <h3>Appointment Request</h3>
+    <h2>Appointment Requests</h2>
   </div>
 
   <div class="topbar-right">
@@ -70,14 +70,39 @@
       <input type="text" placeholder="Search...">
     </div>
 
-    <!-- NOTIFICATIONS -->
+    <div class="filter-wrapper">
+
+      <button class="btn" onclick="toggleFilterBox()">
+        <i class="fa fa-filter"></i> Filter
+      </button>
+
+      <div id="filterBox" class="filter-box">
+
+        <select id="filterPriority">
+          <option value="all">Priority</option>
+          <option>Low</option>
+          <option>Medium</option>
+          <option>High</option>
+        </select>
+
+        <input type="date" id="filterDate">
+
+        <div class="filter-actions">
+          <button onclick="applyFilter()" class="btn-apply">Apply</button>
+          <button onclick="clearFilter()" class="btn-clear">Clear</button>
+        </div>
+
+      </div>
+
+    </div>
+
     <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
       <i class="fa fa-bell"></i>
       <span class="badge">4</span>
 
-    <div class="icon-dropdown" id="notifDropdown">
-      <p>No new notifications</p>
-    </div>
+      <div class="icon-dropdown" id="notifDropdown">
+        <p>No new notifications</p>
+      </div>
     </div>
 
     <div class="topbar-user">
@@ -96,7 +121,6 @@
 
   <section class="cAppointment-grid">
 
-    <!-- APPOINTMENT CARD -->
     <div class="cAppointment-card"
          data-file="uploads/chie-roque-file.pdf"
          data-id="app-001">
@@ -114,7 +138,6 @@
 
       <p><b>Status:</b> Pending</p>
 
-      <!-- ACTIONS -->
       <div class="cAppointment-actions">
 
         <button class="cAppointment-btn approve">
@@ -125,7 +148,6 @@
           <i class="fa fa-times"></i> Decline
         </button>
 
-        <!-- EXPORT (hidden by default) -->
         <button class="cAppointment-exportBtn" onclick="exportAppointment(this)" style="display:none;">
           <i class="fa fa-download"></i>
         </button>
@@ -138,23 +160,52 @@
 
 </main>
 
- <script>
-  function toggleSettingsMenu(e){
+<div class="cStudentModal" id="studentModal">
+
+  <div class="cStudentModal-container">
+
+    <div class="cStudentModal-header">
+      <h2>Student Profile</h2>
+      <button onclick="closeStudentModal()">✕</button>
+    </div>
+
+    <div class="cStudentModal-body">
+
+      <div class="cStudentModal-profile">
+
+        <div class="cStudentModal-avatar">JS</div>
+
+        <div class="cStudentModal-profileText">
+
+          <div class="cStudentModal-nameRow">
+            <h3>Adolf</h3>
+
+            <span id="studentStatusTag" class="tag stable">
+              Stable
+            </span>
+          </div>
+
+          <p>BSIT • 2nd Year</p>
+
+        </div>
+
+      </div>
+
+      <div class="cStudentModal-box">
+        <h4>Wellness Progress: Good</h4>
+        <p><b>Overall Score:</b> 82%</p>
+        <p><b>Recent Check-in:</b> April 22</p>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
-}
-
-function toggleTheme(){
-  const html = document.documentElement;
-  html.setAttribute(
-    "data-theme",
-    html.getAttribute("data-theme") === "light" ? "dark" : "light"
-  );
-}
-
-function logout(){
-  localStorage.clear();
-  window.location.href = "login.html";
 }
 
 document.addEventListener("click", e => {
@@ -166,63 +217,54 @@ document.addEventListener("click", e => {
   }
 });
 
+function toggleTheme(){
+  const html = document.documentElement;
+  html.setAttribute("data-theme",
+    html.getAttribute("data-theme") === "light" ? "dark" : "light"
+  );
+}
 
-function openStudentModal() {
+function logout(){
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+function openStudentModal(){
   document.getElementById("studentModal").classList.add("show");
 }
 
-function closeStudentModal() {
+function closeStudentModal(){
   document.getElementById("studentModal").classList.remove("show");
 }
 
-function searchStudents() {
-  const input = document.getElementById("searchInput").value.toLowerCase();
-  document.querySelectorAll(".cStudentList-item").forEach(item => {
-    item.style.display = item.innerText.toLowerCase().includes(input)
-      ? "flex"
-      : "none";
-  });
+function toggleFilterBox(){
+  document.getElementById("filterBox").classList.toggle("show");
 }
 
+function applyFilter(){
+  alert("Filter applied");
+}
 
-/* =========================
-   EXPORT FUNCTION
-========================= */
-function exportAppointment(btn) {
+function clearFilter(){
+  alert("Filter cleared");
+}
+
+function exportAppointment(btn){
   const card = btn.closest(".cAppointment-card");
+  const file = card.getAttribute("data-file");
 
-  const fileUrl = card.getAttribute("data-file");
-
-  if (!fileUrl || fileUrl.trim() === "") {
-    alert("No uploaded file found for this student.");
+  if(!file){
+    alert("No file found");
     return;
   }
 
-  const link = document.createElement("a");
-  link.href = fileUrl;
-  link.download = fileUrl.split("/").pop();
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const a = document.createElement("a");
+  a.href = file;
+  a.download = file.split("/").pop();
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
-
-/* =========================
-   SHOW/HIDE EXPORT BUTTON
-========================= */
-function checkFiles() {
-  document.querySelectorAll(".cAppointment-card").forEach(card => {
-    const file = card.getAttribute("data-file");
-    const btn = card.querySelector(".cAppointment-exportBtn");
-
-    if (file && file.trim() !== "") {
-      btn.style.display = "inline-flex";
-    } else {
-      btn.style.display = "none";
-    }
-  });
-}
-
-window.addEventListener("load", checkFiles);
 
 </script>
 

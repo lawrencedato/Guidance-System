@@ -51,13 +51,12 @@
 
         <div id="error" class="auth-error"></div>
 
-
       </form>
 
       <!-- FOOTER -->
       <div class="auth-footer">
         <div class="auth-footer-text">Don’t have an account?</div>
-        <a class="auth-footer-link" href="activate.php">Activate</a>
+        <a class="auth-footer-link" href="activate.html">Activate</a>
       </div>
 
     </div>
@@ -70,7 +69,7 @@
 function loginStudent() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
-  const error = document.getElementById("regError");
+  const error = document.getElementById("error");
 
   error.style.color = "red";
   error.textContent = "";
@@ -88,17 +87,15 @@ function loginStudent() {
     error.textContent = "Invalid email.";
     return;
   }
-  
-    // CHECK CAPTCHA
+
+  // CHECK CAPTCHA
   const captchaResponse = grecaptcha.getResponse();
   if (!captchaResponse || captchaResponse.length === 0) {
     error.textContent = "Please complete reCAPTCHA.";
     return;
   }
 
-  /* =========================
-     FIRST LOGIN FLOW
-  ========================= */
+  /* FIRST LOGIN FLOW */
   if (!finalPassword) {
     if (password !== tempPassword) {
       error.textContent = "Invalid temporary password.";
@@ -109,9 +106,7 @@ function loginStudent() {
     localStorage.setItem("passwordChanged", "false");
   }
 
-  /* =========================
-     AFTER RESET PASSWORD
-  ========================= */
+  /* AFTER RESET PASSWORD */
   if (finalPassword && password !== finalPassword) {
     error.textContent = "Invalid password.";
     return;

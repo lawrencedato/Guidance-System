@@ -42,29 +42,28 @@
 
   <nav class="sidebar-menu">
 
-    <a href="admin.html" class="active"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="admin.php" class="active"><i class="fa fa-gauge"></i> Dashboard</a>
 
     <p class="sidebar-title">MANAGEMENT</p>
 
-    <a href="ausers.html"><i class="fa fa-users"></i> Users</a>
-    <a href="astudents.html"><i class="fa fa-user-graduate"></i> Students</a>
-    <a href="acounselors.html"><i class="fa fa-user-doctor"></i> Counselors</a>
-    <a href="aappointments.html"><i class="fa fa-calendar"></i> Appointments</a>
+    <a href="ausers.php"><i class="fa fa-users"></i> Users</a>
+    <a href="astudents.php"><i class="fa fa-user-graduate"></i> Students</a>
+    <a href="acounselors.php"><i class="fa fa-user-doctor"></i> Counselors</a>
+    <a href="aappointments.php"><i class="fa fa-calendar"></i> Appointments</a>
 
     <p class="sidebar-title">SYSTEM</p>
 
-    <a href="areports.html"><i class="fa fa-chart-line"></i> Reports</a>
+    <a href="areports.php"><i class="fa fa-chart-line"></i> Reports</a>
 
   </nav>
 
 </aside>
 
-
 <!-- ================= TOPBAR ================= -->
 <header class="topbar">
 
   <div class="topbar-left">
-      <h2>Administrator Dashboard</h2>
+    <h2>Administrator Dashboard</h2>
     <p class="topbar-muted">
       System overview & performance monitoring
     </p>
@@ -77,11 +76,9 @@
 
 </header>
 
-
 <!-- ================= MAIN ================= -->
 <main class="aDashboard-main">
 
-  <!-- KPI CARDS -->
   <section class="aDashboard-stats">
 
     <div class="aDashboard-card">
@@ -110,14 +107,10 @@
 
   </section>
 
-
-  <!-- QUICK ACTIONS -->
   <section class="aDashboard-card aDashboard-actions">
 
     <h3>Quick Actions</h3>
-    <p class="aDashboard-muted">
-      Fast access to common admin tasks
-    </p>
+    <p class="aDashboard-muted">Fast access to common admin tasks</p>
 
     <div class="aDashboard-actions-wrapper">
       <div class="aDashboard-actions-group">
@@ -137,8 +130,6 @@
 
   </section>
 
-
-  <!-- ANALYTICS -->
   <section class="aDashboard-card aDashboard-analytics">
 
     <h3>System Analytics</h3>
@@ -172,8 +163,6 @@
 
 </main>
 
-
-<!-- ================= SCRIPT ================= -->
 <script>
 function toggleSettingsMenu(e){
   e.stopPropagation();
@@ -202,7 +191,6 @@ document.addEventListener("click", e => {
   }
 });
 
-/* COUNTER ANIMATION */
 function animateValue(id, start, end, duration) {
   let obj = document.getElementById(id);
   let current = start;
@@ -227,8 +215,6 @@ window.onload = () => {
   animateValue("appointmentsCount", 80, 128, 1000);
 };
 
-
-/* LINE CHART */
 new Chart(document.getElementById("appointmentsChart"), {
   type: "line",
   data: {
@@ -244,33 +230,23 @@ new Chart(document.getElementById("appointmentsChart"), {
   },
   options: {
     plugins: {
-      legend: {
-        display: false
-      }
+      legend: { display: false }
     }
   }
 });
 
-
-/* PIE CHART */
 new Chart(document.getElementById("statusChart"), {
   type: "pie",
   data: {
     labels: ["Approved", "Pending", "Rejected"],
     datasets: [{
       data: [70, 20, 10],
-      backgroundColor: [
-        "#2ecc71",
-        "#f1c40f",
-        "#e74c3c"
-      ]
+      backgroundColor: ["#2ecc71","#f1c40f","#e74c3c"]
     }]
   },
   options: {
     plugins: {
-      legend: {
-        position: "bottom"
-      }
+      legend: { position: "bottom" }
     }
   }
 });

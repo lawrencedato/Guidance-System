@@ -67,14 +67,14 @@
 
       switch (role) {
         case "student":
-          window.location.href = "slogin.php";
+          window.location.href = "login.html";
           break;
         case "counselor":
-          window.location.href = "clogin.php";
+          window.location.href = "clogin.html";
           break;
         case "admin":
         default:
-          window.location.href = "admin-dashboard.html";
+          window.location.href = "admin.html";
           break;
       }
     }

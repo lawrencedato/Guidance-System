@@ -19,15 +19,15 @@
       <img src="logo.png" alt="logo">
       <span class="sidebar-logoText">UNITYCARE</span>
     </div>
-    
+
     <div class="sidebar-settings">
       <button class="sidebar-settingsButton" onclick="toggleSettingsMenu(event)">
         <i class="fa fa-gear"></i>
       </button>
 
-      <div class="sidebar-settingsDropdown" id="settingsMenu">
+      <div class="sidebar-settingsDropdown" id="settingsDropdown">
         <a href="cprofile.php"><i class="fa fa-user"></i> Profile</a>
-        <a href="chistory.php"><i class="fa fa-clock"></i> Session History</a>
+        <a href="chistory.php"><i class="fa fa-clock"></i> History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -44,19 +44,18 @@
     <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
 
     <p class="sidebar-title">STUDENTS</p>
-    <a href="cstudents.php"><i class="fa fa-users"></i> Students</a>
+    <a href="students.php"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
     <a href="creports.php" class="active"><i class="fa fa-file"></i> Reports</a>
 
     <p class="sidebar-title">INFORMATION</p>
-    <a href="cannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
+    <a href="cannouncements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
     <a href="creferral.php"><i class="fa fa-route"></i> Referrals</a>
   </nav>
 </aside>
 
-<!-- ================= TOPBAR ================= -->
-<!-- ================= TOPBAR ================= -->
+<!-- TOPBAR -->
 <header class="topbar">
   <div class="topbar-left">
     <h2>Reports</h2>
@@ -64,15 +63,14 @@
 
   <div class="topbar-right">
 
-<!-- BELL NOTIFICATIONS -->
-<div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
-  <i class="fa fa-bell"></i>
-  <span class="badge">4</span>
+    <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
+      <i class="fa fa-bell"></i>
+      <span class="badge">4</span>
 
-  <div class="icon-dropdown" id="notifDropdown">
-    <p>No new notifications</p>
-  </div>
-</div>
+      <div class="icon-dropdown" id="notifDropdown">
+        <p>No new notifications</p>
+      </div>
+    </div>
 
     <div class="topbar-user">
       <img src="counselor.jpg" alt="user">
@@ -88,14 +86,12 @@
 <!-- MAIN -->
 <main class="cReports-main">
 
-  <!-- PAGE HEADER (OUTSIDE CENTER BLOCK) -->
   <div class="cReports-pageHeader">
     <p class="cReports-muted">
       Counseling summaries and student progress reports
     </p>
   </div>
 
-  <!-- CENTER CONTENT -->
   <div class="cReports-center">
 
     <div class="cReports-card">
@@ -145,7 +141,6 @@ document.addEventListener("click", e => {
   }
 });
 
-
 function postAnnouncement() {
   db.collection("announcements").add({
     title: titleInput.value,
@@ -155,7 +150,6 @@ function postAnnouncement() {
     eventDate: eventDateInput.value
   });
 }
-
 </script>
 
 </body>

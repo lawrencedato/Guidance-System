@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Counselor Login | UNITYCARE</title>
+<title>UNITYCARE | Counselor Login</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -17,7 +17,7 @@
 
   <!-- LEFT -->
   <section class="auth-left">
-    <div class="auth-overlay"></div>
+    <div class="auth-left-overlay"></div>
 
     <div class="auth-brand">
       <img class="auth-brand-logo" src="logo.png">
@@ -60,13 +60,6 @@
 </div>
 
 <script>
-/* -------------------------------
-   DEMO: ADMIN SETS PASSWORD
-   (run once in console or admin page)
-   localStorage.setItem("adminPassword", "yourChosenPassword");
-----------------------------------*/
-
-// LOGIN FUNCTION
 function loginCounselor() {
   const name = document.getElementById("name").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -77,32 +70,27 @@ function loginCounselor() {
 
   const storedPassword = localStorage.getItem("adminPassword");
 
-  // CHECK INPUTS
   if (!name || !password) {
     error.textContent = "Please fill in all fields.";
     return;
   }
 
-  // CHECK IF ADMIN HAS SET PASSWORD
   if (!storedPassword) {
     error.textContent = "No admin password set yet.";
     return;
   }
 
-  // CHECK PASSWORD MATCH
   if (password !== storedPassword) {
     error.textContent = "Incorrect password.";
     return;
   }
 
-  // CHECK CAPTCHA
   const captchaResponse = grecaptcha.getResponse();
   if (!captchaResponse || captchaResponse.length === 0) {
     error.textContent = "Please complete reCAPTCHA.";
     return;
   }
 
-  // SUCCESS
   localStorage.setItem("counselorName", name);
 
   error.style.color = "green";

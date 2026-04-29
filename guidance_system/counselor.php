@@ -27,7 +27,7 @@
 
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
         <a href="cprofile.php"><i class="fa fa-user"></i> Profile</a>
-        <a href="chistory.php"><i class="fa fa-clock"></i> Session History</a>
+        <a href="chistory.php"><i class="fa fa-clock"></i> History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -55,26 +55,26 @@
   </nav>
 </aside>
 
-<!-- ================= TOPBAR ================= -->
+<!-- TOPBAR -->
 <header class="topbar">
 
   <div class="topbar-left">
-    <h3>Welcome!</h3>
+    <h2>Welcome!</h2>
   </div>
 
-  <!-- RIGHT SIDE WRAPPER (FIXED) -->
   <div class="topbar-right">
 
     <div class="topbar-icons">
 
-    <!-- NOTIFICATIONS -->
-    <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
-      <i class="fa fa-bell"></i>
-      <span class="badge">4</span>
+      <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
+        <i class="fa fa-bell"></i>
+        <span class="badge">4</span>
 
-    <div class="icon-dropdown" id="notifDropdown">
-      <p>No new notifications</p>
-    </div>
+        <div class="icon-dropdown" id="notifDropdown">
+          <p>No new notifications</p>
+        </div>
+      </div>
+
     </div>
 
     <div class="topbar-user">
@@ -95,7 +95,7 @@
   <section class="cDashboard-container">
 
     <div class="cDashboard-card">
-      <h3>Today’s Sessions</h3>
+      <h4>Today’s Sessions</h4>
       <h3>6</h3>
       <p>Scheduled counseling sessions for today</p>
     </div>
@@ -149,7 +149,6 @@ document.addEventListener("click", e => {
     menu.classList.remove("show");
   }
 });
-
 </script>
 
 </body>

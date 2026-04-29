@@ -28,14 +28,14 @@
 
       <div class="sidebar-settingsDropdown" id="settingsMenu">
         <a href="cprofile.php"><i class="fa fa-user"></i> Profile</a>
-        <a href="chistory.php"><i class="fa fa-clock"></i> Session History</a>
+        <a href="chistory.php"><i class="fa fa-clock"></i> History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
     </div>
 
   </div>
-  
+
   <nav class="sidebar-menu">
     <a href="counselor.php"><i class="fa fa-gauge"></i> Dashboard</a>
 
@@ -56,27 +56,70 @@
   </nav>
 </aside>
 
-<!-- ================= TOPBAR ================= -->
+<!-- TOPBAR -->
 <header class="topbar">
   <div class="topbar-left">
-    <h3>Student List</h3>
+    <h2>Student List</h2>
   </div>
 
   <div class="topbar-right">
 
     <div class="topbar-searchBox">
       <i class="fa fa-search"></i>
-      <input type="text" placeholder="Search...">
+      <input type="text" id="searchInput" oninput="searchStudents()" placeholder="Search...">
     </div>
 
-    <!-- NOTIFICATIONS -->
+    <div class="filter-wrapper">
+
+      <button class="btn" onclick="toggleFilterBox()">
+        <i class="fa fa-filter"></i> Filter
+      </button>
+
+      <div id="filterBox">
+
+        <select id="filterProgram">
+          <option value="all">Programs</option>
+          <option>BSIT</option>
+          <option>BSBA</option>
+          <option>BSA</option>
+          <option>BSCS</option>
+          <option>BSN</option>
+          <option>BSECE</option>
+        </select>
+
+        <select id="filterYear">
+          <option value="all">Year Levels</option>
+          <option>1st Year</option>
+          <option>2nd Year</option>
+          <option>3rd Year</option>
+          <option>4th Year</option>
+        </select>
+
+        <select id="filterStatus">
+          <option value="all">Status</option>
+          <option>Stable</option>
+          <option>At Risk</option>
+          <option>Critical</option>
+        </select>
+
+        <input type="date" id="filterDate">
+
+        <div class="filter-actions">
+          <button onclick="applyFilters()" class="btn-apply">Apply</button>
+          <button onclick="clearFilters()" class="btn-clear">Clear</button>
+        </div>
+
+      </div>
+
+    </div>
+
     <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
       <i class="fa fa-bell"></i>
       <span class="badge">4</span>
 
-    <div class="icon-dropdown" id="notifDropdown">
-      <p>No new notifications</p>
-    </div>
+      <div class="icon-dropdown" id="notifDropdown">
+        <p>No new notifications</p>
+      </div>
     </div>
 
     <div class="topbar-user">
@@ -90,88 +133,77 @@
   </div>
 </header>
 
-
 <!-- LIST -->
 <main class="cStudentList-main">
 
   <div class="cStudentList-container">
 
     <div class="cStudentList-item">
-  <div class="cStudentList-info">
+      <div class="cStudentList-info">
 
-    <div class="cStudentList-avatar">JS</div>
+        <div class="cStudentList-avatar">JS</div>
 
-    <!-- CONTENT WRAPPER (IMPORTANT) -->
-    <div class="cStudentList-content">
+        <div class="cStudentList-content">
 
-      <!-- LEFT -->
-      <div class="cStudentList-left">
-        <div class="cStudentList-nameRow">
-          <h3>Adolf</h3>
-          <button class="btn-small" onclick="openStudentModal()">
-            View Profile
-          </button>
+          <div class="cStudentList-left">
+            <div class="cStudentList-nameRow">
+              <h3>Adolf</h3>
+              <button class="btn-small" onclick="openStudentModal()">
+                View Profile
+              </button>
+            </div>
+            <p>BSIT • 2nd Year</p>
+          </div>
+
+          <div class="cStudentList-right">
+
+            <div class="cStudentList-topRight">
+              <span class="tag stable">Stable</span>
+            </div>
+
+            <div class="cStudentList-bottomRight">
+              <p data-date="2026-04-10">Last Session: April 10, 2026</p>
+            </div>
+
+          </div>
+
         </div>
 
-        <p>BSIT • 2nd Year</p>
       </div>
-
-      <!-- RIGHT -->
-      <div class="cStudentList-right">
-  
-  <div class="cStudentList-topRight">
-    <span class="tag stable">Stable</span>
-  </div>
-
-  <div class="cStudentList-bottomRight">
-    <p>Last Session: Apr 10, 2026</p>
-  </div>
-
-</div>
-
-    </div> <!-- END content -->
-
-  </div>
-</div>
-</main>
-
-<div class="cStudentModal" id="studentModal">
-
-  <div class="cStudentModal-container">
-
-
-<div class="cStudentModal-header">
-  <h2>Student Profile</h2>
-  <button onclick="closeStudentModal()">✕</button>
-</div>
-
-<div class="cStudentModal-body">
-
-  <!-- PROFILE -->
-<div class="cStudentModal-profile">
-
-  <div class="cStudentModal-avatar">JS</div>
-
-  <div class="cStudentModal-profileText">
-
-    <div class="cStudentModal-nameRow">
-      <h3>Adolf</h3>
-
-      <span id="studentStatusTag" class="tag stable">
-        Stable
-      </span>
     </div>
 
-    <p>BSIT • 2nd Year</p>
-
   </div>
+</main>
 
-</div>
+<!-- MODAL -->
+<div class="cStudentModal" id="studentModal">
+  <div class="cStudentModal-container">
 
-      <!-- WELLNESS -->
+    <div class="cStudentModal-header">
+      <h2>Student Profile</h2>
+      <button onclick="closeStudentModal()">✕</button>
+    </div>
+
+    <div class="cStudentModal-body">
+
+      <div class="cStudentModal-profile">
+
+        <div class="cStudentModal-avatar">JS</div>
+
+        <div class="cStudentModal-profileText">
+
+          <div class="cStudentModal-nameRow">
+            <h3>Adolf</h3>
+            <span id="studentStatusTag" class="tag stable">Stable</span>
+          </div>
+
+          <p>BSIT • 2nd Year</p>
+
+        </div>
+      </div>
+
       <div class="cStudentModal-box">
         <h4>Wellness Progress: Good</h4>
-
         <p><b>Overall Score:</b> 82%</p>
 
         <div class="cStudentModal-progressBar">
@@ -204,6 +236,50 @@
 </div>
 
 <script>
+function applyFilters() {
+  const program = document.getElementById("filterProgram").value.toLowerCase();
+  const year = document.getElementById("filterYear").value.toLowerCase();
+  const status = document.getElementById("filterStatus").value.toLowerCase();
+  const filterDate = document.getElementById("filterDate").value;
+
+  document.querySelectorAll(".cStudentList-item").forEach(item => {
+    const text = item.innerText.toLowerCase();
+
+    const matchProgram = program === "all" || text.includes(program);
+    const matchYear = year === "all" || text.includes(year);
+
+    const itemStatus = item.querySelector(".tag")?.innerText.toLowerCase();
+    const matchStatus = status === "all" || itemStatus === status;
+
+    let matchDate = true;
+    const dateValue = item.querySelector("[data-date]")?.dataset.date;
+
+    if (filterDate && dateValue) {
+      matchDate =
+        new Date(dateValue).toDateString() ===
+        new Date(filterDate).toDateString();
+    }
+
+    item.style.display = (matchProgram && matchYear && matchStatus && matchDate)
+      ? "flex"
+      : "none";
+  });
+}
+
+function toggleFilterBox() {
+  document.getElementById("filterBox").classList.toggle("show");
+}
+
+function clearFilters() {
+  document.getElementById("filterProgram").value = "all";
+  document.getElementById("filterYear").value = "all";
+  document.getElementById("filterStatus").value = "all";
+  document.getElementById("filterDate").value = "";
+
+  document.querySelectorAll(".cStudentList-item").forEach(item => {
+    item.style.display = "flex";
+  });
+}
 
 function openStudentModal() {
   document.getElementById("studentModal").classList.add("show");
@@ -215,6 +291,7 @@ function closeStudentModal() {
 
 function searchStudents() {
   const input = document.getElementById("searchInput").value.toLowerCase();
+
   document.querySelectorAll(".cStudentList-item").forEach(item => {
     item.style.display = item.innerText.toLowerCase().includes(input)
       ? "flex"
@@ -223,21 +300,21 @@ function searchStudents() {
 }
 
 function toggleSettings() {
-  const menu = document.getElementById("settingsMenu");
-  menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+  document.getElementById("settingsMenu").classList.toggle("show");
 }
 
 function toggleTheme() {
   document.documentElement.setAttribute(
     "data-theme",
-    document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark"
+    document.documentElement.getAttribute("data-theme") === "dark"
+      ? "light"
+      : "dark"
   );
 }
 
 function logout() {
   window.location.href = "role.html";
 }
-
 </script>
 
 </body>

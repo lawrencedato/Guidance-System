@@ -27,7 +27,7 @@
         <i class="fa fa-gear"></i>
       </button>
 
-      <div class="sidebar-settingsDropdown" id="settingsMenu">
+      <div class="sidebar-settingsDropdown" id="settingsDropdown">
         <a href="cprofile.php"><i class="fa fa-user"></i> Profile</a>
         <a href="chistory.php" class="active"><i class="fa fa-clock"></i> History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
@@ -44,10 +44,9 @@
     <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
     <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
     <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
-    <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
 
     <p class="sidebar-title">STUDENTS</p>
-    <a href="cstudents.php"><i class="fa fa-users"></i> Student List</a>
+    <a href="cstudents.php"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
     <a href="creports.php"><i class="fa fa-file"></i> Reports</a>
@@ -61,20 +60,18 @@
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="topbar-left">
-    <h3>History</h3>
+    <h2>History</h2>
   </div>
 
   <div class="topbar-right">
 
-    <div class="topbar-icons">
-      <div class="topbar-icon">
-        <i class="fa fa-envelope"></i>
-        <span class="badge">2</span>
-      </div>
+    <!-- NOTIFICATIONS -->
+    <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
+      <i class="fa fa-bell"></i>
+      <span class="badge">4</span>
 
-      <div class="topbar-icon">
-        <i class="fa fa-bell"></i>
-        <span class="badge">4</span>
+      <div class="icon-dropdown" id="notifDropdown">
+        <p>No new notifications</p>
       </div>
     </div>
 
@@ -92,100 +89,168 @@
 <!-- MAIN -->
 <main class="cHistory-main">
 
-  <!-- TABS -->
+<!-- TABS + FILTER ROW -->
+<div class="cHistory-topbarRow">
+
   <div class="cHistory-tabs">
     <button class="active" onclick="switchTab(event,'sessions')">Past Sessions</button>
     <button onclick="switchTab(event,'announcements')">Announcements</button>
     <button onclick="switchTab(event,'referrals')">Referrals</button>
   </div>
 
-  <!-- FILTERS -->
-  <div class="cHistory-filterBar">
+  <div class="filter-wrapper">
 
-    <input type="date">
+    <button class="btn" onclick="toggleFilterBox()">
+      <i class="fa fa-filter"></i> Filter
+    </button>
 
-    <!-- YEAR LEVEL -->
-    <select>
-      <option value="">Year Levels</option>
-      <option>1st Year</option>
-      <option>2nd Year</option>
-      <option>3rd Year</option>
-      <option>4th Year</option>
-    </select>
+    <div id="filterBox" class="filter-box">
 
-    <!-- PROGRAM -->
-    <select>
-      <option value="">Programs</option>
-      <option>BSIT</option>
-      <option>BSCS</option>
-      <option>BSA</option>
-      <option>BSBA</option>
-      <option>BEED</option>
-    </select>
+      <div class="filter-box-content">
 
-    <select>
-      <option>Status</option>
-      <option>Completed</option>
-      <option>Expired</option>
-    </select>
+        <select id="filterYear">
+          <option value="all">Year Levels</option>
+          <option>1st Year</option>
+          <option>2nd Year</option>
+          <option>3rd Year</option>
+          <option>4th Year</option>
+        </select>
+
+        <select id="filterProgram">
+          <option value="all">Programs</option>
+          <option>BSIT</option>
+          <option>BSCS</option>
+          <option>BSA</option>
+          <option>BSBA</option>
+          <option>BEED</option>
+        </select>
+
+        <select id="filterStatus">
+          <option value="all">Status</option>
+          <option>Completed</option>
+          <option>Expired</option>
+        </select>
+
+        <input type="date" id="filterDate">
+
+        <div class="filter-actions">
+          <button onclick="applyFilter()" class="btn-apply">Apply</button>
+          <button onclick="clearFilter()" class="btn-clear">Clear</button>
+        </div>
+
+      </div>
+
+    </div>
 
   </div>
 
-  <!-- SESSIONS -->
-  <div id="sessions" class="cHistory-tabContent">
-    <table>
-      <thead>
-        <tr>
-          <th>Student</th>
-          <th>Date</th>
-          <th>Time</th>
-          <th>Type</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td colspan="5" class="empty">No past sessions found</td></tr>
-      </tbody>
-    </table>
-  </div>
+</div>
 
-  <!-- ANNOUNCEMENTS -->
-  <div id="announcements" class="cHistory-tabContent hidden">
-    <table>
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Post Date</th>
-          <th>Year Level</th>
-          <th>Reach</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td colspan="4" class="empty">No past announcements found</td></tr>
-      </tbody>
-    </table>
-  </div>
+<!-- SESSIONS -->
+<div id="sessions" class="cHistory-tabContent">
+  <table>
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Type</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="5" class="empty">No past sessions found</td></tr>
+    </tbody>
+  </table>
+</div>
 
-  <!-- REFERRALS -->
-  <div id="referrals" class="cHistory-tabContent hidden">
-    <table>
-      <thead>
-        <tr>
-          <th>Student</th>
-          <th>Referred To</th>
-          <th>Reason</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td colspan="4" class="empty">No past referrals found</td></tr>
-      </tbody>
-    </table>
-  </div>
+<!-- ANNOUNCEMENTS -->
+<div id="announcements" class="cHistory-tabContent hidden">
+  <table>
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Post Date</th>
+        <th>Year Level</th>
+        <th>Reach</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="4" class="empty">No past announcements found</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- REFERRALS -->
+<div id="referrals" class="cHistory-tabContent hidden">
+  <table>
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>Referred To</th>
+        <th>Reason</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="4" class="empty">No past referrals found</td></tr>
+    </tbody>
+  </table>
+</div>
 
 </main>
 
 <script>
+function toggleFilterBox() {
+  document.getElementById("filterBox").classList.toggle("show");
+}
+
+document.addEventListener("click", function(e) {
+  const box = document.getElementById("filterBox");
+  const btn = document.querySelector(".filter-wrapper button");
+
+  if (!box.contains(e.target) && !btn.contains(e.target)) {
+    box.classList.remove("show");
+  }
+});
+
+function applyFilter() {
+  const year = document.getElementById("filterYear").value.toLowerCase();
+  const program = document.getElementById("filterProgram").value.toLowerCase();
+  const status = document.getElementById("filterStatus").value.toLowerCase();
+  const date = document.getElementById("filterDate").value;
+
+  const rows = document.querySelectorAll("tbody tr");
+
+  rows.forEach(row => {
+    const text = row.innerText.toLowerCase();
+
+    let matchYear = year === "all" || text.includes(year);
+    let matchProgram = program === "all" || text.includes(program);
+    let matchStatus = status === "all" || text.includes(status);
+
+    let matchDate = true;
+    if (date) {
+      matchDate = text.includes(new Date(date).toLocaleDateString().toLowerCase());
+    }
+
+    row.style.display = (matchYear && matchProgram && matchStatus && matchDate) ? "" : "none";
+  });
+
+  document.getElementById("filterBox").classList.remove("show");
+}
+
+function clearFilter() {
+  document.getElementById("filterYear").value = "all";
+  document.getElementById("filterProgram").value = "all";
+  document.getElementById("filterStatus").value = "all";
+  document.getElementById("filterDate").value = "";
+
+  document.querySelectorAll("tbody tr").forEach(row => {
+    row.style.display = "";
+  });
+}
+
 function toggleSettingsMenu() {
   const menu = document.getElementById("settingsDropdown");
   menu.style.display = menu.style.display === "flex" ? "none" : "flex";
@@ -205,7 +270,8 @@ function switchTab(event, tabId) {
 
 function toggleTheme() {
   const html = document.documentElement;
-  html.setAttribute("data-theme",
+  html.setAttribute(
+    "data-theme",
     html.getAttribute("data-theme") === "dark" ? "light" : "dark"
   );
 }

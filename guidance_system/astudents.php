@@ -356,7 +356,6 @@ birthdayInput.addEventListener('change', function () {
 
   if (isNaN(age)) return;
 
-  // BLOCK MINORS
   if (age < 17) {
     alert("Student must be at least 17 years old.");
     this.value = "";
@@ -380,33 +379,13 @@ function saveStudent() {
   const course = document.getElementById('course').value;
   const email = document.getElementById('email').value.trim();
 
-  // EMPTY CHECK
   if (!firstName || !lastName || !gender || !birthday || !studentId || !yearLevel || !course || !email) {
     alert("Please fill in all required fields.");
     return;
   }
 
-  // BLOCK default selects
-  if (gender === "" || yearLevel === "" || course === "") {
-    alert("Please select valid options.");
-    return;
-  }
-
-  // Student ID numeric only
-  if (!/^\d+$/.test(studentId)) {
-    alert("Student ID must contain numbers only.");
-    return;
-  }
-
-  // AGE CHECK
-  if (age < 17) {
-    alert("Student must be at least 17 years old.");
-    return;
-  }
-
   const fullName = firstName + " " + lastName;
 
-  // ADD TO TABLE
   const tbody = document.querySelector('.aStudents-table tbody');
 
   const row = document.createElement('tr');
@@ -427,16 +406,6 @@ function saveStudent() {
 
   alert("Student saved successfully!");
   closeStudentModal();
-
-  // RESET FORM
-  document.getElementById('firstName').value = "";
-  document.getElementById('lastName').value = "";
-  document.getElementById('gender').value = "";
-  document.getElementById('birthday').value = "";
-  document.getElementById('studentAge').value = "";
-  document.getElementById('studentId').value = "";
-  document.getElementById('yearLevel').value = "";
-  document.getElementById('course').value = "";
 }
 
 // ================= FILTER =================
@@ -452,8 +421,6 @@ function triggerImportCsv() {
 
 function exportStudentCsv() {
   const table = document.querySelector('.aStudents-table');
-  if (!table) return;
-
   const rows = Array.from(table.querySelectorAll('thead tr, tbody tr'));
 
   const csv = rows.map(row => {
@@ -518,7 +485,6 @@ function saveEdit() {
 
   closeViewModal();
 }
-
 </script>
 
 </body>
