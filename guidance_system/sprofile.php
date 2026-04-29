@@ -26,8 +26,8 @@
       </button>
 
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
-        <a href="sprofile.php" class="active"><i class="fa fa-user"></i> Profile</a>
-        <a href="shistory.php"><i class="fa fa-clock"></i> Session History</a>
+        <a href="profile.html" class="active"><i class="fa fa-user"></i> Profile</a>
+        <a href="history.html"><i class="fa fa-clock"></i> Session History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -36,22 +36,22 @@
   </div>
 
   <nav class="sidebar-menu">
-    <a href="dashboard.php"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="dashboard.html"><i class="fa fa-th-large"></i> Dashboard</a>
 
     <p class="sidebar-title">SERVICES</p>
-    <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
-    <a href="sconcerns.php"><i class="fa fa-headset"></i> Submit Concern</a>
-    <a href="swellness.php"><i class="fa fa-heart"></i> Wellness Check</a>
-    <a href="sreferral.php"><i class="fa fa-route"></i> Referral</a>
+    <a href="booking.html"><i class="fa fa-calendar"></i> Book Appointment</a>
+    <a href="sconcerns.html"><i class="fa fa-headset"></i> Submit Concern</a>
+    <a href="wellness.html"><i class="fa fa-heart"></i> Wellness Check</a>
+    <a href="referral.html"><i class="fa fa-route"></i> Referral</a>
 
     <p class="sidebar-title">UPDATES</p>
-    <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
+    <a href="announcements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
-    <a href="sreports.php"><i class="fa fa-ticket"></i> Tickets</a>
+    <a href="sreports.html"><i class="fa fa-ticket"></i> Tickets</a>
 
     <p class="sidebar-title">SYSTEM</p>
-    <a href="sfeedback.php"><i class="fa fa-comment"></i> Feedback</a>
+    <a href="feedback.html"><i class="fa fa-comment"></i> Feedback</a>
   </nav>
 </aside>
 
@@ -153,7 +153,33 @@
             placeholder="Change phone number"
           >
         </div>
+<!-- EMERGENCY CONTACT -->
+<div class="form-group">
+  <label>Emergency Contact Name</label>
+  <input
+    id="emergencyName"
+    type="text"
+    placeholder="Enter emergency contact name"
+  >
+</div>
 
+<div class="form-group">
+  <label>Relationship</label>
+  <input
+    id="emergencyRelation"
+    type="text"
+    placeholder="e.g. Mother, Father, Guardian"
+  >
+</div>
+
+<div class="form-group">
+  <label>Emergency Contact Number</label>
+  <input
+    id="emergencyNumber"
+    type="text"
+    placeholder="Enter emergency contact number"
+  >
+</div>
         <button
           class="btn sProfile-saveBtn"
           onclick="saveProfile()"
@@ -213,6 +239,28 @@ function loadImage(event) {
     URL.createObjectURL(event.target.files[0]);
 }
 
+function saveProfile() {
+  const phone = document.getElementById("phone").value;
+  const emergencyName = document.getElementById("emergencyName").value;
+  const emergencyRelation = document.getElementById("emergencyRelation").value;
+  const emergencyNumber = document.getElementById("emergencyNumber").value;
+
+  if (phone.trim() === "") {
+    document.getElementById("status").innerHTML =
+      "<span class='tag warning'>Please enter your phone number</span>";
+    return;
+  }
+
+  document.getElementById("status").innerHTML =
+    "<span class='tag info'>Profile updated successfully</span>";
+
+  console.log({
+    phone,
+    emergencyName,
+    emergencyRelation,
+    emergencyNumber
+  });
+}
 /* only phone number is saved */
 function saveProfile() {
   const phone = document.getElementById("phone").value;
