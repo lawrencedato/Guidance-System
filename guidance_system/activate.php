@@ -37,11 +37,14 @@
         <label class="auth-label">Email</label>
         <input class="auth-input" id="email" type="email">
 
-        <label class="auth-label">Password</label>
-        <input class="auth-input" id="password" type="password">
+        <label class="auth-label">Student-ID</label>
+        <input class="auth-input" id="studentId" type="text">
+
+        <label class="auth-label">Birthday</label>
+        <input class="auth-input" id="birthday" type="date">
 
         <button class="auth-btn" type="submit">
-          Login
+          Activate Account
         </button>
 
         <div class="auth-message" id="regError"></div>
