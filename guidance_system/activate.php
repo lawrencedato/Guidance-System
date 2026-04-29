@@ -57,7 +57,7 @@
 
       <div class="auth-footer">
         <div class="auth-footer-text">Already have an account?</div>
-        <a class="auth-footer-link" href="login.html">Login</a>
+        <a class="auth-footer-link" href="slogin.php">Login</a>
       </div>
 
     </div>
