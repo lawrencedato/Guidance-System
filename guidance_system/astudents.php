@@ -299,6 +299,32 @@
 
 <!-- ================= SCRIPT ================= -->
 <script>
+function toggleSettingsMenu(e){
+  e.stopPropagation();
+  document.getElementById("settingsDropdown").classList.toggle("show");
+}
+
+function toggleTheme(){
+  const html = document.documentElement;
+  html.setAttribute(
+    "data-theme",
+    html.getAttribute("data-theme") === "light" ? "dark" : "light"
+  );
+}
+
+function logout(){
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+document.addEventListener("click", e => {
+  const menu = document.getElementById("settingsDropdown");
+  const btn = document.querySelector(".sidebar-settingsButton");
+
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove("show");
+  }
+});
 
 // ================= MODAL =================
 function openAddStudentModal() {
@@ -492,32 +518,6 @@ function saveEdit() {
 
   closeViewModal();
 }
-function toggleSettingsMenu(e){
-  e.stopPropagation();
-  document.getElementById("settingsDropdown").classList.toggle("show");
-}
-
-function toggleTheme(){
-  const html = document.documentElement;
-  html.setAttribute(
-    "data-theme",
-    html.getAttribute("data-theme") === "light" ? "dark" : "light"
-  );
-}
-
-function logout(){
-  localStorage.clear();
-  window.location.href = "login.html";
-}
-
-document.addEventListener("click", e => {
-  const menu = document.getElementById("settingsDropdown");
-  const btn = document.querySelector(".sidebar-settingsButton");
-
-  if (!menu.contains(e.target) && !btn.contains(e.target)) {
-    menu.classList.remove("show");
-  }
-});
 
 </script>
 

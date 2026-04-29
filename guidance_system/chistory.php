@@ -67,20 +67,15 @@
   <div class="topbar-right">
 
     <div class="topbar-icons">
+      <div class="topbar-icon">
+        <i class="fa fa-envelope"></i>
+        <span class="badge">2</span>
+      </div>
 
-    <div class="topbar-searchBox">
-      <i class="fa fa-search"></i>
-      <input type="text" placeholder="Search...">
-    </div>
-
-    <!-- NOTIFICATIONS -->
-    <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
-      <i class="fa fa-bell"></i>
-      <span class="badge">4</span>
-
-    <div class="icon-dropdown" id="notifDropdown">
-      <p>No new notifications</p>
-    </div>
+      <div class="topbar-icon">
+        <i class="fa fa-bell"></i>
+        <span class="badge">4</span>
+      </div>
     </div>
 
     <div class="topbar-user">

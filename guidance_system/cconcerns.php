@@ -61,8 +61,14 @@
     <h3>Student Concerns</h3>
   </div>
 
-  <div class="topbar-right">
+   <div class="topbar-right">
+<div class="filter-wrapper">
 
+  <button class="btn-filter" onclick="toggleFilterBox(show)">
+    <i class="fa fa-filter"></i> Filter
+  </button>
+
+</div>
     <!-- NOTIFICATIONS -->
     <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
       <i class="fa fa-bell"></i>
@@ -86,7 +92,23 @@
 
 <!-- MAIN -->
 <main class="cConcerns-main">
+<div id="filterBox" class="filter-box">
 
+  <select id="filterStatus">
+    <option value="all">Status</option>
+    <option>Pending</option>
+    <option>In Progress</option>
+    <option>Resolved</option>
+  </select>
+
+  <input type="date" id="filterDate">
+
+  <div class="filter-actions">
+    <button onclick="applyConcernFilter()" class="btn-apply">Apply</button>
+    <button onclick="clearConcernFilter()" class="btn-clear">Clear</button>
+  </div>
+
+</div>
   <div class="cConcerns-container">
 
     <!-- CONCERN CARD -->
@@ -133,7 +155,44 @@
 </main>
 
 <script>
-  function toggleSettingsMenu(e){
+  function toggleFilterBox() {
+  document.getElementById("filterBox").classList.toggle("show");
+}
+
+function applyConcernFilter() {
+
+  const status = document.getElementById("filterStatus").value.toLowerCase();
+  const date = document.getElementById("filterDate").value;
+
+  const items = document.querySelectorAll(".concern-item");
+
+  items.forEach(item => {
+
+    const itemStatus = item.querySelector(".status")?.innerText.toLowerCase();
+    const itemDate = item.querySelector("[data-date]")?.dataset.date;
+
+    let matchStatus = status === "all" || itemStatus === status;
+    let matchDate = true;
+
+    if (date && itemDate) {
+      matchDate = new Date(itemDate).toDateString() === new Date(date).toDateString();
+    }
+
+    item.style.display = (matchStatus && matchDate) ? "block" : "none";
+  });
+}
+
+function clearConcernFilter() {
+
+  document.getElementById("filterStatus").value = "all";
+  document.getElementById("filterDate").value = "";
+
+  document.querySelectorAll(".concern-item").forEach(item => {
+    item.style.display = "block";
+  });
+
+}
+function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
 }
@@ -160,21 +219,18 @@ document.addEventListener("click", e => {
   }
 });
 
+function submitConcern() {
+  const subject = document.getElementById("subject").value;
+  const message = document.getElementById("message").value;
 
-function sendReply(btn){
-  const card = btn.closest(".cConcerns-card");
-  const textarea = card.querySelector(".cConcerns-replyBox");
-  const result = card.querySelector(".cConcerns-result");
-
-  if (!textarea.value.trim()) {
-    alert("Please write a reply first.");
+  if (!subject || !message) {
+    alert("Please complete all fields.");
     return;
   }
 
-  result.innerHTML = "✔ Reply sent successfully.";
-  textarea.value = "";
+  document.getElementById("result").innerHTML =
+    "✔ Concern submitted successfully.";
 }
-
 </script>
 
 </body>

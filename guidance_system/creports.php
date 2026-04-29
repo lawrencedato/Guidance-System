@@ -56,6 +56,7 @@
 </aside>
 
 <!-- ================= TOPBAR ================= -->
+<!-- ================= TOPBAR ================= -->
 <header class="topbar">
   <div class="topbar-left">
     <h2>Reports</h2>
@@ -63,7 +64,7 @@
 
   <div class="topbar-right">
 
-<!-- NOTIFICATIONS -->
+<!-- BELL NOTIFICATIONS -->
 <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
   <i class="fa fa-bell"></i>
   <span class="badge">4</span>
@@ -143,6 +144,7 @@ document.addEventListener("click", e => {
     menu.classList.remove("show");
   }
 });
+
 
 function postAnnouncement() {
   db.collection("announcements").add({
