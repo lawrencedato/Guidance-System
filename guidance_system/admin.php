@@ -53,7 +53,7 @@
 
     <p class="sidebar-title">SYSTEM</p>
 
-    <a href="aeports.php"><i class="fa fa-chart-line"></i> Reports</a>
+    <a href="areports.php"><i class="fa fa-chart-line"></i> Reports</a>
 
   </nav>
 
