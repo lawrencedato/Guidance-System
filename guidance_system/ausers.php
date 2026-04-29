@@ -3,227 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Users - UNITYCARE</title>
+<title>UNITYCARE | Users</title>
 
 <link rel="stylesheet" href="styles.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
-<style>
-
-/* ================= TAB BUTTONS ================= */
-.tab-buttons {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #e2e8f0;
-  flex-wrap: wrap;
-}
-
-.tab-buttons button {
-  padding: 12px 18px;
-  border: none;
-  border-bottom: 3px solid transparent;
-  background: transparent;
-  cursor: pointer;
-  font-weight: 600;
-  color: #64748b;
-  font-size: 14px;
-  transition: all 0.2s ease;
-}
-
-.tab-buttons button:hover {
-  color: #34699A;
-}
-
-.tab-buttons button.active {
-  color: #113F67;
-  border-bottom-color: #113F67;
-}
-
-/* ================= TAB CONTENT ================= */
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
-  display: block;
-}
-
-/* ================= RECORD ACTIONS ================= */
-.record-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.csv-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.csv-actions button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.csv-actions button:hover {
-  transform: translateY(-1px);
-}
-
-.btn-add {
-  background: #113F67;
-  color: #fff;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-}
-
-.btn-add:hover {
-  background: #0d3254;
-  transform: translateY(-1px);
-}
-
-.btn-import {
-  background: #0f766e;
-  color: #fff;
-}
-
-.btn-import:hover {
-  background: #115e59;
-}
-
-.btn-export {
-  background: #f59e0b;
-  color: #1f2937;
-}
-
-.btn-export:hover {
-  background: #d97706;
-}
-
-/* ================= TABLE STYLING ================= */
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-table thead tr {
-  text-align: left;
-  border-bottom: 1.5px solid #e2e8f0;
-  background: #f8fafc;
-}
-
-table th {
-  padding: 12px 14px;
-  font-weight: 600;
-  font-size: 13px;
-  color: #475569;
-}
-
-table td {
-  padding: 12px 14px;
-  font-size: 14px;
-  color: #334155;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-table tbody tr:hover {
-  background: #f8fafc;
-}
-
-table .btn {
-  padding: 6px 12px;
-  font-size: 12px;
-}
-
-</style>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body>
+<body class="body">
 
 <!-- ================= SIDEBAR ================= -->
-<nav class="sidebar">
+<aside class="sidebar">
 
-  <div class="logo-bar">
-    <div class="logo">
-      <img src="logo.png">
-      <h3>UNITYCARE</h3>
+  <div class="sidebar-logoBar">
+
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="logo">
+      <span class="sidebar-logoText">UNITYCARE</span>
     </div>
+
+    <div class="sidebar-settings">
+      <button class="sidebar-settingsButton" onclick="toggleSettingsMenu(event)">
+        <i class="fa fa-gear"></i>
+      </button>
+
+      <div class="sidebar-settingsDropdown" id="settingsDropdown">
+        <button onclick="toggleTheme()">
+          <i class="fa fa-moon"></i> Theme
+        </button>
+
+        <button onclick="logout()">
+          <i class="fa fa-right-from-bracket"></i> Logout
+        </button>
+      </div>
+    </div>
+
   </div>
 
-  <div class="menu">
+  <nav class="sidebar-menu">
 
-    <a href="admin.php"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="admin.html"><i class="fa fa-gauge"></i> Dashboard</a>
 
-    <p class="menu-title">MANAGEMENT</p>
+    <p class="sidebar-title">MANAGEMENT</p>
 
-    <a class="active" href="ausers.php"><i class="fa fa-users"></i> Users</a>
-    <a href="astudents.php"><i class="fa fa-user-graduate"></i> Students</a>
-    <a href="acounselors.php"><i class="fa fa-user-doctor"></i> Counselors</a>
-    <a href="aappointments.php"><i class="fa fa-calendar"></i> Appointments</a>
+    <a href="ausers.html" class="active"><i class="fa fa-users"></i> Users</a>
+    <a href="astudents.html"><i class="fa fa-user-graduate"></i> Students</a>
+    <a href="acounselors.html"><i class="fa fa-user-doctor"></i> Counselors</a>
+    <a href="aappointments.html"><i class="fa fa-calendar"></i> Appointments</a>
 
-    <p class="menu-title">SYSTEM</p>
+    <p class="sidebar-title">SYSTEM</p>
 
-    <a href="areports.php"><i class="fa fa-chart-line"></i> Reports</a>
+    <a href="areports.html"><i class="fa fa-chart-line"></i> Reports</a>
 
-  </div>
+  </nav>
 
-  <button class="btn btn-error btn-sm" onclick="logout()">
-    <i class="fa fa-right-from-bracket"></i> Logout
-  </button>
+</aside>
 
-</nav>
+<!-- ================= TOPBAR ================= -->
+  <header class="topbar">
 
-<!-- ================= MAIN ================= -->
-<main class="main">
-
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div>
+    <div class="topbar-left">
       <h2>Users</h2>
-      <p class="muted">Manage system accounts by role</p>
+      <p class="topbar-muted">Manage system account by role.</p>
     </div>
-    <!-- ================= TABS ================= -->
-    <div class="tab-buttons">
-    <button class="active" onclick="showTab('students')">
+
+  </header>
+
+<!-- ================= MAIN WRAPPER ================= -->
+<main class="aUsers-main">
+
+  <!-- ================= TABS ================= -->
+  <div class="aUsers-tabs">
+
+    <button class="active" onclick="showTab(event,'students')">
       <i class="fa fa-user-graduate"></i> Students
     </button>
-    <button onclick="showTab('counselors')">
+
+    <button onclick="showTab(event,'counselors')">
       <i class="fa fa-user-doctor"></i> Counselors
     </button>
-    <button onclick="showTab('admins')">
+
+    <button onclick="showTab(event,'admins')">
       <i class="fa fa-user-tie"></i> Admins
     </button>
-  </div>
+
   </div>
 
-    
   <!-- ================= STUDENTS ================= -->
-  <section id="students" class="tab-content active card">
+  <section id="students" class="aUsers-tab active aUsers-card">
 
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+    <div class="aUsers-header">
 
       <div>
-        <h3 style="margin:0;">Student Accounts</h3>
-        <p class="muted" style="margin:0;">Activated student users</p>
+        <h3>Student Accounts</h3>
+        <p class="muted">Activated student users</p>
       </div>
 
       <div class="record-actions">
@@ -234,7 +107,7 @@ table .btn {
 
     </div>
 
-    <div style="overflow-x:auto;">
+    <div class="table-wrapper">
 
       <table>
         <thead>
@@ -253,16 +126,10 @@ table .btn {
             <td>Juan Dela Cruz</td>
             <td>juan@email.com</td>
             <td>2nd Year</td>
-            <td><span class="badge badge-success">Active</span></td>
-          </tr>
-          <tr>
-            <td>S-002</td>
-            <td>Maria Santos</td>
-            <td>maria@email.com</td>
-            <td>3rd Year</td>
-            <td><span class="badge badge-success">Active</span></td>
+            <td><span class="aBadge aBadge-success">Active</span></td>
           </tr>
         </tbody>
+
       </table>
 
     </div>
@@ -270,13 +137,13 @@ table .btn {
   </section>
 
   <!-- ================= COUNSELORS ================= -->
-  <section id="counselors" class="tab-content card">
+  <section id="counselors" class="aUsers-tab aUsers-card">
 
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+    <div class="aUsers-header">
 
       <div>
-        <h3 style="margin:0;">Counselor Accounts</h3>
-        <p class="muted" style="margin:0;">System counselors and staff</p>
+        <h3>Counselor Accounts</h3>
+        <p class="muted">System counselors and staff</p>
       </div>
 
       <div class="record-actions">
@@ -287,7 +154,7 @@ table .btn {
 
     </div>
 
-    <div style="overflow-x:auto;">
+    <div class="table-wrapper">
 
       <table>
         <thead>
@@ -306,16 +173,10 @@ table .btn {
             <td>Dr. Reyes</td>
             <td>reyes@unitycare.com</td>
             <td>Mental Health</td>
-            <td><span class="badge badge-success">Active</span></td>
-          </tr>
-          <tr>
-            <td>C-002</td>
-            <td>Dr. Garcia</td>
-            <td>garcia@unitycare.com</td>
-            <td>Academic Counseling</td>
-            <td><span class="badge badge-success">Active</span></td>
+            <td><span class="aBadge aBadge-success">Active</span></td>
           </tr>
         </tbody>
+
       </table>
 
     </div>
@@ -323,13 +184,13 @@ table .btn {
   </section>
 
   <!-- ================= ADMINS ================= -->
-  <section id="admins" class="tab-content card">
+  <section id="admins" class="aUsers-tab aUsers-card">
 
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+    <div class="aUsers-header">
 
       <div>
-        <h3 style="margin:0;">Admin Accounts</h3>
-        <p class="muted" style="margin:0;">System administrators</p>
+        <h3>Admin Accounts</h3>
+        <p class="muted">System administrators</p>
       </div>
 
       <div class="record-actions">
@@ -340,7 +201,7 @@ table .btn {
 
     </div>
 
-    <div style="overflow-x:auto;">
+    <div class="table-wrapper">
 
       <table>
         <thead>
@@ -359,16 +220,10 @@ table .btn {
             <td>System Admin</td>
             <td>admin@unitycare.com</td>
             <td>Super Admin</td>
-            <td><span class="badge badge-success">Active</span></td>
-          </tr>
-          <tr>
-            <td>A-002</td>
-            <td>John Manager</td>
-            <td>manager@unitycare.com</td>
-            <td>Admin</td>
-            <td><span class="badge badge-success">Active</span></td>
+            <td><span class="aBadge aBadge-success">Active</span></td>
           </tr>
         </tbody>
+
       </table>
 
     </div>
@@ -380,18 +235,54 @@ table .btn {
 <!-- ================= SCRIPT ================= -->
 <script>
 
-function showTab(tab) {
-  let sections = document.querySelectorAll(".tab-content");
-  let buttons = document.querySelectorAll(".tab-buttons button");
+/* =========================
+   SIDEBAR SETTINGS MENU
+========================= */
+function toggleSettingsMenu(e) {
+  e.stopPropagation();
+  document.getElementById("settingsDropdown").classList.toggle("show");
+}
+
+/* close settings dropdown when clicking outside */
+document.addEventListener("click", e => {
+  const menu = document.getElementById("settingsDropdown");
+  const btn = document.querySelector(".sidebar-settingsButton");
+
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove("show");
+  }
+});
+
+/* =========================
+   THEME TOGGLE
+========================= */
+function toggleTheme() {
+  const html = document.documentElement;
+  html.setAttribute(
+    "data-theme",
+    html.getAttribute("data-theme") === "light" ? "dark" : "light"
+  );
+}
+
+/* =========================
+   TAB SWITCHING (FIXED)
+========================= */
+function showTab(event, tab) {
+  const sections = document.querySelectorAll(".aUsers-tab");
+  const buttons = document.querySelectorAll(".aUsers-tabs button");
 
   sections.forEach(s => s.classList.remove("active"));
   buttons.forEach(b => b.classList.remove("active"));
 
   document.getElementById(tab).classList.add("active");
 
-  event.target.classList.add("active");
+  // ensure correct button is activated
+  event.currentTarget.classList.add("active");
 }
 
+/* =========================
+   PLACEHOLDER ACTIONS
+========================= */
 function addUser(type) {
   alert(`Add new ${type} functionality - to be implemented`);
 }
@@ -404,9 +295,13 @@ function exportCsv(type) {
   alert(`Export ${type} to CSV - to be implemented`);
 }
 
+/* =========================
+   LOGOUT (FIXED - SINGLE VERSION)
+========================= */
 function logout() {
-  if (confirm('Are you sure you want to logout?')) {
-    window.location.href = 'login.html';
+  if (confirm("Are you sure you want to logout?")) {
+    localStorage.clear();
+    window.location.href = "login.html";
   }
 }
 

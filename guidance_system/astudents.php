@@ -63,61 +63,62 @@
 <header class="topbar">
 
   <div class="topbar-left">
-      <h2>Student Records </h2>
+      <h2>Student Records</h2>
     <p class="topbar-muted">
       Manage registered student accounts.
     </p>
   </div>
-  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
 
-      <input type="text"
-        placeholder="Search student ID or name"
-        style="padding:10px; border-radius:8px; border:1px solid #ddd; width:220px;">
+  <div class="topbar-actions">
 
-      <div style="position:relative;">
+    <input type="text"
+      class="topbar-search-input"
+      placeholder="Search student ID or name">
 
-        <button onclick="toggleFilter(event)" class="btn btn-secondary">
-          <i class="fa fa-filter"></i> Filter
-        </button>
+    <div class="filter-wrapper">
 
-        <div id="filterBox">
+      <button onclick="toggleFilter(event)" class="btn btn-secondary">
+        <i class="fa fa-filter"></i> Filter
+      </button>
 
-          <p>Course</p>
-          <select>
-            <option>All Courses</option>
-            <option>AB Psychology</option>
-            <option>BSBA</option>
-            <option>BSA</option>
-            <option>BS Entrep</option>
-            <option>BEEd</option>
-            <option>BSEd</option>
-            <option>BSHM</option>
-            <option>BSIT</option>
-            <option>BSCS</option>
-            <option>BSN</option>
-            <option>BSECE</option>
-          </select>
+      <div id="filterBox">
 
-          <p>Year Level</p>
-          <select>
-            <option>All Years</option>
-            <option>1st Year</option>
-            <option>2nd Year</option>
-            <option>3rd Year</option>
-            <option>4th Year</option>
-          </select>
+        <p>Course</p>
+        <select>
+          <option>All Courses</option>
+          <option>AB Psychology</option>
+          <option>BSBA</option>
+          <option>BSA</option>
+          <option>BS Entrep</option>
+          <option>BEEd</option>
+          <option>BSEd</option>
+          <option>BSHM</option>
+          <option>BSIT</option>
+          <option>BSCS</option>
+          <option>BSN</option>
+          <option>BSECE</option>
+        </select>
 
-        </div>
+        <p>Year Level</p>
+        <select>
+          <option>All Years</option>
+          <option>1st Year</option>
+          <option>2nd Year</option>
+          <option>3rd Year</option>
+          <option>4th Year</option>
+        </select>
 
       </div>
 
     </div>
 
+  </div>
+
 </header>
 
 <!-- ================= MAIN ================= -->
 <main class="aStudents-main">
-  <!-- ================= STUDENT RECORDS ================= -->
+
   <section class="aStudents-card">
 
     <div class="aStudents-header">
@@ -128,19 +129,21 @@
       </div>
 
       <div class="aStudents-record-actions">
-        <button onclick="openAddStudentModal()"
-          class="aStudents-add-btn">
+
+        <button onclick="openAddStudentModal()" class="aStudents-add-btn">
           <i class="fa fa-user-plus"></i> Add Student
         </button>
 
         <div class="aStudents-csv-actions">
-          <button type="button" class="aStudents-btn-import" onclick="triggerImportCsv()">
+          <button class="btn-import" onclick="triggerImportCsv()">
             <i class="fa fa-file-import"></i> Import CSV
           </button>
-          <button type="button" class="aStudents-btn-export" onclick="exportStudentCsv()">
+
+          <button class="btn-export" onclick="exportStudentCsv()">
             <i class="fa fa-file-export"></i> Export CSV
           </button>
         </div>
+
       </div>
 
     </div>
@@ -173,7 +176,9 @@
             <td>20</td>
             <td>2nd Year</td>
             <td>BSIT</td>
-            <td><button class="aStudents-btn aStudents-btn-sm" onclick="viewStudent(this)">View</button></td>
+            <td>
+              <button class="aStudents-btn aStudents-btn-sm" onclick="viewStudent(this)">View</button>
+            </td>
           </tr>
         </tbody>
 
@@ -194,22 +199,23 @@
         <h3>Add New Student</h3>
         <p>Fill in all the student's information below</p>
       </div>
-      <button class="aStudents-modal-close" onclick="closeStudentModal()">&#x2715;</button>
+      <button class="aStudents-modal-close" onclick="closeStudentModal()">✕</button>
     </div>
 
     <div class="aStudents-modal-body">
 
       <div class="aStudents-sec-label">PERSONAL INFORMATION</div>
+
       <div class="aStudents-field-grid">
 
         <div class="aStudents-field">
           <label>First Name</label>
-          <input type="text" id="firstName" placeholder="e.g. Juan">
+          <input type="text" id="firstName">
         </div>
 
         <div class="aStudents-field">
           <label>Last Name</label>
-          <input type="text" id="lastName" placeholder="e.g. Dela Cruz">
+          <input type="text" id="lastName">
         </div>
 
         <div class="aStudents-field">
@@ -224,22 +230,23 @@
 
         <div class="aStudents-field">
           <label>Birthday</label>
-          <input type="date" id="birthday" required>
+          <input type="date" id="birthday">
         </div>
 
         <div class="aStudents-field">
           <label>Age</label>
-          <input type="number" id="studentAge" placeholder="Auto-calculated" readonly>
+          <input type="number" id="studentAge" readonly>
         </div>
 
       </div>
 
       <div class="aStudents-sec-label">ACADEMIC INFORMATION</div>
+
       <div class="aStudents-field-grid">
 
         <div class="aStudents-field">
           <label>Student ID</label>
-          <input type="text" id="studentId" placeholder="e.g. 240001">
+          <input type="text" id="studentId">
         </div>
 
         <div class="aStudents-field">
@@ -269,12 +276,11 @@
             <option>BSN</option>
             <option>BSECE</option>
           </select>
-          </select>
         </div>
 
         <div class="aStudents-field full">
           <label>Email Address</label>
-          <input type="email" id="email" placeholder="student@school.edu.ph">
+          <input type="email" id="email">
         </div>
 
       </div>
@@ -289,74 +295,7 @@
   </div>
 </div>
 
-  <div id="viewStudentModal" class="aStudents-modal">
-  <div class="aStudents-modal-content">
-
-    <div class="aStudents-modal-header">
-      <div>
-        <h3>Student Details</h3>
-        <p>View and edit student information</p>
-      </div>
-      <button class="aStudents-modal-close" onclick="closeViewModal()">✕</button>
-    </div>
-
-    <div class="aStudents-modal-body">
-
-      <div class="aStudents-field-grid">
-
-        <div class="aStudents-field full">
-          <label>Full Name</label>
-          <input type="text" id="viewName" readonly>
-        </div>
-
-        <div class="aStudents-field">
-          <label>Email</label>
-          <input type="text" id="viewEmail" readonly>
-        </div>
-
-        <div class="aStudents-field">
-          <label>Gender</label>
-          <input type="text" id="viewGender" readonly>
-        </div>
-
-        <div class="aStudents-field">
-          <label>Birthday</label>
-          <input type="text" id="viewBirthday" readonly>
-        </div>
-
-        <div class="aStudents-field">
-          <label>Age</label>
-          <input type="text" id="viewAge" readonly>
-        </div>
-
-        <div class="aStudents-field">
-          <label>Student ID</label>
-          <input type="text" id="viewStudentId" readonly>
-        </div>
-
-        <div class="aStudents-field">
-          <label>Year Level</label>
-          <input type="text" id="viewYear" readonly>
-        </div>
-
-        <div class="aStudents-field">
-          <label>Course</label>
-          <input type="text" id="viewCourse" readonly>
-        </div>
-
-      </div>
-
-    </div>
-
-    <div class="aStudents-modal-footer">
-      <button class="aStudents-btn-cancel" onclick="enableEdit()">Edit</button>
-      <button class="aStudents-btn-save" onclick="saveEdit()">Save Changes</button>
-    </div>
-
-  </div>
-</div>
-
-<input type="file" id="importCsvInput" accept=".csv" style="display:none">
+<input type="file" id="importCsvInput" accept=".csv">
 
 <!-- ================= SCRIPT ================= -->
 <script>
@@ -553,6 +492,32 @@ function saveEdit() {
 
   closeViewModal();
 }
+function toggleSettingsMenu(e){
+  e.stopPropagation();
+  document.getElementById("settingsDropdown").classList.toggle("show");
+}
+
+function toggleTheme(){
+  const html = document.documentElement;
+  html.setAttribute(
+    "data-theme",
+    html.getAttribute("data-theme") === "light" ? "dark" : "light"
+  );
+}
+
+function logout(){
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+document.addEventListener("click", e => {
+  const menu = document.getElementById("settingsDropdown");
+  const btn = document.querySelector(".sidebar-settingsButton");
+
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove("show");
+  }
+});
 
 </script>
 

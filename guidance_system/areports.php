@@ -10,29 +10,51 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body>
+<body class="body">
 
 <!-- ================= SIDEBAR ================= -->
 <aside class="sidebar">
 
   <div class="sidebar-logoBar">
+
     <div class="sidebar-logo">
-      <img src="logo.png">
+      <img src="logo.png" alt="logo">
       <span class="sidebar-logoText">UNITYCARE</span>
     </div>
+
+    <div class="sidebar-settings">
+      <button class="sidebar-settingsButton" onclick="toggleSettingsMenu(event)">
+        <i class="fa fa-gear"></i>
+      </button>
+
+      <div class="sidebar-settingsDropdown" id="settingsDropdown">
+        <button onclick="toggleTheme()">
+          <i class="fa fa-moon"></i> Theme
+        </button>
+
+        <button onclick="logout()">
+          <i class="fa fa-right-from-bracket"></i> Logout
+        </button>
+      </div>
+    </div>
+
   </div>
 
   <nav class="sidebar-menu">
-    <a href="admin.php"><i class="fa fa-gauge"></i> Dashboard</a>
+
+    <a href="admin.html"><i class="fa fa-gauge"></i> Dashboard</a>
 
     <p class="sidebar-title">MANAGEMENT</p>
-    <a href="ausers.php"><i class="fa fa-users"></i> Users</a>
-    <a href="astudents.php"><i class="fa fa-user-graduate"></i> Students</a>
-    <a href="acounselors.php"><i class="fa fa-user-doctor"></i> Counselors</a>
-    <a href="aappointments.php"><i class="fa fa-calendar"></i> Appointments</a>
+
+    <a href="ausers.html"><i class="fa fa-users"></i> Users</a>
+    <a href="astudents.html"><i class="fa fa-user-graduate"></i> Students</a>
+    <a href="acounselors.html"><i class="fa fa-user-doctor"></i> Counselors</a>
+    <a href="aappointments.html"><i class="fa fa-calendar"></i> Appointments</a>
 
     <p class="sidebar-title">SYSTEM</p>
-    <a class="active" href="areports.php"><i class="fa fa-chart-line"></i> Reports</a>
+
+    <a href="areports.html" class="active"><i class="fa fa-chart-line"></i> Reports</a>
+
   </nav>
 
 </aside>
@@ -57,7 +79,7 @@
 <!-- ================= MAIN ================= -->
 <main class="aReports-main">
 
-  <!-- ================= APPOINTMENT ANALYTICS (YOUR EXISTING IDEA) ================= -->
+  <!-- ================= APPOINTMENT ANALYTICS ================= -->
   <section class="aReports-card">
 
     <h3 class="aReports-title">Appointment Analytics</h3>
@@ -84,24 +106,24 @@
 
   </section>
 
-  <!-- ================= NEW: STUDENT ACTIVATION OVERVIEW ================= -->
+  <!-- ================= STUDENT ACTIVATION ================= -->
   <section class="aReports-card">
 
     <h3 class="aReports-title">Account Activation Overview</h3>
 
     <div class="aReports-stats">
 
-      <div class="aReports-card">
+      <div class="aReports-stat-card">
         <h3>Total Students</h3>
         <h2 id="totalStudents">0</h2>
       </div>
 
-      <div class="aReports-card">
+      <div class="aReports-stat-card">
         <h3>Activated Accounts</h3>
         <h2 id="activatedAccounts">0</h2>
       </div>
 
-      <div class="aReports-card">
+      <div class="aReports-stat-card">
         <h3>Not Activated</h3>
         <h2 id="notActivated">0</h2>
       </div>
@@ -114,14 +136,14 @@
   <section class="aReports-card">
 
     <h3 class="aReports-title">Insight Summary</h3>
-    <p id="insightText">Loading insights...</p>
+    <p class="aReports-insight" id="insightText">Loading insights...</p>
 
   </section>
 
-  <!-- ================= NEW: DAILY ACTIVATION CHART ================= -->
+  <!-- ================= ACTIVATION CHART ================= -->
   <section class="aReports-card">
 
-    <h3>Daily Account Activations</h3>
+    <h3 class="aReports-title">Daily Account Activations</h3>
 
     <div class="aReports-chart-container">
       <canvas id="activationChart"></canvas>
@@ -133,10 +155,37 @@
 
 <!-- ================= SCRIPT ================= -->
 <script>
+  // SETTINGS MENU
+function toggleSettingsMenu(e){
+  e.stopPropagation();
+  document.getElementById("settingsDropdown").classList.toggle("show");
+}
 
-/* =========================================================
-   APPOINTMENT DATA (your existing concept)
-========================================================= */
+function toggleTheme(){
+  const html = document.documentElement;
+  html.setAttribute(
+    "data-theme",
+    html.getAttribute("data-theme") === "light" ? "dark" : "light"
+  );
+}
+
+function logout(){
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+document.addEventListener("click", e => {
+  const menu = document.getElementById("settingsDropdown");
+  const btn = document.querySelector(".sidebar-settingsButton");
+
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove("show");
+  }
+});
+
+/* =========================
+   APPOINTMENTS DATA
+========================= */
 const appointments = [
   {date:"2026-04-29", status:"pending"},
   {date:"2026-04-29", status:"approved"},
@@ -147,9 +196,9 @@ const appointments = [
   {date:"2026-05-01", status:"approved"}
 ];
 
-/* =========================================================
-   APPOINTMENT SUMMARY
-========================================================= */
+/* =========================
+   COUNT STATUS
+========================= */
 let approved = 0, pending = 0, rejected = 0;
 
 appointments.forEach(a => {
@@ -158,19 +207,18 @@ appointments.forEach(a => {
   if(a.status === "rejected") rejected++;
 });
 
-/* =========================================================
-   APPOINTMENT CHARTS
-========================================================= */
+/* =========================
+   GROUP BY DATE
+========================= */
 const groupedAppointments = {};
 
 appointments.forEach(a => {
-  if(!groupedAppointments[a.date]){
-    groupedAppointments[a.date] = 0;
-  }
-  groupedAppointments[a.date]++;
+  groupedAppointments[a.date] = (groupedAppointments[a.date] || 0) + 1;
 });
 
-/* LINE CHART */
+/* =========================
+   LINE CHART (FIXED)
+========================= */
 new Chart(document.getElementById("trendChart"), {
   type: "line",
   data: {
@@ -183,10 +231,16 @@ new Chart(document.getElementById("trendChart"), {
       fill: true,
       tension: 0.4
     }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false
   }
 });
 
-/* PIE CHART */
+/* =========================
+   PIE CHART (FIXED)
+========================= */
 new Chart(document.getElementById("statusChart"), {
   type: "pie",
   data: {
@@ -195,12 +249,16 @@ new Chart(document.getElementById("statusChart"), {
       data: [approved, pending, rejected],
       backgroundColor: ["#2ecc71","#f1c40f","#e74c3c"]
     }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false
   }
 });
 
-/* =========================================================
-   STUDENT ACTIVATION DATA (NEW FEATURE)
-========================================================= */
+/* =========================
+   STUDENTS
+========================= */
 const students = [
   {activated:true, date:"2026-04-28"},
   {activated:true, date:"2026-04-28"},
@@ -210,36 +268,35 @@ const students = [
   {activated:true, date:"2026-04-30"}
 ];
 
-/* =========================================================
-   COUNTS
-========================================================= */
 const totalStudents = students.length;
 const activatedCount = students.filter(s => s.activated).length;
 const notActivated = totalStudents - activatedCount;
 
-/* DISPLAY */
+/* update UI */
 document.getElementById("totalStudents").innerText = totalStudents;
 document.getElementById("activatedAccounts").innerText = activatedCount;
 document.getElementById("notActivated").innerText = notActivated;
 
-/* =========================================================
+/* =========================
    INSIGHT
-========================================================= */
+========================= */
 document.getElementById("insightText").innerText =
-  `${activatedCount} out of ${totalStudents} students have activated their accounts. ${notActivated} still need activation.`;
+`${activatedCount} out of ${totalStudents} students activated. ${notActivated} still pending.`;
 
-/* =========================================================
-   DAILY ACTIVATION GROUPING
-========================================================= */
+/* =========================
+   DAILY ACTIVATION
+========================= */
 const activationGrouped = {};
 
 students.forEach(s => {
-  if(s.activated){
+  if(s.activated && s.date){
     activationGrouped[s.date] = (activationGrouped[s.date] || 0) + 1;
   }
 });
 
-/* BAR CHART */
+/* =========================
+   BAR CHART (FIXED)
+========================= */
 new Chart(document.getElementById("activationChart"), {
   type: "bar",
   data: {
@@ -249,6 +306,10 @@ new Chart(document.getElementById("activationChart"), {
       data: Object.values(activationGrouped),
       backgroundColor: "#34699A"
     }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false
   }
 });
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Counselor Feedback Review</title>
+<title>UNITYCARE | Counselor Feedback Review</title>
 
 <link rel="stylesheet" href="styles.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -22,13 +22,13 @@
     </div>
 
     <div class="sidebar-settings">
-      <button class="sidebar-settingsButton" onclick="toggleSettings()">
+      <button class="sidebar-settingsButton" onclick="toggleSettingsMenu(event)">
         <i class="fa fa-gear"></i>
       </button>
 
       <div class="sidebar-settingsDropdown" id="settingsMenu">
-        <a href="cprofile.php"><i class="fa fa-user"></i> Profile</a>
-        <a href="chistory.php"><i class="fa fa-clock"></i> History</a>
+        <a href="profile.html"><i class="fa fa-user"></i> Profile</a>
+        <a href="chistory.html"><i class="fa fa-clock"></i> Session History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
@@ -37,43 +37,41 @@
   </div>
 
   <nav class="sidebar-menu">
-    <a href="counselor.php"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="counselor.html"><i class="fa fa-gauge"></i> Dashboard</a>
 
     <p class="sidebar-title">SESSIONS</p>
-    <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
-    <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
-    <a href="cfeedback.php" class="active"><i class="fa fa-comment"></i> Session Feedback</a>
+    <a href="cappointments.html"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
+    <a href="cconcerns.html"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
 
     <p class="sidebar-title">STUDENTS</p>
-    <a href="cstudents.php"><i class="fa fa-users"></i> Student List</a>
+    <a href="students.html"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
-    <a href="creports.php"><i class="fa fa-file"></i> Reports</a>
+    <a href="creports.html" class="active"><i class="fa fa-file"></i> Reports</a>
 
     <p class="sidebar-title">INFORMATION</p>
-    <a href="cannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
-    <a href="creferral.php"><i class="fa fa-route"></i> Referrals</a>
+    <a href="cannouncements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
+    <a href="creferral.html"><i class="fa fa-route"></i> Referrals</a>
   </nav>
 </aside>
 
 <!-- ================= TOPBAR ================= -->
 <header class="topbar">
   <div class="topbar-left">
-    <h3>Appointment Request</h3>
+    <h2>Appointment Request</h2>
   </div>
 
   <div class="topbar-right">
 
-  <div class="topbar-icons">
-  <!-- NOTIFICATIONS -->
-    <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
-      <i class="fa fa-bell"></i>
-      <span class="badge">4</span>
+<!-- NOTIFICATIONS -->
+<div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
+  <i class="fa fa-bell"></i>
+  <span class="badge">4</span>
 
-    <div class="icon-dropdown" id="notifDropdown">
-      <p>No new notifications</p>
-    </div>
-    </div>
+  <div class="icon-dropdown" id="notifDropdown">
+    <p>No new notifications</p>
+  </div>
+</div>
 
     <div class="topbar-user">
       <img src="counselor.jpg" alt="user">
@@ -92,7 +90,7 @@
   <div class="cFeedback-container">
 
     <!-- CARD -->
-    <div class="card cFeedback-card">
+    <div class="cFeedback-card">
 
       <h3 class="cFeedback-title">Recent Student Feedback</h3>
 
@@ -170,6 +168,14 @@ function toggleSettingsMenu(e) {
     menu.style.display === "block" ? "none" : "block";
 }
 
+function toggleDropdown(id, e) {
+  e.stopPropagation();
+  const dropdown = document.getElementById(id);
+
+  dropdown.style.display =
+    dropdown.style.display === "block" ? "none" : "block";
+}
+
 function toggleTheme() {
   const html = document.documentElement;
   html.setAttribute(
@@ -185,18 +191,12 @@ function logout() {
   window.location.href = "login.html";
 }
 
-document.addEventListener("click", function(e) {
-  const dropdown = document.getElementById("settingsDropdown");
-  const btn = document.querySelector(".sidebar-settingsButton");
-
-  if (
-    btn &&
-    !btn.contains(e.target) &&
-    !dropdown.contains(e.target)
-  ) {
-    dropdown.style.display = "none";
-  }
+/* CLOSE DROPDOWNS */
+document.addEventListener("click", function () {
+  document.getElementById("settingsMenu").style.display = "none";
+  document.getElementById("notifDropdown").style.display = "none";
 });
+
 </script>
 
 </body>

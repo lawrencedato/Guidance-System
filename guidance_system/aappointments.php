@@ -42,18 +42,18 @@
 
   <nav class="sidebar-menu">
 
-    <a href="admin.php"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="admin.html"><i class="fa fa-gauge"></i> Dashboard</a>
 
     <p class="sidebar-title">MANAGEMENT</p>
 
-    <a href="ausers.php"><i class="fa fa-users"></i> Users</a>
-    <a href="astudents.php"><i class="fa fa-user-graduate"></i> Students</a>
-    <a href="acounselors.php"><i class="fa fa-user-doctor"></i> Counselors</a>
-    <a href="aappointments.php" class="active"><i class="fa fa-calendar"></i> Appointments</a>
+    <a href="ausers.html"><i class="fa fa-users"></i> Users</a>
+    <a href="astudents.html"><i class="fa fa-user-graduate"></i> Students</a>
+    <a href="acounselors.html"><i class="fa fa-user-doctor"></i> Counselors</a>
+    <a href="aappointments.html" class="active"><i class="fa fa-calendar"></i> Appointments</a>
 
     <p class="sidebar-title">SYSTEM</p>
 
-    <a href="areports.php"><i class="fa fa-chart-line"></i> Reports</a>
+    <a href="areports.html"><i class="fa fa-chart-line"></i> Reports</a>
 
   </nav>
 
@@ -70,20 +70,33 @@
     </p>
   </div>
 
-      <div class="topbar-filter-bar">
-        <button class="btn-filter" data-status="all" onclick="filterAppointments('all')">All</button>
-        <button class="btn-filter" data-status="pending" onclick="filterAppointments('pending')">Pending</button>
-        <button class="btn-filter" data-status="approved" onclick="filterAppointments('approved')">Approved</button>
-        <button class="btn-filter" data-status="rejected" onclick="filterAppointments('rejected')">Rejected</button>
-      </div>
-
 </header>
 
-<!-- ================= MAIN ================= -->
-  <main class="aAppointments-main">
 
-    <!-- STATUS SUMMARY -->
-     <section class="aAppointments-status-summary">
+<!-- ================= MAIN ================= -->
+<main class="aAppointments-main">
+
+  <!-- ================= FILTER BAR ================= -->
+  <section class="aAppointments-filter-bar">
+
+    <div class="aAppointments-status-filters">
+      <button class="btn-filter active" data-status="all" onclick="filterAppointments('all')">All</button>
+      <button class="btn-filter" data-status="pending" onclick="filterAppointments('pending')">Pending</button>
+      <button class="btn-filter" data-status="approved" onclick="filterAppointments('approved')">Approved</button>
+      <button class="btn-filter" data-status="rejected" onclick="filterAppointments('rejected')">Rejected</button>
+    </div>
+
+<div class="aAppointments-date-filters">
+  <input type="date" id="filterDate">
+  <button class="btn-apply" onclick="applyDateFilter()">Apply</button>
+  <button class="btn-clear" onclick="clearDateFilter()">Clear</button>
+</div>
+
+  </section>
+
+
+  <!-- STATUS SUMMARY -->
+  <section class="aAppointments-status-summary">
     <div class="aAppointments-summary-card">
       <h3>Pending</h3>
       <p class="aAppointments-large-count" id="pendingCount">2</p>
@@ -103,19 +116,20 @@
     </div>
   </section>
 
-  <!-- APPOINTMENTS CARD -->
+
+  <!-- TABLE -->
   <section class="aAppointments-card">
+
     <div class="aAppointments-card-header">
       <div>
         <h3>Appointment Status Overview</h3>
-        <p class="aAppointments-muted">
-          View appointment statuses and details
-        </p>
+        <p class="aAppointments-muted">View appointment statuses and details</p>
       </div>
     </div>
 
     <div class="aAppointments-table-wrapper">
       <table class="aAppointments-table" id="appointmentsTable">
+
         <thead>
           <tr>
             <th>Reference</th>
@@ -126,90 +140,103 @@
         </thead>
 
         <tbody>
-          <tr data-status="pending">
+
+          <tr data-status="pending" data-date="2026-04-29">
             <td>APPT-001</td>
             <td>Carl Reyes</td>
             <td>Apr 29, 2026 · 10:00 AM</td>
             <td><span class="tag tag-warning">Pending</span></td>
           </tr>
 
-          <tr data-status="approved">
+          <tr data-status="approved" data-date="2026-04-28">
             <td>APPT-002</td>
             <td>Anna Cruz</td>
             <td>Apr 28, 2026 · 2:00 PM</td>
             <td><span class="tag tag-success">Approved</span></td>
           </tr>
 
-          <tr data-status="rejected">
+          <tr data-status="rejected" data-date="2026-04-30">
             <td>APPT-003</td>
             <td>Michael Tan</td>
             <td>Apr 30, 2026 · 11:30 AM</td>
             <td><span class="tag tag-error">Rejected</span></td>
           </tr>
 
-          <tr data-status="pending">
+          <tr data-status="pending" data-date="2026-05-01">
             <td>APPT-004</td>
             <td>Emma Santos</td>
             <td>May 01, 2026 · 9:30 AM</td>
             <td><span class="tag tag-warning">Pending</span></td>
           </tr>
 
-          <tr data-status="approved">
+          <tr data-status="approved" data-date="2026-05-02">
             <td>APPT-005</td>
             <td>Samuel Ortiz</td>
             <td>May 02, 2026 · 1:00 PM</td>
             <td><span class="tag tag-success">Approved</span></td>
           </tr>
+
         </tbody>
+
       </table>
     </div>
+
   </section>
 
 </main>
 
+
+<!-- ================= SCRIPT ================= -->
 <script>
-function updateAppointmentCounts() {
+
+let currentStatus = "all";
+let selectedDate = null;
+
+function filterAppointments(status) {
+  currentStatus = status;
+
+  const buttons = document.querySelectorAll('.btn-filter');
+  buttons.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.status === status);
+  });
+
+  applyFilters();
+}
+
+function applyDateFilter() {
+  selectedDate = document.getElementById("filterDate").value || null;
+  applyFilters();
+}
+
+function clearDateFilter() {
+  document.getElementById("filterDate").value = "";
+  selectedDate = null;
+  applyFilters();
+}
+
+function applyFilters() {
   const rows = document.querySelectorAll('#appointmentsTable tbody tr');
-  const counts = {
-    pending: 0,
-    approved: 0,
-    rejected: 0
-  };
 
   rows.forEach(row => {
     const status = row.dataset.status;
+    const date = row.dataset.date;
 
-    if (counts[status] !== undefined) {
-      counts[status] += 1;
+    let show = true;
+
+    // STATUS FILTER
+    if (currentStatus !== "all" && status !== currentStatus) {
+      show = false;
     }
-  });
 
-  document.getElementById('pendingCount').textContent = counts.pending;
-  document.getElementById('approvedCount').textContent = counts.approved;
-  document.getElementById('rejectedCount').textContent = counts.rejected;
-}
+    // SINGLE DATE FILTER
+    if (selectedDate && date !== selectedDate) {
+      show = false;
+    }
 
-function filterAppointments(status) {
-  const rows = document.querySelectorAll('#appointmentsTable tbody tr');
-  const buttons = document.querySelectorAll('.btn-filter');
-
-  buttons.forEach(button => {
-    button.classList.toggle(
-      'active',
-      button.dataset.status === status
-    );
-  });
-
-  rows.forEach(row => {
-    const rowStatus = row.dataset.status;
-
-    row.style.display =
-      status === 'all' || rowStatus === status
-        ? ''
-        : 'none';
+    row.style.display = show ? "" : "none";
   });
 }
-
+// SETTINGS MENU
 function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
