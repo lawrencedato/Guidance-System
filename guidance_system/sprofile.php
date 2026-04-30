@@ -67,7 +67,7 @@
     <div class="topbar-user">
       <img src="student.jpg" alt="user">
       <div>
-        <strong>Vincent Aldolf Sablay</strong>
+        <strong>Vincent Adolf Sablay</strong>
         <p>vincentsablay@gmail.com</p>
       </div>
     </div>
@@ -95,7 +95,7 @@
         </div>
 
         <div>
-          <h3 id="displayName">Vincent Aldolf Sablay</h3>
+          <h3 id="displayName">Vincent Adolf Sablay</h3>
           <p class="sProfile-muted">
             You can only update your phone number and profile picture
           </p>
@@ -107,7 +107,7 @@
 
         <div class="form-group">
           <label>Full Name</label>
-          <input id="name" type="text" value="Vincent Aldolf Sablay" readonly>
+          <input id="name" type="text" value="Vincent Adolf Sablay" readonly>
         </div>
 
         <div class="form-group">

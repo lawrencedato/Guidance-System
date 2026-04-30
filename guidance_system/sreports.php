@@ -48,7 +48,7 @@
     <a href="sreferral.php"><i class="fa fa-route"></i> Referral</a>
 
     <p class="sidebar-title">UPDATES</p>
-    <a href="sannouncements.html"><i class="fa fa-bullhorn"></i> Announcements</a>
+    <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
     <a href="sreports.php" class="active"><i class="fa fa-ticket"></i> Reports</a>
@@ -70,7 +70,7 @@
     <div class="topbar-user">
       <img src="student.jpg" alt="user">
       <div>
-        <strong>Vincent Aldolf Sablay</strong>
+        <strong>Vincent Adolf Sablay</strong>
         <p>vincentsablay@gmail.com</p>
       </div>
     </div>

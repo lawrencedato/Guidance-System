@@ -101,7 +101,7 @@
 
         <div class="cFeedback-item">
           <div class="cFeedback-header">
-            <h4>Vincent Aldolf Sablay</h4>
+            <h4>Vincent Adolf Sablay</h4>
             <span class="cFeedback-rating">⭐⭐⭐⭐⭐ Excellent</span>
           </div>
 

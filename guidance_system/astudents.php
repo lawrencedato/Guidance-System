@@ -210,12 +210,12 @@
 
         <div class="aStudents-field">
           <label>First Name</label>
-          <input type="text" id="firstName">
+          <input type="text" id="firstName" placeholder="e.g. Juan">
         </div>
 
         <div class="aStudents-field">
           <label>Last Name</label>
-          <input type="text" id="lastName">
+          <input type="text" id="lastName" placeholder="e.g. Dela Cruz">
         </div>
 
         <div class="aStudents-field">
@@ -246,7 +246,7 @@
 
         <div class="aStudents-field">
           <label>Student ID</label>
-          <input type="text" id="studentId">
+          <input type="text" id="studentId" placeholder="e.g. 240001">
         </div>
 
         <div class="aStudents-field">
@@ -280,7 +280,7 @@
 
         <div class="aStudents-field full">
           <label>Email Address</label>
-          <input type="email" id="email">
+          <input type="email" id="email" placeholder="e.g. juan@email.com">
         </div>
 
       </div>
@@ -296,6 +296,114 @@
 </div>
 
 <input type="file" id="importCsvInput" accept=".csv">
+
+<!-- ================= VIEW STUDENT MODAL ================= -->
+<div id="viewStudentModal" class="aStudents-modal">
+  <div class="aStudents-modal-content">
+
+    <div class="aStudents-modal-header">
+      <div>
+        <h3>Student Details</h3>
+        <p id="viewModalSubtitle">Viewing student information</p>
+      </div>
+      <button class="aStudents-modal-close" onclick="closeViewModal()">✕</button>
+    </div>
+
+    <div class="aStudents-modal-body">
+
+      <div class="aStudents-sec-label">PERSONAL INFORMATION</div>
+
+      <div class="aStudents-field-grid">
+
+        <div class="aStudents-field">
+          <label>Full Name</label>
+          <input type="text" id="viewName" readonly>
+        </div>
+
+        <div class="aStudents-field">
+          <label>Gender</label>
+          <!-- VIEW mode -->
+          <input type="text" id="viewGender" readonly>
+          <!-- EDIT mode -->
+          <select id="editGender" style="display:none;">
+            <option>Male</option>
+            <option>Female</option>
+            <option>Prefer not to say</option>
+          </select>
+        </div>
+
+        <div class="aStudents-field">
+          <label>Birthday</label>
+          <input type="text" id="viewBirthday" readonly>
+          <input type="date" id="editBirthday" style="display:none;">
+        </div>
+
+        <div class="aStudents-field">
+          <label>Age</label>
+          <input type="text" id="viewAge" readonly>
+        </div>
+
+      </div>
+
+      <div class="aStudents-sec-label">ACADEMIC INFORMATION</div>
+
+      <div class="aStudents-field-grid">
+
+        <div class="aStudents-field">
+          <label>Student ID</label>
+          <input type="text" id="viewStudentId" readonly>
+        </div>
+
+        <div class="aStudents-field">
+          <label>Year Level</label>
+          <input type="text" id="viewYear" readonly>
+          <select id="editYear" style="display:none;">
+            <option>1st Year</option>
+            <option>2nd Year</option>
+            <option>3rd Year</option>
+            <option>4th Year</option>
+          </select>
+        </div>
+
+        <div class="aStudents-field">
+          <label>Course</label>
+          <input type="text" id="viewCourse" readonly>
+          <select id="editCourse" style="display:none;">
+            <option>AB Psychology</option>
+            <option>BSBA</option>
+            <option>BSA</option>
+            <option>BS Entrep</option>
+            <option>BEEd</option>
+            <option>BSEd</option>
+            <option>BSHM</option>
+            <option>BSIT</option>
+            <option>BSCS</option>
+            <option>BSN</option>
+            <option>BSECE</option>
+          </select>
+        </div>
+
+        <div class="aStudents-field">
+          <label>Email Address</label>
+          <input type="text" id="viewEmail" readonly>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="aStudents-modal-footer">
+      <button class="aStudents-btn-cancel" onclick="closeViewModal()">Close</button>
+      <button class="aStudents-btn-cancel" id="editBtn" onclick="enableEdit()">
+        <i class="fa fa-pen"></i> Edit
+      </button>
+      <button class="aStudents-btn-save" id="saveEditBtn" style="display:none;" onclick="saveEdit()">
+        Save Changes
+      </button>
+    </div>
+
+  </div>
+</div>
 
 <!-- ================= SCRIPT ================= -->
 <script>
@@ -328,6 +436,7 @@ document.addEventListener("click", e => {
 
 // ================= MODAL =================
 function openAddStudentModal() {
+  console.log("OPEN MODAL CLICKED");
   document.getElementById('studentModal').classList.add('open');
 }
 
@@ -390,7 +499,7 @@ function saveStudent() {
 
   const row = document.createElement('tr');
 
-  row.innerHTML = `
+    row.innerHTML = `
     <td>${studentId}</td>
     <td>${fullName}</td>
     <td>${email}</td>
@@ -399,7 +508,7 @@ function saveStudent() {
     <td>${age}</td>
     <td>${yearLevel}</td>
     <td>${course}</td>
-    <td><button class="aStudents-btn aStudents-btn-sm">View</button></td>
+    <td><button class="aStudents-btn aStudents-btn-sm" onclick="viewStudent(this)">View</button></td>
   `;
 
   tbody.appendChild(row);
@@ -440,31 +549,82 @@ function exportStudentCsv() {
 }
 
 let selectedRow = null;
+let isEditing = false;
 
 function viewStudent(btn) {
   selectedRow = btn.closest("tr");
-
   const cells = selectedRow.children;
 
   document.getElementById("viewStudentId").value = cells[0].innerText;
-  document.getElementById("viewName").value = cells[1].innerText;
-  document.getElementById("viewEmail").value = cells[2].innerText;
-  document.getElementById("viewGender").value = cells[3].innerText;
-  document.getElementById("viewBirthday").value = cells[4].innerText;
-  document.getElementById("viewAge").value = cells[5].innerText;
-  document.getElementById("viewYear").value = cells[6].innerText;
-  document.getElementById("viewCourse").value = cells[7].innerText;
+  document.getElementById("viewName").value      = cells[1].innerText;
+  document.getElementById("viewEmail").value     = cells[2].innerText;
+  document.getElementById("viewGender").value    = cells[3].innerText;
+  document.getElementById("viewBirthday").value  = cells[4].innerText;
+  document.getElementById("viewAge").value       = cells[5].innerText;
+  document.getElementById("viewYear").value      = cells[6].innerText;
+  document.getElementById("viewCourse").value    = cells[7].innerText;
+
+  // Always open in VIEW mode
+  setViewMode();
 
   document.getElementById("viewStudentModal").classList.add("open");
 }
 
-function closeViewModal() {
-  document.getElementById("viewStudentModal").classList.remove("open");
+function setViewMode() {
+  isEditing = false;
+
+  // Show text inputs, hide selects/date pickers
+  document.getElementById("viewGender").style.display   = "";
+  document.getElementById("editGender").style.display   = "none";
+  document.getElementById("viewBirthday").style.display = "";
+  document.getElementById("editBirthday").style.display = "none";
+  document.getElementById("viewYear").style.display     = "";
+  document.getElementById("editYear").style.display     = "none";
+  document.getElementById("viewCourse").style.display   = "";
+  document.getElementById("editCourse").style.display   = "none";
+
+  // Make text inputs readonly
+  document.getElementById("viewName").readOnly      = true;
+  document.getElementById("viewEmail").readOnly     = true;
+  document.getElementById("viewStudentId").readOnly = true;
+  document.getElementById("viewAge").readOnly       = true;
+
+  // Footer buttons
+  document.getElementById("editBtn").style.display     = "";
+  document.getElementById("saveEditBtn").style.display = "none";
+
+  document.getElementById("viewModalSubtitle").innerText = "Viewing student information";
 }
 
 function enableEdit() {
-  const inputs = document.querySelectorAll("#viewStudentModal input");
-  inputs.forEach(input => input.removeAttribute("readonly"));
+  isEditing = true;
+
+  // Sync selects/date to current displayed values
+  document.getElementById("editGender").value   = document.getElementById("viewGender").value;
+  document.getElementById("editBirthday").value = document.getElementById("viewBirthday").value;
+  document.getElementById("editYear").value     = document.getElementById("viewYear").value;
+  document.getElementById("editCourse").value   = document.getElementById("viewCourse").value;
+
+  // Swap: hide text inputs, show selects/date pickers
+  document.getElementById("viewGender").style.display   = "none";
+  document.getElementById("editGender").style.display   = "";
+  document.getElementById("viewBirthday").style.display = "none";
+  document.getElementById("editBirthday").style.display = "";
+  document.getElementById("viewYear").style.display     = "none";
+  document.getElementById("editYear").style.display     = "";
+  document.getElementById("viewCourse").style.display   = "none";
+  document.getElementById("editCourse").style.display   = "";
+
+  // Make editable text inputs
+  document.getElementById("viewName").readOnly  = false;
+  document.getElementById("viewEmail").readOnly = false;
+  document.getElementById("viewStudentId").readOnly = false; // Allow editing Student ID
+
+  // Footer buttons
+  document.getElementById("editBtn").style.display     = "none";
+  document.getElementById("saveEditBtn").style.display = "";
+
+  document.getElementById("viewModalSubtitle").innerText = "Editing student information";
 }
 
 function saveEdit() {
@@ -475,16 +635,24 @@ function saveEdit() {
   cells[0].innerText = document.getElementById("viewStudentId").value;
   cells[1].innerText = document.getElementById("viewName").value;
   cells[2].innerText = document.getElementById("viewEmail").value;
-  cells[3].innerText = document.getElementById("viewGender").value;
-  cells[4].innerText = document.getElementById("viewBirthday").value;
-  cells[5].innerText = document.getElementById("viewAge").value;
-  cells[6].innerText = document.getElementById("viewYear").value;
-  cells[7].innerText = document.getElementById("viewCourse").value;
+  cells[3].innerText = document.getElementById("editGender").value;
+  cells[4].innerText = document.getElementById("editBirthday").value;
+  cells[6].innerText = document.getElementById("editYear").value;
+  cells[7].innerText = document.getElementById("editCourse").value;
 
   alert("Student updated successfully!");
-
   closeViewModal();
 }
+
+function closeViewModal() {
+  document.getElementById("viewStudentModal").classList.remove("open");
+  setViewMode(); // Reset to view mode for next open
+}
+
+document.getElementById('viewStudentModal').addEventListener('click', function (e) {
+  if (e.target === this) closeViewModal();
+});
+
 </script>
 
 </body>

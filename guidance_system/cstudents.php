@@ -147,7 +147,7 @@
 
           <div class="cStudentList-left">
             <div class="cStudentList-nameRow">
-              <h3>Adolf</h3>
+              <h3>Vincent Adolf Sablay</h3>
               <button class="btn-small" onclick="openStudentModal()">
                 View Profile
               </button>
@@ -193,7 +193,7 @@
         <div class="cStudentModal-profileText">
 
           <div class="cStudentModal-nameRow">
-            <h3>Adolf</h3>
+            <h3>Vincent Adolf Sablay</h3>
             <span id="studentStatusTag" class="tag stable">Stable</span>
           </div>
 

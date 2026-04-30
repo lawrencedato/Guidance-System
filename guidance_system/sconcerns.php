@@ -71,7 +71,7 @@
    <div class="topbar-user">
       <img src="student.jpg" alt="user">
       <div>
-        <strong>Vincent Aldolf Sablay</strong>
+        <strong>Vincent Adolf Sablay</strong>
         <p>vincentsablay@gmail.com</p>
       </div>
     </div>
