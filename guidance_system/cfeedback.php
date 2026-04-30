@@ -39,14 +39,15 @@
     <a href="counselor.php"><i class="fa fa-gauge"></i> Dashboard</a>
 
     <p class="sidebar-title">SESSIONS</p>
-    <a href="cappointments.html"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
-    <a href="cconcerns.html"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
+    <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
+    <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
+    <a href="cfeedback.php" class="active"><i class="fa fa-comment"></i> Session Feedback</a>
 
     <p class="sidebar-title">STUDENTS</p>
     <a href="cstudents.php"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
-    <a href="creports.html" class="active"><i class="fa fa-file"></i> Reports</a>
+    <a href="creports.php"><i class="fa fa-file"></i> Reports</a>
 
     <p class="sidebar-title">INFORMATION</p>
     <a href="cannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
