@@ -120,16 +120,21 @@
     </p>
 
     <div class="aDashboard-actions-wrapper">
-      <div class="aDashboard-actions-group">
+      <div class="aDashboard-actions-group" style="display: flex; gap: 12px;">
 
-        <button class="aDashboard-btn" onclick="openAddStudentModal()">
+        <button class="aDashboard-btn" onclick="window.location.href='astudents.php'">
           <i class="fa fa-user-graduate"></i>
           Add Student
         </button>
-        <div id="studentModal" class="aStudents-modal">
-  
+
+        <div class="aDashboard-actions-group">
+          <button class="aDashboard-btn" onclick="window.location.href='acounselors.php'">
+            <i class="fa fa-user-doctor"></i>
+            Add Counselor Account
+          </button>
+        </div>
+
       </div>
-    </div>
     </div>
 
   </section>
