@@ -1115,8 +1115,8 @@ i, svg {
   position: fixed;
   inset: 0;
 
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
+  background: rgba(17, 63, 103, 0.25);
+  backdrop-filter: blur(6px);
 
   display: none;
   justify-content: center;
@@ -2259,8 +2259,8 @@ i, svg {
   position: fixed;
   inset: 0;
 
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
+  background: rgba(17, 63, 103, 0.25);
+  backdrop-filter: blur(6px);
 
   justify-content: center;
   align-items: center;
@@ -2278,7 +2278,8 @@ i, svg {
 
   padding: 28px;
 
-  background: var(--card);
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(18px);
   border: 1px solid var(--border);
   border-radius: 18px;
 
@@ -4026,7 +4027,9 @@ textarea.sReports-notesBox {
 .cStudentModal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  
+  background: rgba(17, 63, 103, 0.25);
+  backdrop-filter: blur(6px);
 
   display: flex;
   justify-content: center;
@@ -5648,7 +5651,7 @@ th {
   gap: 6px;
 }
 
-/* BACKDROP (optional modal feel) */
+/* BACKDROP */
 .filter-backdrop {
   position: fixed;
   inset: 0;
@@ -6369,9 +6372,6 @@ th {
 
 /* =========================================================
    MODAL
-========================================================= */
-/* =========================================================
-   MODAL BACKDROP
 ========================================================= */
 
 .aCounselors-modal {
