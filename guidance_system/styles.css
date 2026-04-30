@@ -5074,7 +5074,7 @@ tbody tr:hover {
 ========================= */
 
 .aDashboard-card {
-  background: var(--card);
+  background: var(--cards);
   backdrop-filter: blur(14px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -5086,6 +5086,19 @@ tbody tr:hover {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+}
+
+
+.aDashboard-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    var(--glow),
+    transparent 60%
+  );
 }
 
 .aDashboard-card:hover {
@@ -5319,13 +5332,37 @@ tbody tr:hover {
 /* =========================
    CARD STYLE (optional shared look)
 ========================= */
+
 .aUsers-card {
   background: var(--card);
-  border-radius: 12px;
-  padding: 20px;
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
   box-shadow: var(--shadow);
+  transition: var(--transition);
+
+  height: 100%;
+  overflow: hidden;
 }
 
+
+.aUsers-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    var(--glow),
+    transparent 60%
+  );
+}
+
+.aUsers-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
 /* =========================
    HEADER
 ========================= */
@@ -5432,12 +5469,35 @@ th {
 ========================================================= */
 
 .aStudents-card {
-  background: var(--card);
+  background: var(--cards);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
 
-  border-radius: 16px;
-  padding: 20px;
 
-  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  height: 100%;
+  overflow: hidden;
+}
+
+
+.aStudents-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    var(--glow),
+    transparent 60%
+  );
+}
+
+.aStudents-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
 
 /* =========================================================
@@ -5462,35 +5522,74 @@ th {
   min-width: 0;
 }
 
-/* RIGHT SIDE (ACTIONS) */
-.aStudents-record-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;             /* consistent button spacing */
-  flex-shrink: 0;
-}
-
-/* CSV GROUP */
-.aStudents-csv-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* BUTTON SPACING STANDARDIZATION */
-.aStudents-record-actions button {
-  padding: 10px 14px;     /* unified button spacing */
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;               /* icon + text spacing */
-  white-space: nowrap;
-}
 /* TEXT */
 .aStudents-title {
   font-size: 1.3rem;
   font-weight: 700;
 }
+
+/* =========================================================
+   ACTION BUTTONS
+========================================================= */
+.aStudents-record-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ADD BUTTON */
+.aStudents-add-btn {
+  background: linear-gradient(135deg,#113F67,#4988C4);
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.aStudents-add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* CSV BUTTONS */
+.btn-import,
+.btn-export {
+  background: #fff;
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-import:hover,
+.btn-export:hover {
+  background: rgba(73, 136, 196, 0.08);
+  transform: translateY(-2px);
+}
+
+.aStudents-btn-sm {
+  background: #eef4ff;
+  color: #113F67;
+  border: 1px solid #c7d8f5;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.aStudents-btn-sm:hover {
+  background: #dbe9ff;
+}
+
+
 /* =========================================================
    TOPBAR SEARCH INPUT (FEEDBACK THEME)
 ========================================================= */
@@ -5808,20 +5907,39 @@ th {
   margin-bottom: 24px;
 }
 
+
 .aAppointments-summary-card {
-  background: var(--card);
-  border: 1px solid rgba(37, 99, 235, 0.08);
-  border-radius: var(--radius-xl);
-  padding: 24px;
-  backdrop-filter: blur(12px);
-  box-shadow: var(--shadow-md);
+  background: var(--cards);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow);
   transition: var(--transition);
+
+
+  height: 100%;
+  overflow: hidden;
 }
 
-.aAppointments-summary-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+
+.aAppointments-summary-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    var(--glow),
+    transparent 60%
+  );
 }
+
+.aAppointmments-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
 
 .aAppointments-summary-card h3 {
   margin: 0 0 10px;
@@ -5846,15 +5964,38 @@ th {
 /* =========================================================
    MAIN CARD
 ========================================================= */
+
 .aAppointments-card {
   background: var(--card);
-  border: 1px solid rgba(37, 99, 235, 0.08);
-  border-radius: var(--radius-xl);
-  padding: 28px;
-  backdrop-filter: blur(12px);
-  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+
+
+  height: 100%;
+  overflow: hidden;
 }
 
+
+.aAppointments-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    var(--glow),
+    transparent 60%
+  );
+}
+
+.aAppointments-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
 .aAppointments-card-header {
   display: flex;
   justify-content: space-between;
@@ -6056,14 +6197,39 @@ th {
 /* =========================================================
    CARD
 ========================================================= */
+
 .aCounselors-card {
-  background: var(--card);
-  border-radius: var(--radius-xl);
-  padding: 28px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid rgba(37, 99, 235, 0.08);
-  backdrop-filter: blur(12px);
+  background: var(--cards);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+
+
+  height: 100%;
+  overflow: hidden;
 }
+
+
+.aCounselors-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at top left,
+    var(--glow),
+    transparent 60%
+  );
+}
+
+.aCounselors-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
 
 /* HEADER */
 .aCounselors-header {
@@ -6327,6 +6493,11 @@ th {
   );
 
   pointer-events: none;
+}
+
+.aReports-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
 
 /* =========================
