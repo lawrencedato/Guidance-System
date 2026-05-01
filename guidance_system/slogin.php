@@ -1,123 +1,398 @@
+<?php
+error_reporting(0);
+ini_set('display_errors', 0);
+mysqli_report(MYSQLI_REPORT_OFF);
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+$conn = new mysqli("localhost", "root", "", "gcs_db");
+
+// ================= HANDLE AJAX LOGIN =================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login') {
+    header('Content-Type: application/json');
+
+    $email    = trim($_POST['email']    ?? '');
+    $password = $_POST['password']      ?? '';
+
+    if (!$email || !$password) {
+        echo json_encode(["success" => false, "message" => "Please fill in all fields."]);
+        exit;
+    }
+
+    $lockoutSecs = 300;
+    $maxAttempts = 5;
+    $lockKey     = 'lock_'     . md5($email);
+    $attemptsKey = 'attempts_' . md5($email);
+
+    // ---------- CHECK LOCKOUT ----------
+    if (isset($_SESSION[$lockKey])) {
+        $remaining = $_SESSION[$lockKey] - time();
+        if ($remaining > 0) {
+            echo json_encode([
+                "success"   => false,
+                "locked"    => true,
+                "remaining" => $remaining,
+                "message"   => "Account suspended. Try again in " . ceil($remaining / 60) . " minute(s)."
+            ]);
+            exit;
+        }
+        unset($_SESSION[$lockKey], $_SESSION[$attemptsKey]);
+    }
+
+    // ---------- FIND STUDENT ----------
+    $em         = $conn->real_escape_string($email);
+    $studentRes = $conn->query(
+        "SELECT student_id, first_name, last_name, email FROM students WHERE email='$em' LIMIT 1"
+    );
+
+    if (!$studentRes || $studentRes->num_rows === 0) {
+        $_SESSION[$attemptsKey] = ($_SESSION[$attemptsKey] ?? 0) + 1;
+        $attempts = $_SESSION[$attemptsKey];
+        $left     = $maxAttempts - $attempts;
+        if ($attempts >= $maxAttempts) {
+            $_SESSION[$lockKey] = time() + $lockoutSecs;
+            unset($_SESSION[$attemptsKey]);
+            echo json_encode(["success" => false, "locked" => true, "remaining" => $lockoutSecs,
+                "message" => "Too many failed attempts. Account suspended for 5 minutes."]);
+        } else {
+            echo json_encode(["success" => false, "locked" => false, "attempts" => $attempts,
+                "left" => $left, "message" => "Invalid email or password. {$left} attempt(s) remaining."]);
+        }
+        exit;
+    }
+
+    $student = $studentRes->fetch_assoc();
+    $sid     = $student['student_id'];
+
+    // ---------- FIND ACTIVATION ----------
+    $actRes = $conn->query(
+        "SELECT password, status, is_temp_password FROM activated_students WHERE student_id='$sid' LIMIT 1"
+    );
+
+    if (!$actRes || $actRes->num_rows === 0) {
+        echo json_encode(["success" => false,
+            "message" => "Account not yet activated. Please activate your account first."]);
+        exit;
+    }
+
+    $act = $actRes->fetch_assoc();
+
+    if ($act['status'] !== 'active') {
+        echo json_encode(["success" => false,
+            "message" => "Your account is inactive. Please contact your administrator."]);
+        exit;
+    }
+
+    // ---------- VERIFY PASSWORD ----------
+    if (!password_verify($password, $act['password'])) {
+        $_SESSION[$attemptsKey] = ($_SESSION[$attemptsKey] ?? 0) + 1;
+        $attempts = $_SESSION[$attemptsKey];
+        $left     = $maxAttempts - $attempts;
+
+        if ($attempts >= $maxAttempts) {
+            $_SESSION[$lockKey] = time() + $lockoutSecs;
+            unset($_SESSION[$attemptsKey]);
+            echo json_encode(["success" => false, "locked" => true, "remaining" => $lockoutSecs,
+                "message" => "Too many failed attempts. Account suspended for 5 minutes."]);
+        } else {
+            echo json_encode(["success" => false, "locked" => false, "attempts" => $attempts,
+                "left" => $left, "message" => "Invalid email or password. {$left} attempt(s) remaining."]);
+        }
+        exit;
+    }
+
+    // ---------- SUCCESS — clear counters, set session ----------
+    unset($_SESSION[$lockKey], $_SESSION[$attemptsKey]);
+
+    $_SESSION['student_id']       = $student['student_id'];
+    $_SESSION['student_name']     = $student['first_name'] . ' ' . $student['last_name'];
+    $_SESSION['student_email']    = $student['email'];
+    $_SESSION['is_temp_password'] = (int) $act['is_temp_password']; // ✅ cast to int
+
+    echo json_encode([
+        "success"  => true,
+        "message"  => "Login successful.",
+        "redirect" => "dashboard.php"
+    ]);
+    exit;
+}
+
+// Redirect if already logged in
+if (isset($_SESSION['student_id'])) {
+    header("Location: dashboard.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNITYCARE | Student Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .auth-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .auth-input-wrapper .auth-input {
+            width: 100%;
+            padding-right: 44px;
+        }
+        .auth-toggle-pw {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            color: var(--text-muted, #888);
+            transition: color 0.2s;
+        }
+        .auth-toggle-pw:hover { color: var(--primary, #113f67); }
 
-<title>UNITYCARE | Student Login</title>
+        .auth-message {
+            font-size: 13px;
+            margin-top: 10px;
+            min-height: 20px;
+            text-align: center;
+        }
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+        .attempt-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .attempt-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .attempt-dot.used {
+            background: #e53e3e;
+            transform: scale(1.2);
+        }
+
+        .lockout-banner {
+            display: none;
+            background: #fff5f5;
+            border: 1px solid var(--border, #feb2b2);
+            border-radius: 10px;
+            padding: 14px 16px;
+            text-align: center;
+            margin-top: 14px;
+        }
+        .lockout-banner.show { display: block; }
+        .lockout-banner p {
+            font-size: 13px;
+            color: #c53030;
+            margin: 0 0 6px;
+        }
+        .lockout-timer {
+            font-size: 28px;
+            font-weight: 700;
+            color: #e53e3e;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 3px;
+        }
+
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            20%,60%  { transform: translateX(-6px); }
+            40%,80%  { transform: translateX(6px); }
+        }
+        .shake { animation: shake 0.4s ease; }
+    </style>
 </head>
-
 <body class="auth-body">
 
 <div class="auth-container">
 
-  <!-- LEFT -->
-  <section class="auth-left">
-    <div class="auth-left-overlay"></div>
-
-    <div class="auth-brand">
-      <img class="auth-brand-logo" src="logo.png" alt="logo">
-      <h1 class="auth-brand-title">UNITYCARE</h1>
-      <p class="auth-brand-subtitle">Support • Care • Connection</p>
-    </div>
-  </section>
-
-  <!-- RIGHT -->
-  <section class="auth-right">
-
-    <div class="auth-box">
-
-      <h2 class="auth-title">Student Login</h2>
-      <p class="auth-subtitle">Welcome back! Please sign in.</p>
-
-      <!-- FORM -->
-      <form class="auth-form" onsubmit="event.preventDefault(); loginStudent();">
-
-        <label class="auth-label">Email</label>
-        <input class="auth-input" id="email" type="email" placeholder="Enter your email" required>
-
-        <label class="auth-label">Password</label>
-        <input class="auth-input" id="password" type="password" placeholder="Enter your password" required>
-
-        <!-- CAPTCHA -->
-        <div style="margin: 10px 0;">
-          <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY_HERE"></div>
+    <section class="auth-left">
+        <div class="auth-left-overlay"></div>
+        <div class="auth-brand">
+            <img class="auth-brand-logo" src="logo.png" alt="logo">
+            <h1 class="auth-brand-title">UNITYCARE</h1>
+            <p class="auth-brand-subtitle">Support • Care • Connection</p>
         </div>
+    </section>
 
-        <button class="auth-btn" type="submit">Login</button>
+    <section class="auth-right">
+        <div class="auth-box">
 
-        <div id="error" class="auth-error"></div>
+            <h2 class="auth-title">Student Login</h2>
+            <p class="auth-subtitle">Welcome back! Please sign in to continue.</p>
 
-      </form>
+            <form class="auth-form" id="loginForm" onsubmit="event.preventDefault(); loginStudent();">
 
-      <!-- FOOTER -->
-      <div class="auth-footer">
-        <div class="auth-footer-text">Don’t have an account?</div>
-        <a class="auth-footer-link" href="activate.html">Activate</a>
-      </div>
+                <label class="auth-label">Email</label>
+                <input class="auth-input" id="email" type="email" placeholder="Enter your email" required>
 
-    </div>
+                <label class="auth-label">Password</label>
+                <div class="auth-input-wrapper">
+                    <input class="auth-input" id="password" type="password" placeholder="Enter your password" required>
+                    <button type="button" class="auth-toggle-pw" onclick="togglePassword()">
+                        <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
 
-  </section>
+                <div class="attempt-dots" id="attemptDots">
+                    <div class="attempt-dot" id="dot1"></div>
+                    <div class="attempt-dot" id="dot2"></div>
+                    <div class="attempt-dot" id="dot3"></div>
+                    <div class="attempt-dot" id="dot4"></div>
+                    <div class="attempt-dot" id="dot5"></div>
+                </div>
+
+                <button class="auth-btn" type="submit" id="loginBtn">Login</button>
+                <div class="auth-message" id="formMessage"></div>
+
+            </form>
+
+            <div class="lockout-banner" id="lockoutBanner">
+                <p>⛔ Too many failed attempts. Please wait:</p>
+                <div class="lockout-timer" id="lockoutTimer">05:00</div>
+                <p style="margin-top:6px; font-size:12px; margin-bottom:0;">Your account will unlock automatically.</p>
+            </div>
+
+            <div class="auth-footer">
+                <div class="auth-footer-text">Don't have an account?</div>
+                <a class="auth-footer-link" href="activate.php">Activate Account</a>
+            </div>
+
+        </div>
+    </section>
 
 </div>
 
 <script>
+let countdownInterval = null;
+let failedAttempts    = 0;
+const MAX_ATTEMPTS    = 5;
+
+function togglePassword() {
+    const pw   = document.getElementById('password');
+    const icon = document.getElementById('eyeIcon');
+    const show = pw.type === 'password';
+    pw.type = show ? 'text' : 'password';
+    icon.innerHTML = show
+        ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+           <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+           <line x1="1" y1="1" x2="23" y2="23"/>`
+        : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+           <circle cx="12" cy="12" r="3"/>`;
+}
+
+function updateDots(used) {
+    for (let i = 1; i <= MAX_ATTEMPTS; i++) {
+        document.getElementById('dot' + i).classList.toggle('used', i <= used);
+    }
+}
+
+function startCountdown(seconds) {
+    clearInterval(countdownInterval);
+
+    const banner = document.getElementById('lockoutBanner');
+    const timer  = document.getElementById('lockoutTimer');
+    const btn    = document.getElementById('loginBtn');
+    const form   = document.getElementById('loginForm');
+
+    form.querySelectorAll('input, button[type="submit"], button#loginBtn').forEach(el => el.disabled = true);
+    banner.classList.add('show');
+
+    let remaining = seconds;
+
+    function tick() {
+        const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+        const s = String(remaining % 60).padStart(2, '0');
+        timer.textContent = `${m}:${s}`;
+        if (remaining <= 0) {
+            clearInterval(countdownInterval);
+            form.querySelectorAll('input, button').forEach(el => el.disabled = false);
+            banner.classList.remove('show');
+            btn.textContent = 'Login';
+            failedAttempts  = 0;
+            updateDots(0);
+            showMsg('You may try again now.', 'success');
+            return;
+        }
+        remaining--;
+    }
+    tick();
+    countdownInterval = setInterval(tick, 1000);
+}
+
 function loginStudent() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const error = document.getElementById("error");
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn      = document.getElementById('loginBtn');
 
-  error.style.color = "red";
-  error.textContent = "";
+    showMsg('', '');
 
-  const savedEmail = localStorage.getItem("registeredEmail");
-  const tempPassword = localStorage.getItem("tempPassword");
-  const finalPassword = localStorage.getItem("finalPassword");
-
-  if (!email || !password) {
-    error.textContent = "Please fill in all fields.";
-    return;
-  }
-
-  if (email !== savedEmail) {
-    error.textContent = "Invalid email.";
-    return;
-  }
-
-  // CHECK CAPTCHA
-  const captchaResponse = grecaptcha.getResponse();
-  if (!captchaResponse || captchaResponse.length === 0) {
-    error.textContent = "Please complete reCAPTCHA.";
-    return;
-  }
-
-  /* FIRST LOGIN FLOW */
-  if (!finalPassword) {
-    if (password !== tempPassword) {
-      error.textContent = "Invalid temporary password.";
-      return;
+    if (!email || !password) {
+        showMsg('Please fill in all fields.', 'error');
+        return;
     }
 
-    localStorage.setItem("firstLogin", "true");
-    localStorage.setItem("passwordChanged", "false");
-  }
+    btn.disabled    = true;
+    btn.textContent = 'Signing in...';
 
-  /* AFTER RESET PASSWORD */
-  if (finalPassword && password !== finalPassword) {
-    error.textContent = "Invalid password.";
-    return;
-  }
+    const fd = new FormData();
+    fd.append('action',   'login');
+    fd.append('email',    email);
+    fd.append('password', password);
 
-  error.style.color = "green";
-  error.textContent = "Login successful...";
+    fetch('slogin.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(json => {
+            btn.disabled    = false;
+            btn.textContent = 'Login';
 
-  setTimeout(() => {
-    window.location.href = "dashboard.html";
-  }, 800);
+            if (json.success) {
+                showMsg('Login successful! Redirecting...', 'success');
+                updateDots(0);
+                setTimeout(() => { window.location.href = json.redirect; }, 700);
+            } else if (json.locked) {
+                updateDots(MAX_ATTEMPTS);
+                startCountdown(json.remaining);
+                showMsg(json.message, 'error');
+            } else {
+                failedAttempts = json.attempts ?? (failedAttempts + 1);
+                updateDots(failedAttempts);
+                showMsg(json.message, 'error');
+                shakeInputs();
+            }
+        })
+        .catch(() => {
+            btn.disabled    = false;
+            btn.textContent = 'Login';
+            showMsg('Something went wrong. Please try again.', 'error');
+        });
+}
+
+function showMsg(msg, type) {
+    const el = document.getElementById('formMessage');
+    el.style.color = type === 'error' ? '#e53e3e' : '#15803d';
+    el.textContent = msg;
+}
+
+function shakeInputs() {
+    ['email', 'password'].forEach(id => {
+        const el = document.getElementById(id);
+        el.classList.remove('shake');
+        void el.offsetWidth;
+        el.classList.add('shake');
+    });
 }
 </script>
 
