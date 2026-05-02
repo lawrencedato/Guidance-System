@@ -154,7 +154,7 @@ img, video {
 
 /* hover = blue glow */
 [data-theme="dark"] .sidebar-menu a:hover {
-  background: rgba(59, 130, 246, 0.10); /* blue tint */
+  background: rgba(59, 130, 246, 0.10);
   color: var(--text);
   transform: translateX(6px);
 }
