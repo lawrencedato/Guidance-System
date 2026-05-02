@@ -1,3 +1,44 @@
+<?php
+$host = "localhost";
+$db   = "gcs_db";
+$user = "root";
+$pass = "";
+
+$conn = new mysqli($host, $user, $pass, $db);
+
+// ── FETCH APPOINTMENTS ──
+$appointmentRows = [];
+$result = $conn->query("
+    SELECT
+        a.appointment_id,
+        a.appointment_date,
+        a.appointment_time,
+        a.status,
+        CONCAT(c.first_name, ' ', c.last_name) AS counselor_name
+    FROM appointments a
+    JOIN counselors c ON a.counselor_id = c.counselor_id
+    ORDER BY a.appointment_date DESC, a.appointment_time DESC
+");
+while ($row = $result->fetch_assoc()) $appointmentRows[] = $row;
+
+// ── STATUS COUNTS ──
+$pendingCount   = 0;
+$approvedCount  = 0;
+$rejectedCount  = 0;
+foreach ($appointmentRows as $a) {
+    if ($a['status'] === 'Pending')  $pendingCount++;
+    if ($a['status'] === 'Approved') $approvedCount++;
+    if ($a['status'] === 'Rejected') $rejectedCount++;
+}
+
+$conn->close();
+
+// ── HELPER: FORMAT DATE & TIME ──
+function formatDateTime($date, $time) {
+    $dt = new DateTime($date . ' ' . $time);
+    return $dt->format('M d, Y') . ' · ' . $dt->format('g:i A');
+}
+?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -64,7 +105,7 @@
 <header class="topbar">
 
   <div class="topbar-left">
-      <h2>Appointments</h2>
+    <h2>Appointments</h2>
     <p class="topbar-muted">
       Review appointment status only. Student names are confidential and not shown here.
     </p>
@@ -81,39 +122,41 @@
 
     <div class="aAppointments-status-filters">
       <button class="btn-filter active" data-status="all" onclick="filterAppointments('all')">All</button>
-      <button class="btn-filter" data-status="pending" onclick="filterAppointments('pending')">Pending</button>
-      <button class="btn-filter" data-status="approved" onclick="filterAppointments('approved')">Approved</button>
-      <button class="btn-filter" data-status="rejected" onclick="filterAppointments('rejected')">Rejected</button>
+      <button class="btn-filter" data-status="Pending" onclick="filterAppointments('Pending')">Pending</button>
+      <button class="btn-filter" data-status="Approved" onclick="filterAppointments('Approved')">Approved</button>
+      <button class="btn-filter" data-status="Rejected" onclick="filterAppointments('Rejected')">Rejected</button>
     </div>
 
-<div class="aAppointments-date-filters">
-  <input type="date" id="filterDate">
-  <button class="btn-apply" onclick="applyDateFilter()">Apply</button>
-  <button class="btn-clear" onclick="clearDateFilter()">Clear</button>
-</div>
+    <div class="aAppointments-date-filters">
+      <input type="date" id="filterDate">
+      <button class="btn-apply" onclick="applyDateFilter()">Apply</button>
+      <button class="btn-clear" onclick="clearDateFilter()">Clear</button>
+    </div>
 
   </section>
 
 
   <!-- STATUS SUMMARY -->
   <section class="aAppointments-status-summary">
+
     <div class="aAppointments-summary-card">
       <h3>Pending</h3>
-      <p class="aAppointments-large-count" id="pendingCount">2</p>
+      <p class="aAppointments-large-count" id="pendingCount"><?= $pendingCount ?></p>
       <p class="aAppointments-muted">Waiting for approval</p>
     </div>
 
     <div class="aAppointments-summary-card">
       <h3>Approved</h3>
-      <p class="aAppointments-large-count" id="approvedCount">2</p>
+      <p class="aAppointments-large-count" id="approvedCount"><?= $approvedCount ?></p>
       <p class="aAppointments-muted">Confirmed sessions</p>
     </div>
 
     <div class="aAppointments-summary-card">
       <h3>Rejected</h3>
-      <p class="aAppointments-large-count" id="rejectedCount">1</p>
+      <p class="aAppointments-large-count" id="rejectedCount"><?= $rejectedCount ?></p>
       <p class="aAppointments-muted">Declined requests</p>
     </div>
+
   </section>
 
 
@@ -140,42 +183,32 @@
         </thead>
 
         <tbody>
-
-          <tr data-status="pending" data-date="2026-04-29">
-            <td>APPT-001</td>
-            <td>Carl Reyes</td>
-            <td>Apr 29, 2026 · 10:00 AM</td>
-            <td><span class="tag tag-warning">Pending</span></td>
-          </tr>
-
-          <tr data-status="approved" data-date="2026-04-28">
-            <td>APPT-002</td>
-            <td>Anna Cruz</td>
-            <td>Apr 28, 2026 · 2:00 PM</td>
-            <td><span class="tag tag-success">Approved</span></td>
-          </tr>
-
-          <tr data-status="rejected" data-date="2026-04-30">
-            <td>APPT-003</td>
-            <td>Michael Tan</td>
-            <td>Apr 30, 2026 · 11:30 AM</td>
-            <td><span class="tag tag-error">Rejected</span></td>
-          </tr>
-
-          <tr data-status="pending" data-date="2026-05-01">
-            <td>APPT-004</td>
-            <td>Emma Santos</td>
-            <td>May 01, 2026 · 9:30 AM</td>
-            <td><span class="tag tag-warning">Pending</span></td>
-          </tr>
-
-          <tr data-status="approved" data-date="2026-05-02">
-            <td>APPT-005</td>
-            <td>Samuel Ortiz</td>
-            <td>May 02, 2026 · 1:00 PM</td>
-            <td><span class="tag tag-success">Approved</span></td>
-          </tr>
-
+          <?php if (empty($appointmentRows)): ?>
+            <tr>
+              <td colspan="4" style="text-align:center;">No appointments found.</td>
+            </tr>
+          <?php else: ?>
+            <?php foreach ($appointmentRows as $a): ?>
+              <?php
+                $status    = $a['status'];
+                $tagClass  = match($status) {
+                  'Approved'  => 'tag-success',
+                  'Rejected'  => 'tag-error',
+                  'Completed' => 'tag-info',
+                  default     => 'tag-warning'
+                };
+              ?>
+              <tr
+                data-status="<?= htmlspecialchars($status) ?>"
+                data-date="<?= htmlspecialchars($a['appointment_date']) ?>"
+              >
+                <td>APPT-<?= htmlspecialchars($a['appointment_id']) ?></td>
+                <td><?= htmlspecialchars($a['counselor_name']) ?></td>
+                <td><?= formatDateTime($a['appointment_date'], $a['appointment_time']) ?></td>
+                <td><span class="tag <?= $tagClass ?>"><?= htmlspecialchars($status) ?></span></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
 
       </table>
@@ -190,7 +223,7 @@
 <script>
 
 let currentStatus = "all";
-let selectedDate = null;
+let selectedDate  = null;
 
 function filterAppointments(status) {
   currentStatus = status;
@@ -219,30 +252,24 @@ function applyFilters() {
 
   rows.forEach(row => {
     const status = row.dataset.status;
-    const date = row.dataset.date;
+    const date   = row.dataset.date;
 
     let show = true;
 
-    // STATUS FILTER
-    if (currentStatus !== "all" && status !== currentStatus) {
-      show = false;
-    }
-
-    // SINGLE DATE FILTER
-    if (selectedDate && date !== selectedDate) {
-      show = false;
-    }
+    if (currentStatus !== "all" && status !== currentStatus) show = false;
+    if (selectedDate && date !== selectedDate) show = false;
 
     row.style.display = show ? "" : "none";
   });
 }
-// SETTINGS MENU
-function toggleSettingsMenu(e){
+
+// ================= SETTINGS =================
+function toggleSettingsMenu(e) {
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
-function toggleTheme(){
+function toggleTheme() {
   const html = document.documentElement;
   html.setAttribute(
     "data-theme",
@@ -250,15 +277,14 @@ function toggleTheme(){
   );
 }
 
-function logout(){
+function logout() {
   localStorage.clear();
   window.location.href = "index.php";
 }
 
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
-  const btn = document.querySelector(".sidebar-settingsButton");
-
+  const btn  = document.querySelector(".sidebar-settingsButton");
   if (!menu.contains(e.target) && !btn.contains(e.target)) {
     menu.classList.remove("show");
   }

@@ -1,3 +1,147 @@
+<?php
+$host = "localhost";
+$db   = "gcs_db";
+$user = "root";
+$pass = "";
+
+$conn = new mysqli($host, $user, $pass, $db);
+
+// ── HANDLE POST ACTIONS ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    header('Content-Type: application/json');
+    $action = $_POST['action'];
+
+    // ---------- ADD COUNSELOR ----------
+    if ($action === 'add') {
+        $counselor_id  = $conn->real_escape_string(trim($_POST['counselor_id']));
+        $first_name    = $conn->real_escape_string(trim($_POST['first_name']));
+        $last_name     = $conn->real_escape_string(trim($_POST['last_name']));
+        $email         = $conn->real_escape_string(trim($_POST['email']));
+        $department    = $conn->real_escape_string(trim($_POST['department']));
+        $status        = $conn->real_escape_string(trim($_POST['status']));
+        $password      = password_hash($_POST['password'], PASSWORD_DEFAULT);
+
+        $check = $conn->query("SELECT counselor_id FROM counselors WHERE counselor_id = '$counselor_id' OR email = '$email'");
+        if ($check->num_rows > 0) {
+            echo json_encode(["success" => false, "message" => "Counselor ID or Email already exists."]);
+            exit;
+        }
+
+        $sql = "INSERT INTO counselors (counselor_id, first_name, last_name, email, department, password, status)
+                VALUES ('$counselor_id', '$first_name', '$last_name', '$email', '$department', '$password', '$status')";
+
+        if ($conn->query($sql)) {
+            echo json_encode(["success" => true, "message" => "Counselor account created successfully."]);
+        } else {
+            echo json_encode(["success" => false, "message" => "Failed to create counselor: " . $conn->error]);
+        }
+        exit;
+    }
+
+    // ---------- EDIT COUNSELOR ----------
+    if ($action === 'edit') {
+        $old_id     = $conn->real_escape_string(trim($_POST['old_id']));
+        $counselor_id = $conn->real_escape_string(trim($_POST['counselor_id']));
+        $name       = $conn->real_escape_string(trim($_POST['name']));
+        $email      = $conn->real_escape_string(trim($_POST['email']));
+        $department = $conn->real_escape_string(trim($_POST['department']));
+        $status     = $conn->real_escape_string(trim($_POST['status']));
+
+        // Split name into first and last
+        $parts      = explode(' ', $name, 2);
+        $first_name = $conn->real_escape_string($parts[0]);
+        $last_name  = $conn->real_escape_string($parts[1] ?? '');
+
+        $emailCheck = $conn->query("SELECT counselor_id FROM counselors WHERE email = '$email' AND counselor_id != '$old_id'");
+        if ($emailCheck->num_rows > 0) {
+            echo json_encode(["success" => false, "message" => "Email already in use by another counselor."]);
+            exit;
+        }
+
+        $sql = "UPDATE counselors
+                SET counselor_id = '$counselor_id',
+                    first_name   = '$first_name',
+                    last_name    = '$last_name',
+                    email        = '$email',
+                    department   = '$department',
+                    status       = '$status'
+                WHERE counselor_id = '$old_id'";
+
+        if (!empty($_POST['password'])) {
+            $newPass = password_hash($_POST['password'], PASSWORD_DEFAULT);
+            $sql = "UPDATE counselors
+                    SET counselor_id = '$counselor_id',
+                        first_name   = '$first_name',
+                        last_name    = '$last_name',
+                        email        = '$email',
+                        department   = '$department',
+                        status       = '$status',
+                        password     = '$newPass'
+                    WHERE counselor_id = '$old_id'";
+        }
+
+        if ($conn->query($sql)) {
+            echo json_encode(["success" => true, "message" => "Counselor updated successfully."]);
+        } else {
+            echo json_encode(["success" => false, "message" => "Failed to update counselor: " . $conn->error]);
+        }
+        exit;
+    }
+
+    // ---------- IMPORT CSV ----------
+    if ($action === 'import_csv') {
+        if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode(["success" => false, "message" => "No file uploaded or upload error."]);
+            exit;
+        }
+
+        $file = fopen($_FILES['csv_file']['tmp_name'], 'r');
+        if (!$file) {
+            echo json_encode(["success" => false, "message" => "Failed to open CSV file."]);
+            exit;
+        }
+
+        $rowCount = 0;
+        $skipped  = 0;
+        fgetcsv($file); // skip header
+
+        while (($data = fgetcsv($file, 1000, ",")) !== FALSE) {
+            if (count($data) < 5) { $skipped++; continue; }
+
+            $counselor_id = $conn->real_escape_string(trim($data[0]));
+            $name         = explode(' ', trim($data[1]), 2);
+            $first_name   = $conn->real_escape_string($name[0]);
+            $last_name    = $conn->real_escape_string($name[1] ?? '');
+            $email        = $conn->real_escape_string(trim($data[2]));
+            $department   = $conn->real_escape_string(trim($data[3]));
+            $status       = strtolower($conn->real_escape_string(trim($data[4])));
+            $password     = password_hash('temp1234', PASSWORD_DEFAULT);
+
+            $check = $conn->query("SELECT counselor_id FROM counselors WHERE counselor_id = '$counselor_id' OR email = '$email'");
+            if ($check->num_rows > 0) { $skipped++; continue; }
+
+            $sql = "INSERT INTO counselors (counselor_id, first_name, last_name, email, department, password, status)
+                    VALUES ('$counselor_id', '$first_name', '$last_name', '$email', '$department', '$password', '$status')";
+
+            if ($conn->query($sql)) { $rowCount++; } else { $skipped++; }
+        }
+
+        fclose($file);
+        echo json_encode(["success" => true, "message" => "$rowCount counselors imported. $skipped skipped."]);
+        exit;
+    }
+
+    echo json_encode(["success" => false, "message" => "Unknown action."]);
+    exit;
+}
+
+// ── FETCH COUNSELORS ──
+$counselorRows = [];
+$result = $conn->query("SELECT counselor_id, first_name, last_name, email, department, status FROM counselors ORDER BY counselor_id ASC");
+while ($row = $result->fetch_assoc()) $counselorRows[] = $row;
+
+$conn->close();
+?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -114,16 +258,32 @@
         </thead>
 
         <tbody id="counselorTableBody">
-          <tr>
-            <td>C-001</td>
-            <td>Marie Santos</td>
-            <td>marie.santos@unitycare.org</td>
-            <td>Wellness</td>
-            <td>Active</td>
-            <td>
-              <button class="aCounselors-btn aCounselors-btn-sm" onclick="viewCounselor(this)">View</button>
-            </td>
-          </tr>
+          <?php if (empty($counselorRows)): ?>
+            <tr><td colspan="6" style="text-align:center;">No counselors found.</td></tr>
+          <?php else: ?>
+            <?php foreach ($counselorRows as $c): ?>
+              <tr
+                data-id="<?= htmlspecialchars($c['counselor_id']) ?>"
+                data-name="<?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?>"
+                data-email="<?= htmlspecialchars($c['email']) ?>"
+                data-department="<?= htmlspecialchars($c['department']) ?>"
+                data-status="<?= htmlspecialchars($c['status']) ?>"
+              >
+                <td><?= htmlspecialchars($c['counselor_id']) ?></td>
+                <td><?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?></td>
+                <td><?= htmlspecialchars($c['email']) ?></td>
+                <td><?= htmlspecialchars($c['department']) ?></td>
+                <td>
+                  <span class="aBadge <?= strtolower($c['status']) === 'active' ? 'aBadge-success' : 'aBadge-danger' ?>">
+                    <?= ucfirst($c['status']) ?>
+                  </span>
+                </td>
+                <td>
+                  <button class="aCounselors-btn aCounselors-btn-sm" onclick="viewCounselor(this)">View</button>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
       </table>
     </div>
@@ -162,7 +322,7 @@
 
         <div class="aCounselors-field">
           <label>Counselor ID</label>
-          <input id="counselorID" type="text" placeholder="e.g. C-001">
+          <input id="counselorID" type="text" placeholder="e.g. 000002">
         </div>
 
         <div class="aCounselors-field">
@@ -184,8 +344,8 @@
         <div class="aCounselors-field">
           <label>Status</label>
           <select id="counselorStatus">
-            <option>Active</option>
-            <option>Inactive</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
         </div>
 
@@ -238,8 +398,6 @@
 
       <div class="aCounselors-field-grid">
 
-        <!-- FIX #2: Added missing Counselor ID field -->
-
         <div class="aCounselors-field">
           <label>Full Name</label>
           <input type="text" id="viewName" readonly>
@@ -270,15 +428,15 @@
           <label>Status</label>
           <input type="text" id="viewStatus" readonly>
           <select id="editStatus" style="display:none;">
-            <option>Active</option>
-            <option>Inactive</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
         </div>
 
         <div class="aCounselors-field">
-          <label>Password</label>
+          <label>New Password <small>(leave blank to keep current)</small></label>
           <div class="password-wrapper">
-            <input id="viewPassword" type="password" readonly>
+            <input id="viewPassword" type="password" placeholder="Enter new password" readonly>
             <span class="aCounselors-toggle-eye" onclick="togglePassword('viewPassword', this)">
               <i class="fa-regular fa-eye"></i>
             </span>
@@ -302,7 +460,6 @@
   </div>
 </div>
 
-<!-- FIX #1: Added missing file input -->
 <input type="file" id="importCsvInput" accept=".csv" style="display:none;">
 
 <!-- ================= SCRIPT ================= -->
@@ -329,7 +486,7 @@ function logout() {
 
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
-  const btn = document.querySelector(".sidebar-settingsButton");
+  const btn  = document.querySelector(".sidebar-settingsButton");
   if (!menu.contains(e.target) && !btn.contains(e.target)) {
     menu.classList.remove("show");
   }
@@ -348,16 +505,16 @@ document.getElementById('counselorModal').addEventListener('click', function(e) 
   if (e.target === this) closeCounselorModal();
 });
 
-// ================= SAVE COUNSELOR =================
+// ================= SAVE COUNSELOR (DB) =================
 function saveCounselorAccount() {
-  const counselorID       = document.getElementById('counselorID').value.trim();
-  const firstName         = document.getElementById('counselorFirstName').value.trim();
-  const lastName          = document.getElementById('counselorLastName').value.trim();
-  const email             = document.getElementById('counselorEmail').value.trim();
-  const department        = document.getElementById('counselorDepartment').value;
-  const status            = document.getElementById('counselorStatus').value;
-  const password          = document.getElementById('counselorPassword').value;
-  const confirmPassword   = document.getElementById('counselorConfirmPassword').value;
+  const counselorID     = document.getElementById('counselorID').value.trim();
+  const firstName       = document.getElementById('counselorFirstName').value.trim();
+  const lastName        = document.getElementById('counselorLastName').value.trim();
+  const email           = document.getElementById('counselorEmail').value.trim();
+  const department      = document.getElementById('counselorDepartment').value;
+  const status          = document.getElementById('counselorStatus').value;
+  const password        = document.getElementById('counselorPassword').value;
+  const confirmPassword = document.getElementById('counselorConfirmPassword').value;
 
   if (!counselorID || !firstName || !lastName || !email || !department || !password || !confirmPassword) {
     alert('Please fill in all fields.');
@@ -369,61 +526,46 @@ function saveCounselorAccount() {
     return;
   }
 
-  const fullName = firstName + " " + lastName;
-  const tbody = document.getElementById('counselorTableBody');
-  const row = document.createElement('tr');
+  const formData = new FormData();
+  formData.append('action', 'add');
+  formData.append('counselor_id', counselorID);
+  formData.append('first_name', firstName);
+  formData.append('last_name', lastName);
+  formData.append('email', email);
+  formData.append('department', department);
+  formData.append('status', status);
+  formData.append('password', password);
 
-  // FIX #4: Added correct class to View button
-  row.innerHTML = `
-    <td>${counselorID}</td>
-    <td>${fullName}</td>
-    <td>${email}</td>
-    <td>${department}</td>
-    <td>${status}</td>
-    <td>
-      <button class="aCounselors-btn aCounselors-btn-sm" onclick="viewCounselor(this)">View</button>
-    </td>
-  `;
-
-  row.dataset.password = password;
-  tbody.appendChild(row);
-
-  // Clear fields
-  document.getElementById('counselorID').value              = '';
-  document.getElementById('counselorFirstName').value       = '';
-  document.getElementById('counselorLastName').value        = '';
-  document.getElementById('counselorEmail').value           = '';
-  document.getElementById('counselorDepartment').value      = '';
-  document.getElementById('counselorStatus').value          = 'Active';
-  document.getElementById('counselorPassword').value        = '';
-  document.getElementById('counselorConfirmPassword').value = '';
-
-  closeCounselorModal();
-  alert('Counselor account created successfully.');
+  fetch('acounselors.php', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      if (data.success) {
+        closeCounselorModal();
+        location.reload();
+      }
+    })
+    .catch(() => alert('Request failed.'));
 }
 
 // ================= VIEW / EDIT COUNSELOR =================
 let selectedRow = null;
-let isEditing   = false;
 
 function viewCounselor(btn) {
   selectedRow = btn.closest("tr");
-  const cells = selectedRow.children;
 
-  document.getElementById("viewCounselorId").value  = cells[0].innerText;
-  document.getElementById("viewName").value         = cells[1].innerText;
-  document.getElementById("viewEmail").value        = cells[2].innerText;
-  document.getElementById("viewDepartment").value   = cells[3].innerText;
-  document.getElementById("viewStatus").value       = cells[4].innerText;
-  document.getElementById("viewPassword").value     = selectedRow.dataset.password || "";
+  document.getElementById("viewCounselorId").value = selectedRow.dataset.id;
+  document.getElementById("viewName").value        = selectedRow.dataset.name;
+  document.getElementById("viewEmail").value       = selectedRow.dataset.email;
+  document.getElementById("viewDepartment").value  = selectedRow.dataset.department;
+  document.getElementById("viewStatus").value      = selectedRow.dataset.status;
+  document.getElementById("viewPassword").value    = "";
 
   setViewMode();
   document.getElementById("viewCounselorModal").classList.add("open");
 }
 
 function setViewMode() {
-  isEditing = false;
-
   document.getElementById("viewDepartment").style.display = "";
   document.getElementById("editDepartment").style.display = "none";
   document.getElementById("viewStatus").style.display     = "";
@@ -440,8 +582,6 @@ function setViewMode() {
 }
 
 function enableEdit() {
-  isEditing = true;
-
   document.getElementById("editDepartment").value = document.getElementById("viewDepartment").value;
   document.getElementById("editStatus").value     = document.getElementById("viewStatus").value;
 
@@ -450,7 +590,6 @@ function enableEdit() {
   document.getElementById("viewStatus").style.display     = "none";
   document.getElementById("editStatus").style.display     = "";
 
-  // FIX #3 + #5: All fields made editable including ID and password
   document.getElementById("viewCounselorId").readOnly = false;
   document.getElementById("viewName").readOnly        = false;
   document.getElementById("viewEmail").readOnly       = false;
@@ -464,19 +603,26 @@ function enableEdit() {
 function saveEdit() {
   if (!selectedRow) return;
 
-  const cells = selectedRow.children;
+  const formData = new FormData();
+  formData.append('action', 'edit');
+  formData.append('old_id',     selectedRow.dataset.id);
+  formData.append('counselor_id', document.getElementById("viewCounselorId").value);
+  formData.append('name',       document.getElementById("viewName").value);
+  formData.append('email',      document.getElementById("viewEmail").value);
+  formData.append('department', document.getElementById("editDepartment").value);
+  formData.append('status',     document.getElementById("editStatus").value);
+  formData.append('password',   document.getElementById("viewPassword").value);
 
-  cells[0].innerText = document.getElementById("viewCounselorId").value;
-  cells[1].innerText = document.getElementById("viewName").value;
-  cells[2].innerText = document.getElementById("viewEmail").value;
-  cells[3].innerText = document.getElementById("editDepartment").value;
-  cells[4].innerText = document.getElementById("editStatus").value;
-
-  // Update stored password if changed
-  selectedRow.dataset.password = document.getElementById("viewPassword").value;
-
-  alert("Counselor updated successfully!");
-  closeViewModal();
+  fetch('acounselors.php', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      if (data.success) {
+        closeViewModal();
+        location.reload();
+      }
+    })
+    .catch(() => alert('Request failed.'));
 }
 
 function closeViewModal() {
@@ -495,94 +641,56 @@ function togglePassword(inputId, iconSpan) {
 
   if (input.type === "password") {
     input.type = "text";
-    icon.classList.remove("fa-eye");
-    icon.classList.add("fa-eye-slash");
+    icon.classList.replace("fa-eye", "fa-eye-slash");
   } else {
     input.type = "password";
-    icon.classList.remove("fa-eye-slash");
-    icon.classList.add("fa-eye");
+    icon.classList.replace("fa-eye-slash", "fa-eye");
   }
 }
 
-// ================= CSV IMPORT / EXPORT =================
+// ================= CSV IMPORT =================
 function triggerImportCsv() {
   document.getElementById('importCsvInput').click();
-}
-
-function exportCounselorCsv() {
-  const table = document.querySelector('.aCounselors-table');
-  if (!table) return;
-
-  const rows = Array.from(table.querySelectorAll('thead tr, tbody tr'));
-  const csv = rows.map(row => {
-    const cells = Array.from(row.querySelectorAll('th, td'));
-    return cells.map(cell => '"' + cell.innerText.replace(/"/g, '""') + '"').join(',');
-  }).join('\r\n');
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'counselors.csv';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-function parseCsvLine(line) {
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    const next = line[i + 1];
-
-    if (char === '"') {
-      if (inQuotes && next === '"') { current += '"'; i++; }
-      else { inQuotes = !inQuotes; }
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-
-  result.push(current.trim());
-  return result;
 }
 
 document.getElementById('importCsvInput').addEventListener('change', function(event) {
   const file = event.target.files[0];
   if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const lines = e.target.result.split(/\r?\n/).filter(line => line.trim());
-    if (lines.length < 2) return;
+  const formData = new FormData();
+  formData.append('action', 'import_csv');
+  formData.append('csv_file', file);
 
-    const tbody = document.getElementById('counselorTableBody');
+  fetch('acounselors.php', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      if (data.success) location.reload();
+    })
+    .catch(() => alert('Import failed.'));
 
-    lines.slice(1).forEach(line => {
-      const values = parseCsvLine(line);
-      if (!values.length) return;
-
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${values[0] || ''}</td>
-        <td>${values[1] || ''}</td>
-        <td>${values[2] || ''}</td>
-        <td>${values[3] || ''}</td>
-        <td>${values[4] || ''}</td>
-        <td><button class="aCounselors-btn aCounselors-btn-sm" onclick="viewCounselor(this)">View</button></td>
-      `;
-      tbody.appendChild(row);
-    });
-  };
-
-  reader.readAsText(file);
   event.target.value = '';
 });
+
+// ================= CSV EXPORT =================
+function exportCounselorCsv() {
+  const table = document.querySelector('.aCounselors-table');
+  if (!table) return;
+
+  const rows = Array.from(table.querySelectorAll('thead tr, tbody tr'));
+  const csv  = rows.map(row => {
+    const cells = Array.from(row.querySelectorAll('th, td'));
+    return cells.map(cell => '"' + cell.innerText.replace(/"/g, '""') + '"').join(',');
+  }).join('\r\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href     = URL.createObjectURL(blob);
+  link.download = 'counselors.csv';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
 </script>
 

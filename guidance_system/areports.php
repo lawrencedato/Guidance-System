@@ -1,3 +1,43 @@
+<?php
+$host = "localhost";
+$db   = "gcs_db";
+$user = "root";
+$pass = "";
+
+$conn = new mysqli($host, $user, $pass, $db);
+
+// ── APPOINTMENT STATUS COUNTS ──
+$statusCounts = ['Approved' => 0, 'Pending' => 0, 'Rejected' => 0, 'Completed' => 0];
+$statusResult = $conn->query("SELECT status, COUNT(*) AS c FROM appointments GROUP BY status");
+while ($row = $statusResult->fetch_assoc()) {
+    $statusCounts[$row['status']] = (int)$row['c'];
+}
+
+// ── APPOINTMENT TREND (last 7 days) ──
+$trendLabels = [];
+$trendData   = [];
+for ($i = 6; $i >= 0; $i--) {
+    $date          = date('Y-m-d', strtotime("-$i days"));
+    $trendLabels[] = date('M d', strtotime("-$i days"));
+    $trendData[]   = (int)$conn->query("SELECT COUNT(*) AS c FROM appointments WHERE DATE(created_at) = '$date'")->fetch_assoc()['c'];
+}
+
+// ── STUDENT ACTIVATION ──
+$totalStudents   = (int)$conn->query("SELECT COUNT(*) AS c FROM students")->fetch_assoc()['c'];
+$activatedCount  = (int)$conn->query("SELECT COUNT(*) AS c FROM activated_students WHERE status = 'active'")->fetch_assoc()['c'];
+$notActivated    = $totalStudents - $activatedCount;
+
+// ── DAILY ACTIVATIONS (last 7 days) ──
+$activationLabels = [];
+$activationData   = [];
+for ($i = 6; $i >= 0; $i--) {
+    $date               = date('Y-m-d', strtotime("-$i days"));
+    $activationLabels[] = date('M d', strtotime("-$i days"));
+    $activationData[]   = (int)$conn->query("SELECT COUNT(*) AS c FROM activated_students WHERE DATE(created_at) = '$date'")->fetch_assoc()['c'];
+}
+
+$conn->close();
+?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -115,17 +155,17 @@
 
       <div class="aReports-stat-card">
         <h3>Total Students</h3>
-        <h2 id="totalStudents">0</h2>
+        <h2 id="totalStudents"><?= $totalStudents ?></h2>
       </div>
 
       <div class="aReports-stat-card">
         <h3>Activated Accounts</h3>
-        <h2 id="activatedAccounts">0</h2>
+        <h2 id="activatedAccounts"><?= $activatedCount ?></h2>
       </div>
 
       <div class="aReports-stat-card">
         <h3>Not Activated</h3>
-        <h2 id="notActivated">0</h2>
+        <h2 id="notActivated"><?= $notActivated ?></h2>
       </div>
 
     </div>
@@ -136,7 +176,17 @@
   <section class="aReports-card">
 
     <h3 class="aReports-title">Insight Summary</h3>
-    <p class="aReports-insight" id="insightText">Loading insights...</p>
+    <p class="aReports-insight" id="insightText">
+      <?= $activatedCount ?> out of <?= $totalStudents ?> students have activated their accounts.
+      <?= $notActivated ?> student<?= $notActivated !== 1 ? 's' : '' ?> still pending activation.
+      <?php
+        $total = array_sum($statusCounts);
+        if ($total > 0) {
+            $approvedPct = round(($statusCounts['Approved'] / $total) * 100);
+            echo " Appointment approval rate: {$approvedPct}%.";
+        }
+      ?>
+    </p>
 
   </section>
 
@@ -155,6 +205,8 @@
 
 <!-- ================= SCRIPT ================= -->
 <script>
+
+// ================= SETTINGS =================
 function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
@@ -175,56 +227,20 @@ function logout(){
 
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
-  const btn = document.querySelector(".sidebar-settingsButton");
-
+  const btn  = document.querySelector(".sidebar-settingsButton");
   if (!menu.contains(e.target) && !btn.contains(e.target)) {
     menu.classList.remove("show");
   }
 });
 
-/* =========================
-   APPOINTMENTS DATA
-========================= */
-const appointments = [
-  {date:"2026-04-29", status:"pending"},
-  {date:"2026-04-29", status:"approved"},
-  {date:"2026-04-29", status:"rejected"},
-  {date:"2026-04-30", status:"approved"},
-  {date:"2026-04-30", status:"pending"},
-  {date:"2026-05-01", status:"approved"},
-  {date:"2026-05-01", status:"approved"}
-];
-
-/* =========================
-   COUNT STATUS
-========================= */
-let approved = 0, pending = 0, rejected = 0;
-
-appointments.forEach(a => {
-  if(a.status === "approved") approved++;
-  if(a.status === "pending") pending++;
-  if(a.status === "rejected") rejected++;
-});
-
-/* =========================
-   GROUP BY DATE
-========================= */
-const groupedAppointments = {};
-
-appointments.forEach(a => {
-  groupedAppointments[a.date] = (groupedAppointments[a.date] || 0) + 1;
-});
-
-/* =========================
-   LINE CHART
-========================= */
+// ================= LINE CHART - Appointment Trend =================
 new Chart(document.getElementById("trendChart"), {
   type: "line",
   data: {
-    labels: Object.keys(groupedAppointments),
+    labels: <?= json_encode($trendLabels) ?>,
     datasets: [{
       label: "Appointments",
-      data: Object.values(groupedAppointments),
+      data: <?= json_encode($trendData) ?>,
       borderColor: "#34699A",
       backgroundColor: "rgba(52,105,154,0.15)",
       fill: true,
@@ -233,83 +249,46 @@ new Chart(document.getElementById("trendChart"), {
   },
   options: {
     responsive: true,
-    maintainAspectRatio: false
+    maintainAspectRatio: false,
+    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
   }
 });
 
-/* =========================
-   PIE CHART
-========================= */
+// ================= PIE CHART - Status Distribution =================
 new Chart(document.getElementById("statusChart"), {
   type: "pie",
   data: {
-    labels: ["Approved","Pending","Rejected"],
+    labels: <?= json_encode(array_keys($statusCounts)) ?>,
     datasets: [{
-      data: [approved, pending, rejected],
-      backgroundColor: ["#2ecc71","#f1c40f","#e74c3c"]
+      data: <?= json_encode(array_values($statusCounts)) ?>,
+      backgroundColor: ["#2ecc71", "#f1c40f", "#e74c3c", "#3498db"]
     }]
   },
   options: {
     responsive: true,
-    maintainAspectRatio: false
+    maintainAspectRatio: false,
+    plugins: { legend: { position: "bottom" } }
   }
 });
 
-/* =========================
-   STUDENTS
-========================= */
-const students = [
-  {activated:true, date:"2026-04-28"},
-  {activated:true, date:"2026-04-28"},
-  {activated:false},
-  {activated:true, date:"2026-04-29"},
-  {activated:false},
-  {activated:true, date:"2026-04-30"}
-];
-
-const totalStudents = students.length;
-const activatedCount = students.filter(s => s.activated).length;
-const notActivated = totalStudents - activatedCount;
-
-document.getElementById("totalStudents").innerText = totalStudents;
-document.getElementById("activatedAccounts").innerText = activatedCount;
-document.getElementById("notActivated").innerText = notActivated;
-
-/* =========================
-   INSIGHT
-========================= */
-document.getElementById("insightText").innerText =
-`${activatedCount} out of ${totalStudents} students activated. ${notActivated} still pending.`;
-
-/* =========================
-   DAILY ACTIVATION
-========================= */
-const activationGrouped = {};
-
-students.forEach(s => {
-  if(s.activated && s.date){
-    activationGrouped[s.date] = (activationGrouped[s.date] || 0) + 1;
-  }
-});
-
-/* =========================
-   BAR CHART
-========================= */
+// ================= BAR CHART - Daily Activations =================
 new Chart(document.getElementById("activationChart"), {
   type: "bar",
   data: {
-    labels: Object.keys(activationGrouped),
+    labels: <?= json_encode($activationLabels) ?>,
     datasets: [{
       label: "Activated Accounts",
-      data: Object.values(activationGrouped),
+      data: <?= json_encode($activationData) ?>,
       backgroundColor: "#34699A"
     }]
   },
   options: {
     responsive: true,
-    maintainAspectRatio: false
+    maintainAspectRatio: false,
+    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
   }
 });
+
 </script>
 
 </body>
