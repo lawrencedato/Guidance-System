@@ -10,6 +10,45 @@ if ($conn->connect_error) {
     die(json_encode(["error" => "Connection failed: " . $conn->connect_error]));
 }
 
+// ================= HANDLE GET: NEXT STUDENT ID =================
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'next_id') {
+    header('Content-Type: application/json');
+
+    $year_level = $_GET['year_level'] ?? '';
+
+    $prefix_map = [
+        '4th Year' => '22',
+        '3rd Year' => '23',
+        '2nd Year' => '24',
+        '1st Year' => '25',
+    ];
+
+    if (!isset($prefix_map[$year_level])) {
+        echo json_encode(["success" => false, "message" => "Invalid year level."]);
+        exit;
+    }
+
+    $prefix = $prefix_map[$year_level];
+
+    $result = $conn->query("
+        SELECT MAX(student_id) AS max_id
+        FROM students
+        WHERE student_id LIKE '{$prefix}%'
+    ");
+
+    $row    = $result->fetch_assoc();
+    $max_id = $row['max_id'];
+
+    if ($max_id) {
+        $next_id = $max_id + 1;
+    } else {
+        $next_id = intval($prefix . '0001');
+    }
+
+    echo json_encode(["success" => true, "next_id" => $next_id]);
+    exit;
+}
+
 // ================= HANDLE GET REQUEST (FETCH) =================
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'fetch') {
 
@@ -103,7 +142,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // ---------- EDIT STUDENT ----------
     if ($action === 'edit') {
         $student_id     = intval($_POST['student_id']);
-        $new_student_id = intval($_POST['new_student_id']);
         $first_name     = $conn->real_escape_string(trim($_POST['first_name']));
         $last_name      = $conn->real_escape_string(trim($_POST['last_name']));
         $email          = $conn->real_escape_string(trim($_POST['email']));
@@ -112,14 +150,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $year_level     = $conn->real_escape_string($_POST['year_level']);
         $course         = $conn->real_escape_string($_POST['course']);
 
-        if ($student_id !== $new_student_id) {
-            $check = $conn->query("SELECT student_id FROM students WHERE student_id = $new_student_id");
-            if ($check->num_rows > 0) {
-                echo json_encode(["success" => false, "message" => "New Student ID already in use."]);
-                exit;
-            }
-        }
-
         $emailCheck = $conn->query("SELECT student_id FROM students WHERE email = '$email' AND student_id != $student_id");
         if ($emailCheck->num_rows > 0) {
             echo json_encode(["success" => false, "message" => "Email already in use by another student."]);
@@ -127,8 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
 
         $sql = "UPDATE students
-                SET student_id = $new_student_id,
-                    first_name = '$first_name',
+                SET first_name = '$first_name',
                     last_name  = '$last_name',
                     email      = '$email',
                     gender     = '$gender',
@@ -259,6 +288,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             font-weight: 600;
         }
         .aStudents-sort-option i { width: 14px; text-align: center; font-size: 0.75rem; }
+
+        /* ── Student ID auto-generate style ── */
+        .aStudents-id-field {
+            position: relative;
+        }
+        .aStudents-id-field input[readonly] {
+            background: var(--input-bg, #f0f2f5);
+            cursor: not-allowed;
+            color: #555;
+        }
+        .aStudents-id-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+        }
+        .aStudents-id-badge i { font-size: 10px; }
 
         /* ── Utility ── */
         .aStudents-hidden        { display: none; }
@@ -460,10 +508,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <div class="aStudents-sec-label">ACADEMIC INFORMATION</div>
             <div class="aStudents-field-grid">
                 <div class="aStudents-field">
-                    <label>Student ID</label>
-                    <input type="text" id="studentId" placeholder="e.g. 240001">
-                </div>
-                <div class="aStudents-field">
                     <label>Year Level</label>
                     <select id="yearLevel">
                         <option value="" disabled selected>Select Year</option>
@@ -472,6 +516,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         <option>3rd Year</option>
                         <option>4th Year</option>
                     </select>
+                </div>
+                <div class="aStudents-field aStudents-id-field">
+                    <label>Student ID</label>
+                    <input type="text" id="studentId" placeholder="Select a year level first" readonly>
+                    <span class="aStudents-id-badge" id="studentIdBadge">
+                        <i class="fa fa-circle-info"></i> Auto-generated based on year level
+                    </span>
                 </div>
                 <div class="aStudents-field full">
                     <label>Course</label>
@@ -552,17 +603,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <div class="aStudents-field-grid">
                 <div class="aStudents-field">
                     <label>Student ID</label>
-                    <input type="text" id="viewStudentId" readonly>
+                    <!-- Always readonly — ID is never editable -->
+                    <input type="text" id="viewStudentId" readonly
+                           style="background: var(--input-bg, #f0f2f5); cursor: not-allowed;">
                 </div>
                 <div class="aStudents-field">
                     <label>Year Level</label>
-                    <input type="text" id="viewYear" readonly>
-                    <select id="editYear" class="aStudents-hidden">
-                        <option>1st Year</option>
-                        <option>2nd Year</option>
-                        <option>3rd Year</option>
-                        <option>4th Year</option>
-                    </select>
+                    <!-- Always readonly — tied to Student ID prefix, never editable -->
+                    <input type="text" id="viewYear" readonly
+                           style="background: var(--input-bg, #f0f2f5); cursor: not-allowed;">
                 </div>
                 <div class="aStudents-field">
                     <label>Course</label>
@@ -654,7 +703,6 @@ function setSort(col, dir) {
     loadStudents();
 }
 
-// Close sort dropdown on outside click
 document.addEventListener('click', e => {
     const dd = document.getElementById('sortDropdown');
     if (!e.target.closest('.aStudents-sort-wrapper')) dd.classList.remove('show');
@@ -691,7 +739,6 @@ function loadStudents() {
             }
             json.data.forEach(s => {
                 const row = document.createElement('tr');
-                // Store all fields as data attributes for easy access in viewStudent()
                 row.dataset.id        = s.student_id;
                 row.dataset.firstName = s.first_name;
                 row.dataset.lastName  = s.last_name;
@@ -732,11 +779,15 @@ document.addEventListener('DOMContentLoaded', loadStudents);
 
 // ================= ADD STUDENT MODAL =================
 function openAddStudentModal() {
-    ['firstName','lastName','email','studentId','studentAge'].forEach(id => document.getElementById(id).value = '');
+    ['firstName', 'lastName', 'email', 'studentAge'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('gender').value    = '';
     document.getElementById('birthday').value  = '';
     document.getElementById('yearLevel').value = '';
     document.getElementById('course').value    = '';
+    document.getElementById('studentId').value       = '';
+    document.getElementById('studentId').placeholder = 'Select a year level first';
+    document.getElementById('studentIdBadge').innerHTML =
+        '<i class="fa fa-circle-info"></i> Auto-generated based on year level';
     document.getElementById('studentModal').classList.add('open');
 }
 function closeStudentModal() {
@@ -744,6 +795,36 @@ function closeStudentModal() {
 }
 document.getElementById('studentModal').addEventListener('click', function(e) {
     if (e.target === this) closeStudentModal();
+});
+
+// ================= AUTO-GENERATE STUDENT ID =================
+document.getElementById('yearLevel').addEventListener('change', function () {
+    const yearLevel = this.value;
+    if (!yearLevel) return;
+
+    const idField = document.getElementById('studentId');
+    const badge   = document.getElementById('studentIdBadge');
+
+    idField.value       = '';
+    idField.placeholder = 'Generating...';
+    badge.innerHTML     = '<i class="fa fa-spinner fa-spin"></i> Fetching next ID...';
+
+    fetch(`astudents.php?action=next_id&year_level=${encodeURIComponent(yearLevel)}`)
+        .then(res => res.json())
+        .then(json => {
+            if (json.success) {
+                idField.value       = json.next_id;
+                idField.placeholder = '';
+                badge.innerHTML     = '<i class="fa fa-lock"></i> Auto-assigned — not editable';
+            } else {
+                idField.placeholder = 'Error generating ID';
+                badge.innerHTML     = '<i class="fa fa-triangle-exclamation"></i> Could not generate ID';
+            }
+        })
+        .catch(() => {
+            idField.placeholder = 'Error generating ID';
+            badge.innerHTML     = '<i class="fa fa-triangle-exclamation"></i> Could not generate ID';
+        });
 });
 
 // ================= AGE COMPUTE =================
@@ -781,7 +862,15 @@ function saveStudent() {
     const course    = document.getElementById('course').value;
     const email     = document.getElementById('email').value.trim();
 
-    if (!firstName || !lastName || !gender || !birthday || !studentId || !yearLevel || !course || !email) {
+    if (!yearLevel) {
+        alert("Please select a year level so a Student ID can be generated.");
+        return;
+    }
+    if (!studentId) {
+        alert("Student ID has not been generated yet. Please wait or re-select the year level.");
+        return;
+    }
+    if (!firstName || !lastName || !gender || !birthday || !course || !email) {
         alert("Please fill in all required fields.");
         return;
     }
@@ -830,7 +919,7 @@ function exportStudentCsv() {
     const table = document.querySelector('.aStudents-table');
     const rows  = Array.from(table.querySelectorAll('thead tr, tbody tr'));
     const csv   = rows.map(row => {
-        const cells = Array.from(row.querySelectorAll('th, td')).slice(0, 9); // exclude Actions col
+        const cells = Array.from(row.querySelectorAll('th, td')).slice(0, 9);
         return cells.map(cell => `"${cell.innerText.replace(/"/g, '""')}"`).join(',');
     }).join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -843,7 +932,6 @@ function exportStudentCsv() {
 }
 
 // ================= VIEW STUDENT =================
-// Reads from data attributes set during row render — no column index guessing.
 function viewStudent(btn) {
     const row = btn.closest('tr');
 
@@ -867,16 +955,15 @@ function setViewMode() {
     document.getElementById('editGender').classList.add('aStudents-hidden');
     document.getElementById('viewBirthday').classList.remove('aStudents-hidden');
     document.getElementById('editBirthday').classList.add('aStudents-hidden');
-    document.getElementById('viewYear').classList.remove('aStudents-hidden');
-    document.getElementById('editYear').classList.add('aStudents-hidden');
     document.getElementById('viewCourse').classList.remove('aStudents-hidden');
     document.getElementById('editCourse').classList.add('aStudents-hidden');
 
-    document.getElementById('viewFirstName').readOnly  = true;
-    document.getElementById('viewLastName').readOnly   = true;
-    document.getElementById('viewEmail').readOnly      = true;
-    document.getElementById('viewStudentId').readOnly  = true;
-    document.getElementById('viewAge').readOnly        = true;
+    document.getElementById('viewFirstName').readOnly = true;
+    document.getElementById('viewLastName').readOnly  = true;
+    document.getElementById('viewEmail').readOnly     = true;
+    // Student ID is always readonly — never unlocked
+    document.getElementById('viewStudentId').readOnly = true;
+    document.getElementById('viewAge').readOnly       = true;
 
     document.getElementById('editBtn').classList.remove('aStudents-hidden');
     document.getElementById('saveEditBtn').classList.add('aStudents-hidden');
@@ -886,22 +973,20 @@ function setViewMode() {
 function enableEdit() {
     document.getElementById('editGender').value   = document.getElementById('viewGender').value;
     document.getElementById('editBirthday').value = document.getElementById('viewBirthday').value;
-    document.getElementById('editYear').value     = document.getElementById('viewYear').value;
     document.getElementById('editCourse').value   = document.getElementById('viewCourse').value;
 
     document.getElementById('viewGender').classList.add('aStudents-hidden');
     document.getElementById('editGender').classList.remove('aStudents-hidden');
     document.getElementById('viewBirthday').classList.add('aStudents-hidden');
     document.getElementById('editBirthday').classList.remove('aStudents-hidden');
-    document.getElementById('viewYear').classList.add('aStudents-hidden');
-    document.getElementById('editYear').classList.remove('aStudents-hidden');
+    // viewYear stays visible and readonly — year level is locked
     document.getElementById('viewCourse').classList.add('aStudents-hidden');
     document.getElementById('editCourse').classList.remove('aStudents-hidden');
 
-    document.getElementById('viewFirstName').readOnly  = false;
-    document.getElementById('viewLastName').readOnly   = false;
-    document.getElementById('viewEmail').readOnly      = false;
-    document.getElementById('viewStudentId').readOnly  = false;
+    document.getElementById('viewFirstName').readOnly = false;
+    document.getElementById('viewLastName').readOnly  = false;
+    document.getElementById('viewEmail').readOnly     = false;
+    // viewStudentId intentionally stays readonly here
 
     document.getElementById('editBtn').classList.add('aStudents-hidden');
     document.getElementById('saveEditBtn').classList.remove('aStudents-hidden');
@@ -910,32 +995,30 @@ function enableEdit() {
 
 // ================= SAVE EDIT =================
 function saveEdit() {
-    const firstName    = document.getElementById('viewFirstName').value.trim();
-    const lastName     = document.getElementById('viewLastName').value.trim();
-    const newStudentId = document.getElementById('viewStudentId').value.trim();
-    const email        = document.getElementById('viewEmail').value.trim();
-    const gender       = document.getElementById('editGender').value;
-    const birthday     = document.getElementById('editBirthday').value;
-    const yearLevel    = document.getElementById('editYear').value;
-    const course       = document.getElementById('editCourse').value;
-    const originalId   = document.getElementById('originalStudentId').value;
+    const firstName  = document.getElementById('viewFirstName').value.trim();
+    const lastName   = document.getElementById('viewLastName').value.trim();
+    const email      = document.getElementById('viewEmail').value.trim();
+    const gender     = document.getElementById('editGender').value;
+    const birthday   = document.getElementById('editBirthday').value;
+    const yearLevel  = document.getElementById('viewYear').value;
+    const course     = document.getElementById('editCourse').value;
+    const originalId = document.getElementById('originalStudentId').value;
 
-    if (!firstName || !lastName || !newStudentId || !email || !gender || !birthday || !yearLevel || !course) {
+    if (!firstName || !lastName || !email || !gender || !birthday || !yearLevel || !course) {
         alert("Please fill in all fields.");
         return;
     }
 
     const formData = new FormData();
-    formData.append('action',         'edit');
-    formData.append('student_id',     originalId);
-    formData.append('new_student_id', newStudentId);
-    formData.append('first_name',     firstName);
-    formData.append('last_name',      lastName);
-    formData.append('email',          email);
-    formData.append('gender',         gender);
-    formData.append('birthday',       birthday);
-    formData.append('year_level',     yearLevel);
-    formData.append('course',         course);
+    formData.append('action',     'edit');
+    formData.append('student_id', originalId);
+    formData.append('first_name', firstName);
+    formData.append('last_name',  lastName);
+    formData.append('email',      email);
+    formData.append('gender',     gender);
+    formData.append('birthday',   birthday);
+    formData.append('year_level', yearLevel);
+    formData.append('course',     course);
 
     fetch('astudents.php', { method: 'POST', body: formData })
         .then(res => res.json())
@@ -959,19 +1042,16 @@ document.getElementById('importCsvInput').addEventListener('change', function ()
     if (!file) return;
 
     const formData = new FormData();
-    formData.append('action', 'import_csv');
+    formData.append('action',   'import_csv');
     formData.append('csv_file', file);
 
-    fetch('astudents.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(json => {
-        alert(json.message);
-        if (json.success) loadStudents();
-    })
-    .catch(() => alert("CSV import failed."));
+    fetch('astudents.php', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(json => {
+            alert(json.message);
+            if (json.success) loadStudents();
+        })
+        .catch(() => alert("CSV import failed."));
 });
 </script>
 </body>
