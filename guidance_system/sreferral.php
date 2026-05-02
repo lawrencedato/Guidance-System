@@ -1,3 +1,53 @@
+<?php
+error_reporting(0);
+ini_set('display_errors', 0);
+mysqli_report(MYSQLI_REPORT_OFF);
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+// ===== GUARD =====
+if (!isset($_SESSION['student_id'])) {
+    header("Location: slogin.php");
+    exit;
+}
+
+// ===== DB CONNECTION =====
+$conn = new mysqli("localhost", "root", "", "gcs_db");
+$sid  = $conn->real_escape_string($_SESSION['student_id']);
+
+// ===== LOAD STUDENT DATA =====
+$studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
+$student    = $studentRes->fetch_assoc();
+
+$profileRes = $conn->query("SELECT contact_details, profile_image FROM student_profiles WHERE student_id='$sid' LIMIT 1");
+$profile    = $profileRes->fetch_assoc();
+
+$fullName   = htmlspecialchars(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? ''));
+$email      = htmlspecialchars($student['email'] ?? '');
+$yearLevel  = htmlspecialchars($student['year_level'] ?? '');
+$course     = htmlspecialchars($student['course'] ?? '');
+$contact    = htmlspecialchars($profile['contact_details'] ?? 'N/A');
+$profileImg = !empty($profile['profile_image'])
+              ? htmlspecialchars($profile['profile_image'])
+              : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
+
+// ===== LOAD LATEST REFERRAL =====
+$referralRes = $conn->query("
+    SELECT r.referral_date, r.reason, r.counselor_remarks,
+           CONCAT(c.first_name, ' ', c.last_name) AS counselor_name,
+           c.department
+    FROM referrals r
+    JOIN counselors c ON r.counselor_id = c.counselor_id
+    WHERE r.student_id='$sid'
+    ORDER BY r.created_at DESC
+    LIMIT 1
+");
+$referral = $referralRes ? $referralRes->fetch_assoc() : null;
+
+// ===== REFERRAL COUNT (badge) =====
+$countRes      = $conn->query("SELECT COUNT(*) AS total FROM referrals WHERE student_id='$sid'");
+$referralCount = $countRes ? (int)$countRes->fetch_assoc()['total'] : 0;
+?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -11,10 +61,11 @@
 
 <body class="body">
 
-<!-- ================= SIDEBAR ================= -->
+<!-- ========================= SIDEBAR ========================= -->
 <aside class="sidebar">
 
   <div class="sidebar-logoBar">
+
     <div class="sidebar-logo">
       <img src="logo.png" alt="logo">
       <span class="sidebar-logoText">UNITYCARE</span>
@@ -32,6 +83,7 @@
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
     </div>
+
   </div>
 
   <nav class="sidebar-menu">
@@ -44,7 +96,9 @@
 
     <a href="sreferral.php" class="active">
       <i class="fa fa-route"></i> Referral
-      <span class="referral-badge" id="referralBadge">1</span>
+      <?php if ($referralCount > 0): ?>
+        <span class="referral-badge" id="referralBadge"><?= $referralCount ?></span>
+      <?php endif; ?>
     </a>
 
     <p class="sidebar-title">UPDATES</p>
@@ -59,25 +113,30 @@
 
 </aside>
 
-<!-- ================= TOPBAR ================= -->
+<!-- ========================= TOPBAR ========================= -->
 <header class="topbar">
+
   <div class="topbar-left">
     <h2>Referral Slip</h2>
   </div>
 
   <div class="topbar-right">
     <div class="topbar-user">
-      <img src="student.jpg" alt="user">
+      <img src="<?= $profileImg ?>" alt="user"
+           onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff'">
       <div>
-        <strong>Vincent Adolf Sablay</strong>
-        <p>vincentsablay@gmail.com</p>
+        <strong><?= $fullName ?></strong>
+        <p><?= $email ?></p>
       </div>
     </div>
   </div>
+
 </header>
 
-<!-- ================= MAIN ================= -->
+<!-- ========================= MAIN ========================= -->
 <main class="sReferral-main">
+
+  <?php if ($referral): ?>
 
   <!-- REFERRAL CARD -->
   <section class="sReferral-card" id="sReferral-slip">
@@ -85,64 +144,93 @@
     <h2 class="sReferral-title">REFERRAL SLIP</h2>
 
     <p class="sReferral-date">
-      <b>Date:</b> <span id="sReferral-date"></span>
+      <b>Date:</b> <span><?= htmlspecialchars(date('F d, Y', strtotime($referral['referral_date']))) ?></span>
     </p>
 
     <hr>
 
     <!-- STUDENT INFO -->
     <h3>Student Information</h3>
-    <p><b>Name:</b> <span id="sReferral-name"></span></p>
-    <p><b>Year Level:</b> <span id="sReferral-year"></span></p>
-    <p><b>Program:</b> <span id="sReferral-course"></span></p>
-    <p><b>Contact:</b> <span id="sReferral-contact"></span></p>
+    <p><b>Name:</b> <span><?= $fullName ?></span></p>
+    <p><b>Year Level:</b> <span><?= $yearLevel ?></span></p>
+    <p><b>Program:</b> <span><?= $course ?></span></p>
+    <p><b>Contact:</b> <span><?= $contact ?></span></p>
 
     <hr>
 
-    <!-- DETAILS -->
+    <!-- REFERRAL DETAILS -->
     <h3>Referral Details</h3>
     <p><b>Reason:</b></p>
-    <p id="sReferral-reason"></p>
+    <p><?= nl2br(htmlspecialchars($referral['reason'])) ?></p>
 
-    <p><b>Concern:</b></p>
-    <p id="sReferral-concern"></p>
+    <?php if (!empty($referral['counselor_remarks'])): ?>
+    <p><b>Counselor Remarks:</b></p>
+    <p><?= nl2br(htmlspecialchars($referral['counselor_remarks'])) ?></p>
+    <?php endif; ?>
 
     <hr>
 
-    <!-- SIGNATURE -->
+    <!-- REFERRED BY -->
     <h3>Referred By</h3>
-    <img src="images/signature.png" class="sReferral-signature">
+    <img src="images/signature.png" class="sReferral-signature" alt="Counselor Signature">
 
-    <p><b>Counselor:</b> Dr. Lawrence Dato</p>
-    <p><b>Office:</b> Guidance Office</p>
+    <p><b>Counselor:</b> <?= htmlspecialchars($referral['counselor_name']) ?></p>
+    <p><b>Office:</b> <?= htmlspecialchars($referral['department']) ?></p>
 
-    <!-- ACTION -->
+    <!-- EXPORT BUTTON -->
     <button class="sReferral-btn" onclick="exportPDF()">
       Export as PDF
     </button>
 
   </section>
 
+  <?php else: ?>
+
+  <!-- NO REFERRAL STATE -->
+  <section class="sReferral-card">
+    <div style="text-align: center; padding: 2rem 0;">
+      <i class="fa fa-route" style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1rem;"></i>
+      <h3>No Referral Found</h3>
+      <p style="opacity: 0.6;">You have no referral slip on record yet.</p>
+    </div>
+  </section>
+
+  <?php endif; ?>
+
 </main>
 
+<!-- ========================= SCRIPT ========================= -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
-function loadReferral() {
-  let data = JSON.parse(localStorage.getItem("referrals")) || [];
-  if (!data.length) return;
-
-  let r = data[0];
-
-  document.getElementById("sReferral-name").textContent = r.studentName;
-  document.getElementById("sReferral-year").textContent = r.yearLevel;
-  document.getElementById("sReferral-course").textContent = r.course;
-  document.getElementById("sReferral-contact").textContent = r.contact;
-  document.getElementById("sReferral-reason").textContent = r.reason;
-  document.getElementById("sReferral-concern").textContent = r.concern;
-  document.getElementById("sReferral-date").textContent = r.date;
+function toggleSettingsMenu(e) {
+  e.stopPropagation();
+  document.getElementById("settingsDropdown").classList.toggle("show");
 }
+
+function toggleTheme() {
+  const html = document.documentElement;
+  html.setAttribute(
+    "data-theme",
+    html.getAttribute("data-theme") === "light" ? "dark" : "light"
+  );
+}
+
+function logout() {
+  fetch('logout.php').finally(() => { window.location.href = "slogin.php"; });
+}
+
+document.addEventListener("click", e => {
+  const menu = document.getElementById("settingsDropdown");
+  const btn  = document.querySelector(".sidebar-settingsButton");
+
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove("show");
+  }
+});
 
 function exportPDF() {
   const element = document.getElementById("sReferral-slip");
+  if (!element) return;
 
   html2pdf().set({
     margin: 10,
@@ -152,47 +240,6 @@ function exportPDF() {
     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
   }).from(element).save();
 }
-
-function updateReferralBadge() {
-  let count = parseInt(localStorage.getItem("referralCount")) || 0;
-  const badge = document.getElementById("referralBadge");
-
-  if (badge) {
-    badge.style.display = count > 0 ? "flex" : "none";
-    badge.textContent = count;
-  }
-}
-
-// UI HELPERS
-function toggleSettingsMenu(e){
-  e.stopPropagation();
-  document.getElementById("settingsDropdown").classList.toggle("show");
-}
-
-function toggleTheme(){
-  const html = document.documentElement;
-  html.setAttribute(
-    "data-theme",
-    html.getAttribute("data-theme") === "light" ? "dark" : "light"
-  );
-}
-
-function logout(){
-  localStorage.clear();
-  window.location.href = "slogin.php";
-}
-
-document.addEventListener("click", e => {
-  const menu = document.getElementById("settingsDropdown");
-  const btn = document.querySelector(".sidebar-settingsButton");
-
-  if (!menu.contains(e.target) && !btn.contains(e.target)) {
-    menu.classList.remove("show");
-  }
-});
-
-loadReferral();
-updateReferralBadge();
 </script>
 
 </body>

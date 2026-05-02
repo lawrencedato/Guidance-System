@@ -1,3 +1,32 @@
+<?php
+error_reporting(0);
+ini_set('display_errors', 0);
+mysqli_report(MYSQLI_REPORT_OFF);
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+// ===== GUARD =====
+if (!isset($_SESSION['student_id'])) {
+    header("Location: slogin.php");
+    exit;
+}
+
+// ===== LOAD STUDENT DATA =====
+$conn = new mysqli("localhost", "root", "", "gcs_db");
+$sid  = $conn->real_escape_string($_SESSION['student_id']);
+
+$studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
+$student    = $studentRes->fetch_assoc();
+
+$profileRes = $conn->query("SELECT profile_image FROM student_profiles WHERE student_id='$sid' LIMIT 1");
+$profile    = $profileRes->fetch_assoc();
+
+$fullName   = htmlspecialchars(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? ''));
+$email      = htmlspecialchars($student['email'] ?? '');
+$profileImg = !empty($profile['profile_image'])
+              ? htmlspecialchars($profile['profile_image'])
+              : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
+?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -67,15 +96,14 @@
   </div>
 
   <div class="topbar-right">
-
-   <div class="topbar-user">
-      <img src="student.jpg" alt="user">
+    <div class="topbar-user">
+      <img src="<?= $profileImg ?>" alt="user"
+           onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff'">
       <div>
-        <strong>Vincent Adolf Sablay</strong>
-        <p>vincentsablay@gmail.com</p>
+        <strong><?= $fullName ?></strong>
+        <p><?= $email ?></p>
       </div>
     </div>
-
   </div>
 
 </header>
@@ -146,8 +174,7 @@ function toggleTheme(){
 }
 
 function logout(){
-  localStorage.clear();
-  window.location.href = "slogin.php";
+  fetch('logout.php').finally(() => { window.location.href = "slogin.php"; });
 }
 
 document.addEventListener("click", e => {

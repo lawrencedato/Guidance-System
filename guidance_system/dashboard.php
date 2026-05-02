@@ -60,6 +60,10 @@ $sid  = $conn->real_escape_string($_SESSION['student_id']);
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
 $student    = $studentRes->fetch_assoc();
 
+// Load profile image from student_profiles
+$profileRes = $conn->query("SELECT profile_image FROM student_profiles WHERE student_id='$sid' LIMIT 1");
+$profile    = $profileRes->fetch_assoc();
+
 // Read is_temp_password from session (set during login)
 $isTempPassword = (int) ($_SESSION['is_temp_password'] ?? 0);
 
@@ -82,9 +86,12 @@ $actRes = $conn->query(
 $activities = [];
 while ($row = $actRes->fetch_assoc()) $activities[] = $row;
 
-$firstName = htmlspecialchars($student['first_name'] ?? 'Student');
-$fullName  = htmlspecialchars(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? ''));
-$email     = htmlspecialchars($student['email'] ?? '');
+$firstName  = htmlspecialchars($student['first_name'] ?? 'Student');
+$fullName   = htmlspecialchars(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? ''));
+$email      = htmlspecialchars($student['email'] ?? '');
+$profileImg = !empty($profile['profile_image'])
+              ? htmlspecialchars($profile['profile_image'])
+              : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -424,7 +431,7 @@ $email     = htmlspecialchars($student['email'] ?? '');
     </div>
     <div class="topbar-right">
         <div class="topbar-user">
-            <img src="student.jpg" alt="user"
+            <img src="<?= $profileImg ?>" alt="user"
                  onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff'">
             <div>
                 <strong><?= $fullName ?></strong>
@@ -616,7 +623,6 @@ function saveNewPassword() {
             btn.textContent = 'Save Password';
 
             if (json.success) {
-                // ✅ Hide reset modal and overlay, show success modal
                 document.getElementById('resetModal').classList.remove('active');
                 document.getElementById('pageBlockOverlay').classList.remove('active');
                 document.getElementById('successModal').classList.add('active');
