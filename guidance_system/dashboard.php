@@ -44,7 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
     );
 
     if ($ok) {
-        // ✅ Destroy session BEFORE sending JSON — output not yet started
         session_unset();
         session_destroy();
         echo json_encode(["success" => true]);
@@ -61,7 +60,7 @@ $sid  = $conn->real_escape_string($_SESSION['student_id']);
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
 $student    = $studentRes->fetch_assoc();
 
-// ✅ Read is_temp_password from session (set during login)
+// Read is_temp_password from session (set during login)
 $isTempPassword = (int) ($_SESSION['is_temp_password'] ?? 0);
 
 // Stats

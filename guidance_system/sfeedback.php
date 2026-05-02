@@ -136,7 +136,7 @@ function toggleTheme() {
 
 function logout() {
   localStorage.clear();
-  window.location.href = "login.html";
+  window.location.href = "slogin.php";
 }
 
 document.addEventListener("click", function(e) {

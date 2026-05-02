@@ -21,7 +21,7 @@
     </div>
 
     <div class="sidebar-settings">
-      <button class="sidebar-settingsButton" onclick="toggleSettingsMenu()">
+      <button class="sidebar-settingsButton" onclick="toggleSettingsMenu(event)">
         <i class="fa fa-gear"></i>
       </button>
 
@@ -160,7 +160,7 @@ function toggleTheme(){
 
 function logout(){
   localStorage.clear();
-  window.location.href = "login.html";
+  window.location.href = "clogin.php";
 }
 
 document.addEventListener("click", e => {
