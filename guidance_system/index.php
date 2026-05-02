@@ -63,24 +63,15 @@
 
 </main>
 
-  <script>
-    function handleRoleSelection(role) {
-      localStorage.setItem("userRole", role);
+<script>
+function goLogin(){
+  window.location.href = "slogin.php";
+}
 
-      switch (role) {
-        case "student":
-          window.location.href = "login.html";
-          break;
-        case "counselor":
-          window.location.href = "clogin.html";
-          break;
-        case "admin":
-        default:
-          window.location.href = "admin.html";
-          break;
-      }
-    }
-  </script>
+function goActivate(){
+  window.location.href = "activate.php";
+}
+</script>
 
 </body>
 </html>
