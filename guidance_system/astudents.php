@@ -10,7 +10,63 @@ if ($conn->connect_error) {
     die(json_encode(["error" => "Connection failed: " . $conn->connect_error]));
 }
 
-// ================= HANDLE AJAX REQUESTS =================
+// ================= HANDLE GET REQUEST (FETCH) =================
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'fetch') {
+
+    header('Content-Type: application/json');
+
+    $search     = $conn->real_escape_string($_GET['search'] ?? '');
+    $course     = $conn->real_escape_string($_GET['course'] ?? 'All Courses');
+    $year_level = $conn->real_escape_string($_GET['year_level'] ?? 'All Years');
+    $sort_col   = $_GET['sort_col'] ?? 'student_id';
+    $sort_dir   = ($_GET['sort_dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+
+    $allowed_cols = ['student_id', 'last_name', 'year_level'];
+    if (!in_array($sort_col, $allowed_cols)) {
+        $sort_col = 'student_id';
+    }
+
+    $where = "WHERE 1=1";
+
+    if (!empty($search)) {
+        $where .= " AND (
+            student_id LIKE '%$search%' OR
+            first_name LIKE '%$search%' OR
+            last_name LIKE '%$search%'
+        )";
+    }
+
+    if ($course !== "All Courses") {
+        $where .= " AND course = '$course'";
+    }
+
+    if ($year_level !== "All Years") {
+        $where .= " AND year_level = '$year_level'";
+    }
+
+    $sql = "SELECT *,
+        TIMESTAMPDIFF(YEAR, birthday, CURDATE()) AS age
+        FROM students
+        $where
+        ORDER BY $sort_col $sort_dir";
+
+    $result = $conn->query($sql);
+
+    if (!$result) {
+        echo json_encode(["success" => false, "message" => "Query failed: " . $conn->error]);
+        exit;
+    }
+
+    $students = [];
+    while ($row = $result->fetch_assoc()) {
+        $students[] = $row;
+    }
+
+    echo json_encode(["success" => true, "data" => $students]);
+    exit;
+}
+
+// ================= HANDLE POST REQUESTS =================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
 
@@ -89,43 +145,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
+    // ---------- IMPORT CSV ----------
+    if ($action === 'import_csv') {
+
+        if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode(["success" => false, "message" => "No file uploaded or upload error."]);
+            exit;
+        }
+
+        $file = fopen($_FILES['csv_file']['tmp_name'], 'r');
+        if (!$file) {
+            echo json_encode(["success" => false, "message" => "Failed to open CSV file."]);
+            exit;
+        }
+
+        $rowCount = 0;
+        $skipped  = 0;
+
+        fgetcsv($file); // skip header
+
+        while (($data = fgetcsv($file, 1000, ",")) !== FALSE) {
+            if (count($data) < 8) {
+                $skipped++;
+                continue;
+            }
+
+            $student_id = intval($data[0]);
+            $last_name  = $conn->real_escape_string(trim($data[1]));
+            $first_name = $conn->real_escape_string(trim($data[2]));
+            $email      = $conn->real_escape_string(trim($data[3]));
+            $gender     = $conn->real_escape_string(trim($data[4]));
+            $birthday   = $conn->real_escape_string(trim($data[5]));
+            $year_level = $conn->real_escape_string(trim($data[6]));
+            $course     = $conn->real_escape_string(trim($data[7]));
+
+            $check = $conn->query("SELECT student_id FROM students WHERE student_id = $student_id OR email = '$email'");
+            if ($check->num_rows > 0) {
+                $skipped++;
+                continue;
+            }
+
+            $sql = "INSERT INTO students (student_id, first_name, last_name, email, gender, birthday, year_level, course)
+                    VALUES ($student_id, '$first_name', '$last_name', '$email', '$gender', '$birthday', '$year_level', '$course')";
+
+            if ($conn->query($sql)) {
+                $rowCount++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        fclose($file);
+
+        echo json_encode([
+            "success" => true,
+            "message" => "$rowCount students imported successfully. $skipped skipped."
+        ]);
+        exit;
+    }
+
     echo json_encode(["success" => false, "message" => "Unknown action."]);
-    exit;
-}
-
-// ---------- FETCH STUDENTS ----------
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'fetch') {
-    header('Content-Type: application/json');
-
-    $where = "1=1";
-
-    if (!empty($_GET['search'])) {
-        $search = $conn->real_escape_string($_GET['search']);
-        $where .= " AND (student_id LIKE '%$search%' OR first_name LIKE '%$search%' OR last_name LIKE '%$search%')";
-    }
-    if (!empty($_GET['course']) && $_GET['course'] !== 'All Courses') {
-        $course = $conn->real_escape_string($_GET['course']);
-        $where .= " AND course = '$course'";
-    }
-    if (!empty($_GET['year_level']) && $_GET['year_level'] !== 'All Years') {
-        $year = $conn->real_escape_string($_GET['year_level']);
-        $where .= " AND year_level = '$year'";
-    }
-
-    // Sort logic
-    $allowed_sort = ['student_id', 'last_name', 'first_name', 'year_level'];
-    $allowed_dir  = ['ASC', 'DESC'];
-    $sort_col = isset($_GET['sort_col']) && in_array($_GET['sort_col'], $allowed_sort) ? $_GET['sort_col'] : 'student_id';
-    $sort_dir = isset($_GET['sort_dir']) && in_array(strtoupper($_GET['sort_dir']), $allowed_dir) ? strtoupper($_GET['sort_dir']) : 'ASC';
-
-    $result = $conn->query("SELECT *, TIMESTAMPDIFF(YEAR, birthday, CURDATE()) AS age FROM students WHERE $where ORDER BY $sort_col $sort_dir");
-
-    $students = [];
-    while ($row = $result->fetch_assoc()) {
-        $students[] = $row;
-    }
-
-    echo json_encode(["success" => true, "data" => $students]);
     exit;
 }
 ?>
@@ -875,6 +954,25 @@ document.getElementById('viewStudentModal').addEventListener('click', function(e
     if (e.target === this) closeViewModal();
 });
 
+document.getElementById('importCsvInput').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('action', 'import_csv');
+    formData.append('csv_file', file);
+
+    fetch('astudents.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(json => {
+        alert(json.message);
+        if (json.success) loadStudents();
+    })
+    .catch(() => alert("CSV import failed."));
+});
 </script>
 </body>
 </html>
