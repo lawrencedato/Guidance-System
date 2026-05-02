@@ -1,3 +1,41 @@
+<?php
+$host = "localhost";
+$db   = "gcs_db";
+$user = "root";
+$pass = "";
+
+$conn = new mysqli($host, $user, $pass, $db);
+
+// ── STUDENTS (activated) ──
+$studentRows = [];
+$sResult = $conn->query("
+    SELECT s.student_id, s.first_name, s.last_name, s.email, s.year_level, a.status
+    FROM activated_students a
+    JOIN students s ON a.student_id = s.student_id
+    ORDER BY s.student_id ASC
+");
+while ($row = $sResult->fetch_assoc()) $studentRows[] = $row;
+
+// ── COUNSELORS ──
+$counselorRows = [];
+$cResult = $conn->query("
+    SELECT counselor_id, first_name, last_name, email, department, status
+    FROM counselors
+    ORDER BY counselor_id ASC
+");
+while ($row = $cResult->fetch_assoc()) $counselorRows[] = $row;
+
+// ── ADMINS ──
+$adminRows = [];
+$aResult = $conn->query("
+    SELECT admin_id, name, email, status
+    FROM admins
+    ORDER BY admin_id ASC
+");
+while ($row = $aResult->fetch_assoc()) $adminRows[] = $row;
+
+$conn->close();
+?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -121,13 +159,23 @@
         </thead>
 
         <tbody>
-          <tr>
-            <td>S-001</td>
-            <td>Juan Dela Cruz</td>
-            <td>juan@email.com</td>
-            <td>2nd Year</td>
-            <td><span class="aBadge aBadge-success">Active</span></td>
-          </tr>
+          <?php if (empty($studentRows)): ?>
+            <tr><td colspan="5" style="text-align:center;">No student accounts found.</td></tr>
+          <?php else: ?>
+            <?php foreach ($studentRows as $s): ?>
+              <tr>
+                <td><?= htmlspecialchars($s['student_id']) ?></td>
+                <td><?= htmlspecialchars($s['first_name'] . ' ' . $s['last_name']) ?></td>
+                <td><?= htmlspecialchars($s['email']) ?></td>
+                <td><?= htmlspecialchars($s['year_level']) ?></td>
+                <td>
+                  <span class="aBadge <?= $s['status'] === 'active' ? 'aBadge-success' : 'aBadge-danger' ?>">
+                    <?= ucfirst($s['status']) ?>
+                  </span>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
 
       </table>
@@ -162,19 +210,29 @@
             <th>Counselor ID</th>
             <th>Name</th>
             <th>Email</th>
-            <th>Specialization</th>
+            <th>Department</th>
             <th>Status</th>
           </tr>
         </thead>
 
         <tbody>
-          <tr>
-            <td>C-001</td>
-            <td>Dr. Reyes</td>
-            <td>reyes@unitycare.com</td>
-            <td>Mental Health</td>
-            <td><span class="aBadge aBadge-success">Active</span></td>
-          </tr>
+          <?php if (empty($counselorRows)): ?>
+            <tr><td colspan="5" style="text-align:center;">No counselor accounts found.</td></tr>
+          <?php else: ?>
+            <?php foreach ($counselorRows as $c): ?>
+              <tr>
+                <td><?= htmlspecialchars($c['counselor_id']) ?></td>
+                <td><?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?></td>
+                <td><?= htmlspecialchars($c['email']) ?></td>
+                <td><?= htmlspecialchars($c['department']) ?></td>
+                <td>
+                  <span class="aBadge <?= $c['status'] === 'active' ? 'aBadge-success' : 'aBadge-danger' ?>">
+                    <?= ucfirst($c['status']) ?>
+                  </span>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
 
       </table>
@@ -215,13 +273,23 @@
         </thead>
 
         <tbody>
-          <tr>
-            <td>A-001</td>
-            <td>System Admin</td>
-            <td>admin@unitycare.com</td>
-            <td>Super Admin</td>
-            <td><span class="aBadge aBadge-success">Active</span></td>
-          </tr>
+          <?php if (empty($adminRows)): ?>
+            <tr><td colspan="5" style="text-align:center;">No admin accounts found.</td></tr>
+          <?php else: ?>
+            <?php foreach ($adminRows as $a): ?>
+              <tr>
+                <td><?= htmlspecialchars($a['admin_id']) ?></td>
+                <td><?= htmlspecialchars($a['name']) ?></td>
+                <td><?= htmlspecialchars($a['email']) ?></td>
+                <td>Administrator</td>
+                <td>
+                  <span class="aBadge <?= $a['status'] === 'active' ? 'aBadge-success' : 'aBadge-danger' ?>">
+                    <?= ucfirst($a['status']) ?>
+                  </span>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
 
       </table>
@@ -273,10 +341,8 @@ function exportCsv(type) {
 }
 
 function logout() {
-  if (confirm("Are you sure you want to logout?")) {
     localStorage.clear();
-    window.location.href = "login.html";
-  }
+    window.location.href = "index.php";
 }
 
 </script>

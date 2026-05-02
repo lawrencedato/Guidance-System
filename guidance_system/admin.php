@@ -1,3 +1,35 @@
+<?php
+$host = "localhost";
+$db   = "gcs_db";
+$user = "root";
+$pass = "";
+
+$conn = new mysqli($host, $user, $pass, $db);
+
+// ── KPI COUNTS ──
+$students     = $conn->query("SELECT COUNT(*) AS c FROM students")->fetch_assoc()['c'];
+$counselors   = $conn->query("SELECT COUNT(*) AS c FROM counselors WHERE status = 'active'")->fetch_assoc()['c'];
+$accounts     = $conn->query("SELECT COUNT(*) AS c FROM activated_students WHERE status = 'active'")->fetch_assoc()['c'];
+$appointments = $conn->query("SELECT COUNT(*) AS c FROM appointments")->fetch_assoc()['c'];
+
+// ── APPOINTMENT TRENDS (last 7 days) ──
+$trendLabels = [];
+$trendData   = [];
+for ($i = 6; $i >= 0; $i--) {
+    $date          = date('Y-m-d', strtotime("-$i days"));
+    $trendLabels[] = date('D', strtotime("-$i days"));
+    $trendData[]   = (int)$conn->query("SELECT COUNT(*) AS c FROM appointments WHERE DATE(created_at) = '$date'")->fetch_assoc()['c'];
+}
+
+// ── APPOINTMENT STATUS BREAKDOWN ──
+$statusData = ['Approved' => 0, 'Pending' => 0, 'Rejected' => 0, 'Completed' => 0];
+$statusRows = $conn->query("SELECT status, COUNT(*) AS c FROM appointments GROUP BY status");
+while ($row = $statusRows->fetch_assoc()) {
+    $statusData[$row['status']] = (int)$row['c'];
+}
+
+$conn->close();
+?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -64,7 +96,7 @@
 <header class="topbar">
 
   <div class="topbar-left">
-      <h2>Administrator Dashboard</h2>
+    <h2>Administrator Dashboard</h2>
     <p class="topbar-muted">
       System overview & performance monitoring
     </p>
@@ -86,25 +118,25 @@
 
     <div class="aDashboard-card">
       <h3><i class="fa fa-user-graduate"></i> Students</h3>
-      <h2 id="studentsCount">245</h2>
+      <h2 id="studentsCount"><?= (int)$students ?></h2>
       <p class="aDashboard-muted">Total students</p>
     </div>
 
     <div class="aDashboard-card">
       <h3><i class="fa fa-user-doctor"></i> Counselors</h3>
-      <h2 id="counselorsCount">12</h2>
+      <h2 id="counselorsCount"><?= (int)$counselors ?></h2>
       <p class="aDashboard-muted">Active guidance counselors</p>
     </div>
 
     <div class="aDashboard-card">
       <h3><i class="fa fa-user-check"></i> Accounts</h3>
-      <h2 id="accountsCount">180</h2>
+      <h2 id="accountsCount"><?= (int)$accounts ?></h2>
       <p class="aDashboard-muted">Activated system users</p>
     </div>
 
     <div class="aDashboard-card">
       <h3><i class="fa fa-calendar"></i> Appointments</h3>
-      <h2 id="appointmentsCount">128</h2>
+      <h2 id="appointmentsCount"><?= (int)$appointments ?></h2>
       <p class="aDashboard-muted">Total bookings</p>
     </div>
 
@@ -192,206 +224,83 @@ function toggleTheme(){
 
 function logout(){
   localStorage.clear();
-  window.location.href = "login.html";
+  window.location.href = "index.php";
 }
 
-// CLICK OUTSIDE SETTINGS
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
-  const btn = document.querySelector(".sidebar-settingsButton");
-
+  const btn  = document.querySelector(".sidebar-settingsButton");
   if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
     menu.classList.remove("show");
   }
 });
 
 
-// ================= STUDENT MODAL =================
-function openAddStudentModal() {
-  const modal = document.getElementById('studentModal');
-  if (modal) modal.classList.add('open');
-}
-
-function closeStudentModal() {
-  const modal = document.getElementById('studentModal');
-  if (modal) modal.classList.remove('open');
-}
-
-const studentModal = document.getElementById('studentModal');
-if (studentModal) {
-  studentModal.addEventListener('click', function (e) {
-    if (e.target === this) closeStudentModal();
-  });
-}
-
-
-// ================= COUNSELOR MODAL =================
-function openAddCounselorModal() {
-  const modal = document.getElementById('counselorModal');
-  if (modal) modal.classList.add('open');
-}
-
-function closeCounselorModal() {
-  const modal = document.getElementById('counselorModal');
-  if (modal) modal.classList.remove('open');
-}
-
-const counselorModal = document.getElementById('counselorModal');
-if (counselorModal) {
-  counselorModal.addEventListener('click', function(e) {
-    if (e.target === this) closeCounselorModal();
-  });
-}
-
-
-// ================= AGE COMPUTE =================
-const birthdayInput = document.getElementById('birthday');
-const ageInput = document.getElementById('studentAge');
-
-if (birthdayInput && ageInput) {
-  birthdayInput.addEventListener('change', function () {
-    const birthDate = new Date(this.value);
-    const today = new Date();
-
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-
-    if (isNaN(age)) return;
-
-    if (age < 17) {
-      alert("Student must be at least 17 years old.");
-      this.value = "";
-      ageInput.value = "";
-      return;
-    }
-
-    ageInput.value = age;
-  });
-}
-
-
-// ================= SAVE STUDENT =================
-function saveStudent() {
-
-  const firstName = document.getElementById('firstName').value.trim();
-  const lastName = document.getElementById('lastName').value.trim();
-  const gender = document.getElementById('gender').value;
-  const birthday = document.getElementById('birthday').value;
-  const age = document.getElementById('studentAge').value;
-  const studentId = document.getElementById('studentId').value.trim();
-  const yearLevel = document.getElementById('yearLevel').value;
-  const course = document.getElementById('course').value;
-  const email = document.getElementById('email').value.trim();
-
-  if (!firstName || !lastName || !gender || !birthday || !studentId || !yearLevel || !course || !email) {
-    alert("Please fill in all required fields.");
-    return;
-  }
-
-  const tbody = document.querySelector('.aStudents-table tbody');
-
-  // SAFE CHECK
-  if (!tbody) {
-    alert("Student saved (table not found on this page).");
-    closeStudentModal();
-    return;
-  }
-
-  const row = document.createElement('tr');
-
-  row.innerHTML = `
-    <td>${studentId}</td>
-    <td>${firstName} ${lastName}</td>
-    <td>${email}</td>
-    <td>${gender}</td>
-    <td>${birthday}</td>
-    <td>${age}</td>
-    <td>${yearLevel}</td>
-    <td>${course}</td>
-    <td><button class="aStudents-btn aStudents-btn-sm">View</button></td>
-  `;
-
-  tbody.appendChild(row);
-
-  alert("Student saved successfully!");
-  closeStudentModal();
-}
-
-
 // ================= COUNTER ANIMATION =================
 function animateValue(id, start, end, duration) {
-  let obj = document.getElementById(id);
+  const obj = document.getElementById(id);
   if (!obj) return;
-
   let current = start;
-  let step = (end - start) / (duration / 50);
-
-  let timer = setInterval(() => {
+  const step  = (end - start) / (duration / 50);
+  const timer = setInterval(() => {
     current += step;
-
-    if (current >= end) {
-      current = end;
-      clearInterval(timer);
-    }
-
+    if (current >= end) { current = end; clearInterval(timer); }
     obj.innerText = Math.floor(current);
   }, 50);
 }
 
+
+// ================= ON LOAD =================
 window.onload = () => {
-  animateValue("studentsCount", 200, 245, 1000);
-  animateValue("counselorsCount", 5, 12, 1000);
-  animateValue("accountsCount", 120, 180, 1000);
-  animateValue("appointmentsCount", 80, 128, 1000);
+
+  // ANIMATE KPI COUNTERS
+  animateValue("studentsCount",     0, <?= (int)$students ?>,     1000);
+  animateValue("counselorsCount",   0, <?= (int)$counselors ?>,   1000);
+  animateValue("accountsCount",     0, <?= (int)$accounts ?>,     1000);
+  animateValue("appointmentsCount", 0, <?= (int)$appointments ?>, 1000);
+
+  // LINE CHART - Appointment Trends
+  const appointmentsCanvas = document.getElementById("appointmentsChart");
+  if (appointmentsCanvas) {
+    new Chart(appointmentsCanvas, {
+      type: "line",
+      data: {
+        labels: <?= json_encode($trendLabels) ?>,
+        datasets: [{
+          label: "Appointments",
+          data: <?= json_encode($trendData) ?>,
+          borderColor: "#34699A",
+          backgroundColor: "rgba(52,105,154,0.15)",
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    });
+  }
+
+  // PIE CHART - Appointment Status
+  const statusCanvas = document.getElementById("statusChart");
+  if (statusCanvas) {
+    new Chart(statusCanvas, {
+      type: "pie",
+      data: {
+        labels: <?= json_encode(array_keys($statusData)) ?>,
+        datasets: [{
+          data: <?= json_encode(array_values($statusData)) ?>,
+          backgroundColor: ["#2ecc71", "#f1c40f", "#e74c3c", "#3498db"]
+        }]
+      },
+      options: {
+        plugins: { legend: { position: "bottom" } }
+      }
+    });
+  }
+
 };
-
-
-// ================= CHARTS =================
-
-// LINE CHART
-const appointmentsCanvas = document.getElementById("appointmentsChart");
-if (appointmentsCanvas) {
-  new Chart(appointmentsCanvas, {
-    type: "line",
-    data: {
-      labels: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
-      datasets: [{
-        label: "Appointments",
-        data: [12, 19, 8, 15, 22, 18, 25],
-        borderColor: "#34699A",
-        backgroundColor: "rgba(52,105,154,0.15)",
-        fill: true,
-        tension: 0.4
-      }]
-    },
-    options: {
-      plugins: { legend: { display: false } }
-    }
-  });
-}
-
-// PIE CHART
-const statusCanvas = document.getElementById("statusChart");
-if (statusCanvas) {
-  new Chart(statusCanvas, {
-    type: "pie",
-    data: {
-      labels: ["Approved", "Pending", "Rejected"],
-      datasets: [{
-        data: [70, 20, 10],
-        backgroundColor: ["#2ecc71","#f1c40f","#e74c3c"]
-      }]
-    },
-    options: {
-      plugins: { legend: { position: "bottom" } }
-    }
-  });
-}
-
 </script>
 
 </body>

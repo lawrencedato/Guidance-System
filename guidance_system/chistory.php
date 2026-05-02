@@ -23,7 +23,7 @@
     </div>
 
     <div class="sidebar-settings">
-      <button class="sidebar-settingsButton" onclick="toggleSettingsMenu()">
+      <button class="sidebar-settingsButton" onclick="toggleSettingsMenu(event)">
         <i class="fa fa-gear"></i>
       </button>
 
@@ -251,10 +251,32 @@ function clearFilter() {
   });
 }
 
-function toggleSettingsMenu() {
-  const menu = document.getElementById("settingsDropdown");
-  menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+function toggleSettingsMenu(e){
+  e.stopPropagation();
+  document.getElementById("settingsDropdown").classList.toggle("show");
 }
+
+function toggleTheme(){
+  const html = document.documentElement;
+  html.setAttribute(
+    "data-theme",
+    html.getAttribute("data-theme") === "light" ? "dark" : "light"
+  );
+}
+
+function logout(){
+  localStorage.clear();
+  window.location.href = "clogin.php";
+}
+
+document.addEventListener("click", e => {
+  const menu = document.getElementById("settingsDropdown");
+  const btn = document.querySelector(".sidebar-settingsButton");
+
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove("show");
+  }
+});
 
 function switchTab(event, tabId) {
   document.querySelectorAll(".cHistory-tabContent")
@@ -266,18 +288,6 @@ function switchTab(event, tabId) {
     .forEach(b => b.classList.remove("active"));
 
   event.target.classList.add("active");
-}
-
-function toggleTheme() {
-  const html = document.documentElement;
-  html.setAttribute(
-    "data-theme",
-    html.getAttribute("data-theme") === "dark" ? "light" : "dark"
-  );
-}
-
-function logout() {
-  window.location.href = "role.html";
 }
 </script>
 

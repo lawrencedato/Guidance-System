@@ -97,7 +97,7 @@ function loginCounselor() {
   error.textContent = "Login successful...";
 
   setTimeout(() => {
-    window.location.href = "counselor.html";
+    window.location.href = "counselor.php";
   }, 800);
 }
 </script>

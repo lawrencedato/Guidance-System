@@ -10,7 +10,63 @@ if ($conn->connect_error) {
     die(json_encode(["error" => "Connection failed: " . $conn->connect_error]));
 }
 
-// ================= HANDLE AJAX REQUESTS =================
+// ================= HANDLE GET REQUEST (FETCH) =================
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'fetch') {
+
+    header('Content-Type: application/json');
+
+    $search     = $conn->real_escape_string($_GET['search'] ?? '');
+    $course     = $conn->real_escape_string($_GET['course'] ?? 'All Courses');
+    $year_level = $conn->real_escape_string($_GET['year_level'] ?? 'All Years');
+    $sort_col   = $_GET['sort_col'] ?? 'student_id';
+    $sort_dir   = ($_GET['sort_dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+
+    $allowed_cols = ['student_id', 'last_name', 'year_level'];
+    if (!in_array($sort_col, $allowed_cols)) {
+        $sort_col = 'student_id';
+    }
+
+    $where = "WHERE 1=1";
+
+    if (!empty($search)) {
+        $where .= " AND (
+            student_id LIKE '%$search%' OR
+            first_name LIKE '%$search%' OR
+            last_name LIKE '%$search%'
+        )";
+    }
+
+    if ($course !== "All Courses") {
+        $where .= " AND course = '$course'";
+    }
+
+    if ($year_level !== "All Years") {
+        $where .= " AND year_level = '$year_level'";
+    }
+
+    $sql = "SELECT *,
+        TIMESTAMPDIFF(YEAR, birthday, CURDATE()) AS age
+        FROM students
+        $where
+        ORDER BY $sort_col $sort_dir";
+
+    $result = $conn->query($sql);
+
+    if (!$result) {
+        echo json_encode(["success" => false, "message" => "Query failed: " . $conn->error]);
+        exit;
+    }
+
+    $students = [];
+    while ($row = $result->fetch_assoc()) {
+        $students[] = $row;
+    }
+
+    echo json_encode(["success" => true, "data" => $students]);
+    exit;
+}
+
+// ================= HANDLE POST REQUESTS =================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
 
@@ -27,7 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $year_level = $conn->real_escape_string($_POST['year_level']);
         $course     = $conn->real_escape_string($_POST['course']);
 
-        // Check for duplicate student_id or email
         $check = $conn->query("SELECT student_id FROM students WHERE student_id = $student_id OR email = '$email'");
         if ($check->num_rows > 0) {
             echo json_encode(["success" => false, "message" => "Student ID or Email already exists."]);
@@ -57,7 +112,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $year_level     = $conn->real_escape_string($_POST['year_level']);
         $course         = $conn->real_escape_string($_POST['course']);
 
-        // If student_id changed, check for conflict
         if ($student_id !== $new_student_id) {
             $check = $conn->query("SELECT student_id FROM students WHERE student_id = $new_student_id");
             if ($check->num_rows > 0) {
@@ -66,7 +120,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
         }
 
-        // Check email conflict (excluding current student)
         $emailCheck = $conn->query("SELECT student_id FROM students WHERE email = '$email' AND student_id != $student_id");
         if ($emailCheck->num_rows > 0) {
             echo json_encode(["success" => false, "message" => "Email already in use by another student."]);
@@ -92,41 +145,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
+    // ---------- IMPORT CSV ----------
+    if ($action === 'import_csv') {
+
+        if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode(["success" => false, "message" => "No file uploaded or upload error."]);
+            exit;
+        }
+
+        $file = fopen($_FILES['csv_file']['tmp_name'], 'r');
+        if (!$file) {
+            echo json_encode(["success" => false, "message" => "Failed to open CSV file."]);
+            exit;
+        }
+
+        $rowCount = 0;
+        $skipped  = 0;
+
+        fgetcsv($file); // skip header
+
+        while (($data = fgetcsv($file, 1000, ",")) !== FALSE) {
+            if (count($data) < 8) {
+                $skipped++;
+                continue;
+            }
+
+            $student_id = intval($data[0]);
+            $last_name  = $conn->real_escape_string(trim($data[1]));
+            $first_name = $conn->real_escape_string(trim($data[2]));
+            $email      = $conn->real_escape_string(trim($data[3]));
+            $gender     = $conn->real_escape_string(trim($data[4]));
+            $birthday   = $conn->real_escape_string(trim($data[5]));
+            $year_level = $conn->real_escape_string(trim($data[6]));
+            $course     = $conn->real_escape_string(trim($data[7]));
+
+            $check = $conn->query("SELECT student_id FROM students WHERE student_id = $student_id OR email = '$email'");
+            if ($check->num_rows > 0) {
+                $skipped++;
+                continue;
+            }
+
+            $sql = "INSERT INTO students (student_id, first_name, last_name, email, gender, birthday, year_level, course)
+                    VALUES ($student_id, '$first_name', '$last_name', '$email', '$gender', '$birthday', '$year_level', '$course')";
+
+            if ($conn->query($sql)) {
+                $rowCount++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        fclose($file);
+
+        echo json_encode([
+            "success" => true,
+            "message" => "$rowCount students imported successfully. $skipped skipped."
+        ]);
+        exit;
+    }
+
     echo json_encode(["success" => false, "message" => "Unknown action."]);
     exit;
 }
-
-// ---------- FETCH STUDENTS (for table) ----------
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'fetch') {
-    header('Content-Type: application/json');
-
-    $where = "1=1";
-
-    if (!empty($_GET['search'])) {
-        $search = $conn->real_escape_string($_GET['search']);
-        $where .= " AND (student_id LIKE '%$search%' OR first_name LIKE '%$search%' OR last_name LIKE '%$search%')";
-    }
-    if (!empty($_GET['course']) && $_GET['course'] !== 'All Courses') {
-        $course = $conn->real_escape_string($_GET['course']);
-        $where .= " AND course = '$course'";
-    }
-    if (!empty($_GET['year_level']) && $_GET['year_level'] !== 'All Years') {
-        $year = $conn->real_escape_string($_GET['year_level']);
-        $where .= " AND year_level = '$year'";
-    }
-
-    $result = $conn->query("SELECT *, TIMESTAMPDIFF(YEAR, birthday, CURDATE()) AS age FROM students WHERE $where ORDER BY student_id ASC");
-
-    $students = [];
-    while ($row = $result->fetch_assoc()) {
-        $students[] = $row;
-    }
-
-    echo json_encode(["success" => true, "data" => $students]);
-    exit;
-}
-
-// ================= PAGE LOAD =================
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -136,6 +216,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     <title>Students - UNITYCARE</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ── aStudents Sort ── */
+        .aStudents-sort-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .aStudents-sort-dropdown {
+            display: none;
+            position: absolute;
+            top: 55px;
+            right: 0;
+            width: 200px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 10px 0;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            z-index: 999;
+            overflow: hidden;
+        }
+        .aStudents-sort-dropdown.show { display: block; }
+        .aStudents-sort-dropdown-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            padding: 6px 15px 2px;
+        }
+        .aStudents-sort-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 15px;
+            font-size: 13px;
+            color: var(--text);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .aStudents-sort-option:hover { background: rgba(73,136,196,0.08); }
+        .aStudents-sort-option.active {
+            background: rgba(17,63,103,0.1);
+            color: #113F67;
+            font-weight: 600;
+        }
+        .aStudents-sort-option i { width: 14px; text-align: center; font-size: 0.75rem; }
+
+        /* ── Utility ── */
+        .aStudents-hidden        { display: none; }
+        .aStudents-table-loading { text-align: center; padding: 20px; }
+        .aStudents-table-empty   { text-align: center; padding: 20px; color: #888; }
+        .aStudents-table-error   { text-align: center; padding: 20px; color: red; }
+    </style>
 </head>
 <body>
 
@@ -206,6 +336,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                 </select>
             </div>
         </div>
+        <div class="aStudents-sort-wrapper">
+            <button onclick="toggleSortDropdown(event)" class="btn btn-secondary">
+                <i class="fa fa-arrow-up-wide-short"></i> Sort: <span id="sortLabel">ID (Asc)</span>
+            </button>
+            <div class="aStudents-sort-dropdown" id="sortDropdown">
+                <div class="aStudents-sort-dropdown-label">Student ID</div>
+                <div class="aStudents-sort-option active" id="sortOpt-student_id-ASC" onclick="setSort('student_id','ASC')">
+                    <i class="fa fa-arrow-up"></i> ID — Ascending
+                </div>
+                <div class="aStudents-sort-option" id="sortOpt-student_id-DESC" onclick="setSort('student_id','DESC')">
+                    <i class="fa fa-arrow-down"></i> ID — Descending
+                </div>
+                <div class="aStudents-sort-dropdown-label">Name</div>
+                <div class="aStudents-sort-option" id="sortOpt-last_name-ASC" onclick="setSort('last_name','ASC')">
+                    <i class="fa fa-arrow-up"></i> Name — A to Z
+                </div>
+                <div class="aStudents-sort-option" id="sortOpt-last_name-DESC" onclick="setSort('last_name','DESC')">
+                    <i class="fa fa-arrow-down"></i> Name — Z to A
+                </div>
+                <div class="aStudents-sort-dropdown-label">Year Level</div>
+                <div class="aStudents-sort-option" id="sortOpt-year_level-ASC" onclick="setSort('year_level','ASC')">
+                    <i class="fa fa-arrow-up"></i> Year — 1st to 4th
+                </div>
+                <div class="aStudents-sort-option" id="sortOpt-year_level-DESC" onclick="setSort('year_level','DESC')">
+                    <i class="fa fa-arrow-down"></i> Year — 4th to 1st
+                </div>
+            </div>
+        </div>
     </div>
 </header>
 
@@ -237,7 +395,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                 <thead>
                     <tr>
                         <th>Student ID</th>
-                        <th>Name</th>
+                        <th>Last Name</th>
+                        <th>First Name</th>
                         <th>Email</th>
                         <th>Gender</th>
                         <th>Birthday</th>
@@ -249,7 +408,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                 </thead>
                 <tbody id="studentsTableBody">
                     <tr>
-                        <td colspan="9" style="text-align:center; padding: 20px;">
+                        <td colspan="10" class="aStudents-table-loading">
                             <i class="fa fa-spinner fa-spin"></i> Loading students...
                         </td>
                     </tr>
@@ -343,7 +502,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     </div>
 </div>
 
-<input type="file" id="importCsvInput" accept=".csv">
+<input type="file" id="importCsvInput" accept=".csv" class="aStudents-hidden">
 
 <!-- ================= VIEW / EDIT STUDENT MODAL ================= -->
 <div id="viewStudentModal" class="aStudents-modal">
@@ -357,19 +516,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
         </div>
         <div class="aStudents-modal-body">
 
-            <!-- Hidden: original student_id for edits -->
             <input type="hidden" id="originalStudentId">
 
             <div class="aStudents-sec-label">PERSONAL INFORMATION</div>
             <div class="aStudents-field-grid">
                 <div class="aStudents-field">
-                    <label>Full Name</label>
-                    <input type="text" id="viewName" readonly>
+                    <label>First Name</label>
+                    <input type="text" id="viewFirstName" readonly>
+                </div>
+                <div class="aStudents-field">
+                    <label>Last Name</label>
+                    <input type="text" id="viewLastName" readonly>
                 </div>
                 <div class="aStudents-field">
                     <label>Gender</label>
                     <input type="text" id="viewGender" readonly>
-                    <select id="editGender" style="display:none;">
+                    <select id="editGender" class="aStudents-hidden">
                         <option>Male</option>
                         <option>Female</option>
                         <option>Prefer not to say</option>
@@ -378,7 +540,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                 <div class="aStudents-field">
                     <label>Birthday</label>
                     <input type="text" id="viewBirthday" readonly>
-                    <input type="date" id="editBirthday" style="display:none;">
+                    <input type="date" id="editBirthday" class="aStudents-hidden">
                 </div>
                 <div class="aStudents-field">
                     <label>Age</label>
@@ -395,7 +557,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                 <div class="aStudents-field">
                     <label>Year Level</label>
                     <input type="text" id="viewYear" readonly>
-                    <select id="editYear" style="display:none;">
+                    <select id="editYear" class="aStudents-hidden">
                         <option>1st Year</option>
                         <option>2nd Year</option>
                         <option>3rd Year</option>
@@ -405,7 +567,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                 <div class="aStudents-field">
                     <label>Course</label>
                     <input type="text" id="viewCourse" readonly>
-                    <select id="editCourse" style="display:none;">
+                    <select id="editCourse" class="aStudents-hidden">
                         <option>AB Psychology</option>
                         <option>BSBA</option>
                         <option>BSA</option>
@@ -430,7 +592,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
             <button class="aStudents-btn-cancel" id="editBtn" onclick="enableEdit()">
                 <i class="fa fa-pen"></i> Edit
             </button>
-            <button class="aStudents-btn-save" id="saveEditBtn" style="display:none;" onclick="saveEdit()">
+            <button class="aStudents-btn-save aStudents-hidden" id="saveEditBtn" onclick="saveEdit()">
                 Save Changes
             </button>
         </div>
@@ -451,12 +613,51 @@ function toggleTheme() {
 }
 function logout() {
     localStorage.clear();
-    window.location.href = "slogin.php";
+    window.location.href = "index.php";
 }
 document.addEventListener("click", e => {
     const menu = document.getElementById("settingsDropdown");
-    const btn = document.querySelector(".sidebar-settingsButton");
+    const btn  = document.querySelector(".sidebar-settingsButton");
     if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("show");
+});
+
+// ================= SORT =================
+let currentSortCol = 'student_id';
+let currentSortDir = 'ASC';
+
+const sortLabels = {
+    'student_id-ASC':  'ID (Asc)',
+    'student_id-DESC': 'ID (Desc)',
+    'last_name-ASC':   'Name A→Z',
+    'last_name-DESC':  'Name Z→A',
+    'year_level-ASC':  'Year 1st→4th',
+    'year_level-DESC': 'Year 4th→1st'
+};
+
+function toggleSortDropdown(e) {
+    e.stopPropagation();
+    document.getElementById('sortDropdown').classList.toggle('show');
+}
+
+function setSort(col, dir) {
+    currentSortCol = col;
+    currentSortDir = dir;
+
+    document.getElementById('sortLabel').innerText = sortLabels[`${col}-${dir}`] || '';
+
+    document.querySelectorAll('.aStudents-sort-option').forEach(o => o.classList.remove('active'));
+    const active = document.getElementById(`sortOpt-${col}-${dir}`);
+    if (active) active.classList.add('active');
+
+    document.getElementById('sortDropdown').classList.remove('show');
+
+    loadStudents();
+}
+
+// Close sort dropdown on outside click
+document.addEventListener('click', e => {
+    const dd = document.getElementById('sortDropdown');
+    if (!e.target.closest('.aStudents-sort-wrapper')) dd.classList.remove('show');
 });
 
 // ================= LOAD STUDENTS FROM DB =================
@@ -468,29 +669,43 @@ function loadStudents() {
     const yearLevel = document.getElementById('filterYear').value;
 
     const params = new URLSearchParams({
-        action: 'fetch',
+        action:     'fetch',
         search,
         course,
-        year_level: yearLevel
+        year_level: yearLevel,
+        sort_col:   currentSortCol,
+        sort_dir:   currentSortDir
     });
 
     const tbody = document.getElementById('studentsTableBody');
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="aStudents-table-loading">
+        <i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>`;
 
     fetch(`astudents.php?${params.toString()}`)
         .then(res => res.json())
         .then(json => {
             tbody.innerHTML = '';
             if (!json.success || json.data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:#888;">No students found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="aStudents-table-empty">No students found.</td></tr>`;
                 return;
             }
             json.data.forEach(s => {
                 const row = document.createElement('tr');
-                row.dataset.id = s.student_id;
+                // Store all fields as data attributes for easy access in viewStudent()
+                row.dataset.id        = s.student_id;
+                row.dataset.firstName = s.first_name;
+                row.dataset.lastName  = s.last_name;
+                row.dataset.email     = s.email;
+                row.dataset.gender    = s.gender;
+                row.dataset.birthday  = s.birthday;
+                row.dataset.age       = s.age;
+                row.dataset.year      = s.year_level;
+                row.dataset.course    = s.course;
+
                 row.innerHTML = `
                     <td>${s.student_id}</td>
-                    <td>${s.first_name} ${s.last_name}</td>
+                    <td>${s.last_name}</td>
+                    <td>${s.first_name}</td>
                     <td>${s.email}</td>
                     <td>${s.gender}</td>
                     <td>${s.birthday}</td>
@@ -504,27 +719,24 @@ function loadStudents() {
             });
         })
         .catch(() => {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:red;">Failed to load students.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="10" class="aStudents-table-error">Failed to load students.</td></tr>`;
         });
 }
 
-// Live search with debounce
 document.getElementById('searchInput').addEventListener('input', () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(loadStudents, 350);
 });
 
-// Load on page ready
 document.addEventListener('DOMContentLoaded', loadStudents);
 
 // ================= ADD STUDENT MODAL =================
 function openAddStudentModal() {
-    // Clear fields
     ['firstName','lastName','email','studentId','studentAge'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('gender').value = '';
-    document.getElementById('birthday').value = '';
+    document.getElementById('gender').value    = '';
+    document.getElementById('birthday').value  = '';
     document.getElementById('yearLevel').value = '';
-    document.getElementById('course').value = '';
+    document.getElementById('course').value    = '';
     document.getElementById('studentModal').classList.add('open');
 }
 function closeStudentModal() {
@@ -550,14 +762,14 @@ document.getElementById('birthday').addEventListener('change', function () {
 function calcAge(birthdayStr) {
     if (!birthdayStr) return null;
     const birthDate = new Date(birthdayStr);
-    const today = new Date();
+    const today     = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
     return isNaN(age) ? null : age;
 }
 
-// ================= SAVE STUDENT (POST to DB) =================
+// ================= SAVE STUDENT =================
 function saveStudent() {
     const firstName = document.getElementById('firstName').value.trim();
     const lastName  = document.getElementById('lastName').value.trim();
@@ -593,10 +805,7 @@ function saveStudent() {
         .then(res => res.json())
         .then(json => {
             alert(json.message);
-            if (json.success) {
-                closeStudentModal();
-                loadStudents();
-            }
+            if (json.success) { closeStudentModal(); loadStudents(); }
         })
         .catch(() => alert("Error saving student."));
 }
@@ -619,9 +828,9 @@ function triggerImportCsv() {
 }
 function exportStudentCsv() {
     const table = document.querySelector('.aStudents-table');
-    const rows = Array.from(table.querySelectorAll('thead tr, tbody tr'));
-    const csv = rows.map(row => {
-        const cells = Array.from(row.querySelectorAll('th, td')).slice(0, 8); // exclude Actions col
+    const rows  = Array.from(table.querySelectorAll('thead tr, tbody tr'));
+    const csv   = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('th, td')).slice(0, 9); // exclude Actions col
         return cells.map(cell => `"${cell.innerText.replace(/"/g, '""')}"`).join(',');
     }).join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -634,77 +843,75 @@ function exportStudentCsv() {
 }
 
 // ================= VIEW STUDENT =================
-let currentStudentOriginalId = null;
-
+// Reads from data attributes set during row render — no column index guessing.
 function viewStudent(btn) {
-    const cells = btn.closest('tr').children;
-    const studentId = cells[0].innerText.trim();
-    currentStudentOriginalId = studentId;
+    const row = btn.closest('tr');
 
-    document.getElementById('originalStudentId').value  = studentId;
-    document.getElementById('viewStudentId').value       = studentId;
-    document.getElementById('viewName').value            = cells[1].innerText.trim();
-    document.getElementById('viewEmail').value           = cells[2].innerText.trim();
-    document.getElementById('viewGender').value          = cells[3].innerText.trim();
-    document.getElementById('viewBirthday').value        = cells[4].innerText.trim();
-    document.getElementById('viewAge').value             = cells[5].innerText.trim();
-    document.getElementById('viewYear').value            = cells[6].innerText.trim();
-    document.getElementById('viewCourse').value          = cells[7].innerText.trim();
+    document.getElementById('originalStudentId').value = row.dataset.id;
+    document.getElementById('viewStudentId').value     = row.dataset.id;
+    document.getElementById('viewFirstName').value     = row.dataset.firstName;
+    document.getElementById('viewLastName').value      = row.dataset.lastName;
+    document.getElementById('viewEmail').value         = row.dataset.email;
+    document.getElementById('viewGender').value        = row.dataset.gender;
+    document.getElementById('viewBirthday').value      = row.dataset.birthday;
+    document.getElementById('viewAge').value           = row.dataset.age;
+    document.getElementById('viewYear').value          = row.dataset.year;
+    document.getElementById('viewCourse').value        = row.dataset.course;
 
     setViewMode();
     document.getElementById('viewStudentModal').classList.add('open');
 }
 
 function setViewMode() {
-    document.getElementById('viewGender').style.display   = '';
-    document.getElementById('editGender').style.display   = 'none';
-    document.getElementById('viewBirthday').style.display = '';
-    document.getElementById('editBirthday').style.display = 'none';
-    document.getElementById('viewYear').style.display     = '';
-    document.getElementById('editYear').style.display     = 'none';
-    document.getElementById('viewCourse').style.display   = '';
-    document.getElementById('editCourse').style.display   = 'none';
+    document.getElementById('viewGender').classList.remove('aStudents-hidden');
+    document.getElementById('editGender').classList.add('aStudents-hidden');
+    document.getElementById('viewBirthday').classList.remove('aStudents-hidden');
+    document.getElementById('editBirthday').classList.add('aStudents-hidden');
+    document.getElementById('viewYear').classList.remove('aStudents-hidden');
+    document.getElementById('editYear').classList.add('aStudents-hidden');
+    document.getElementById('viewCourse').classList.remove('aStudents-hidden');
+    document.getElementById('editCourse').classList.add('aStudents-hidden');
 
-    document.getElementById('viewName').readOnly      = true;
-    document.getElementById('viewEmail').readOnly     = true;
-    document.getElementById('viewStudentId').readOnly = true;
-    document.getElementById('viewAge').readOnly       = true;
+    document.getElementById('viewFirstName').readOnly  = true;
+    document.getElementById('viewLastName').readOnly   = true;
+    document.getElementById('viewEmail').readOnly      = true;
+    document.getElementById('viewStudentId').readOnly  = true;
+    document.getElementById('viewAge').readOnly        = true;
 
-    document.getElementById('editBtn').style.display     = '';
-    document.getElementById('saveEditBtn').style.display = 'none';
+    document.getElementById('editBtn').classList.remove('aStudents-hidden');
+    document.getElementById('saveEditBtn').classList.add('aStudents-hidden');
     document.getElementById('viewModalSubtitle').innerText = 'Viewing student information';
 }
 
 function enableEdit() {
-    document.getElementById('editGender').value  = document.getElementById('viewGender').value;
+    document.getElementById('editGender').value   = document.getElementById('viewGender').value;
     document.getElementById('editBirthday').value = document.getElementById('viewBirthday').value;
-    document.getElementById('editYear').value    = document.getElementById('viewYear').value;
-    document.getElementById('editCourse').value  = document.getElementById('viewCourse').value;
+    document.getElementById('editYear').value     = document.getElementById('viewYear').value;
+    document.getElementById('editCourse').value   = document.getElementById('viewCourse').value;
 
-    document.getElementById('viewGender').style.display   = 'none';
-    document.getElementById('editGender').style.display   = '';
-    document.getElementById('viewBirthday').style.display = 'none';
-    document.getElementById('editBirthday').style.display = '';
-    document.getElementById('viewYear').style.display     = 'none';
-    document.getElementById('editYear').style.display     = '';
-    document.getElementById('viewCourse').style.display   = 'none';
-    document.getElementById('editCourse').style.display   = '';
+    document.getElementById('viewGender').classList.add('aStudents-hidden');
+    document.getElementById('editGender').classList.remove('aStudents-hidden');
+    document.getElementById('viewBirthday').classList.add('aStudents-hidden');
+    document.getElementById('editBirthday').classList.remove('aStudents-hidden');
+    document.getElementById('viewYear').classList.add('aStudents-hidden');
+    document.getElementById('editYear').classList.remove('aStudents-hidden');
+    document.getElementById('viewCourse').classList.add('aStudents-hidden');
+    document.getElementById('editCourse').classList.remove('aStudents-hidden');
 
-    document.getElementById('viewName').readOnly      = false;
-    document.getElementById('viewEmail').readOnly     = false;
-    document.getElementById('viewStudentId').readOnly = false;
+    document.getElementById('viewFirstName').readOnly  = false;
+    document.getElementById('viewLastName').readOnly   = false;
+    document.getElementById('viewEmail').readOnly      = false;
+    document.getElementById('viewStudentId').readOnly  = false;
 
-    document.getElementById('editBtn').style.display     = 'none';
-    document.getElementById('saveEditBtn').style.display = '';
+    document.getElementById('editBtn').classList.add('aStudents-hidden');
+    document.getElementById('saveEditBtn').classList.remove('aStudents-hidden');
     document.getElementById('viewModalSubtitle').innerText = 'Editing student information';
 }
 
-// ================= SAVE EDIT (POST to DB) =================
+// ================= SAVE EDIT =================
 function saveEdit() {
-    const fullName     = document.getElementById('viewName').value.trim();
-    const nameParts    = fullName.split(' ');
-    const firstName    = nameParts[0] || '';
-    const lastName     = nameParts.slice(1).join(' ') || '';
+    const firstName    = document.getElementById('viewFirstName').value.trim();
+    const lastName     = document.getElementById('viewLastName').value.trim();
     const newStudentId = document.getElementById('viewStudentId').value.trim();
     const email        = document.getElementById('viewEmail').value.trim();
     const gender       = document.getElementById('editGender').value;
@@ -719,25 +926,22 @@ function saveEdit() {
     }
 
     const formData = new FormData();
-    formData.append('action',        'edit');
-    formData.append('student_id',    originalId);
+    formData.append('action',         'edit');
+    formData.append('student_id',     originalId);
     formData.append('new_student_id', newStudentId);
-    formData.append('first_name',    firstName);
-    formData.append('last_name',     lastName);
-    formData.append('email',         email);
-    formData.append('gender',        gender);
-    formData.append('birthday',      birthday);
-    formData.append('year_level',    yearLevel);
-    formData.append('course',        course);
+    formData.append('first_name',     firstName);
+    formData.append('last_name',      lastName);
+    formData.append('email',          email);
+    formData.append('gender',         gender);
+    formData.append('birthday',       birthday);
+    formData.append('year_level',     yearLevel);
+    formData.append('course',         course);
 
     fetch('astudents.php', { method: 'POST', body: formData })
         .then(res => res.json())
         .then(json => {
             alert(json.message);
-            if (json.success) {
-                closeViewModal();
-                loadStudents();
-            }
+            if (json.success) { closeViewModal(); loadStudents(); }
         })
         .catch(() => alert("Error updating student."));
 }
@@ -750,6 +954,25 @@ document.getElementById('viewStudentModal').addEventListener('click', function(e
     if (e.target === this) closeViewModal();
 });
 
+document.getElementById('importCsvInput').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('action', 'import_csv');
+    formData.append('csv_file', file);
+
+    fetch('astudents.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(json => {
+        alert(json.message);
+        if (json.success) loadStudents();
+    })
+    .catch(() => alert("CSV import failed."));
+});
 </script>
 </body>
 </html>

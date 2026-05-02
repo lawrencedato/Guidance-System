@@ -78,7 +78,7 @@ html {
 }
 
 body {
-  font-family: "Poppins", sans-serif;
+  font-family: "Poppins", system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.5;
 
@@ -6849,4 +6849,28 @@ th {
   .aReports-stats {
     grid-template-columns: 1fr;
   }
+}
+
+/* ================= SCROLLBAR ================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(52, 105, 154, 0.15);
+  border-radius: 10px;
+  transition: 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 105, 154, 0.35);
+}
+
+html {
+  scroll-behavior: smooth;
 }

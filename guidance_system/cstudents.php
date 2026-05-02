@@ -313,7 +313,7 @@ function toggleTheme() {
 }
 
 function logout() {
-  window.location.href = "role.html";
+  window.location.href = "clogin.php";
 }
 </script>
 
