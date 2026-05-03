@@ -138,8 +138,8 @@ $conn->close();
       </div>
 
       <div class="record-actions">
-        <button class="btn-export" onclick="exportCsv('students')">
-          <i class="fa fa-file-export"></i> Export CSV
+        <button class="btn-export" style="position:relative; z-index:1;" onclick="exportCsv('students')">
+            <i class="fa fa-file-export"></i> Export CSV
         </button>
       </div>
 
@@ -195,8 +195,8 @@ $conn->close();
       </div>
 
       <div class="record-actions">
-        <button class="btn-export" onclick="exportCsv('counselors')">
-          <i class="fa fa-file-export"></i> Export CSV
+        <button class="btn-export" style="position:relative; z-index:1;" onclick="exportCsv('counselors')">
+            <i class="fa fa-file-export"></i> Export CSV
         </button>
       </div>
 
@@ -252,8 +252,8 @@ $conn->close();
       </div>
 
       <div class="record-actions">
-        <button class="btn-export" onclick="exportCsv('admins')">
-          <i class="fa fa-file-export"></i> Export CSV
+        <button class="btn-export" style="position:relative; z-index:1;" onclick="exportCsv('admins')">
+            <i class="fa fa-file-export"></i> Export CSV
         </button>
       </div>
 
@@ -337,7 +337,31 @@ function showTab(event, tab) {
 }
 
 function exportCsv(type) {
-  alert(`Export ${type} to CSV - to be implemented`);
+  const section = document.getElementById(type);
+  const table = section.querySelector("table");
+  const rows = table.querySelectorAll("tr");
+
+  const csvLines = [];
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("th, td");
+    const line = Array.from(cells).map(cell => {
+      let text = cell.innerText.trim().replace(/\n+/g, " ");
+      if (text.includes(",") || text.includes('"')) {
+        text = `"${text.replace(/"/g, '""')}"`;
+      }
+      return text;
+    });
+    csvLines.push(line.join(","));
+  });
+
+  const csv = csvLines.join("\n");
+  const a = document.createElement("a");
+  a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+  a.download = type + "_export.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 function logout() {

@@ -5473,7 +5473,8 @@ tbody tr:hover {
   transition: var(--transition);
 
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
+  position: relative;
 }
 
 
@@ -5481,6 +5482,7 @@ tbody tr:hover {
   content: "";
   position: absolute;
   inset: 0;
+  pointer-events: none;
 
   background: radial-gradient(
     circle at top left,
