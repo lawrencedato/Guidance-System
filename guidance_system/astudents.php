@@ -1,14 +1,22 @@
 <?php
-// ================= DB CONNECTION =================
-$host = "localhost";
-$db   = "gcs_db";
-$user = "root";
-$pass = "";
+if (session_status() === PHP_SESSION_NONE) session_start();
 
-$conn = new mysqli($host, $user, $pass, $db);
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: slogin.php");
+    exit;
+}
+
+$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
 if ($conn->connect_error) {
     die(json_encode(["error" => "Connection failed: " . $conn->connect_error]));
 }
+
+/*
+  REQUIRED: Run these SQL statements once on your database before using this file.
+
+  ALTER TABLE students ADD COLUMN IF NOT EXISTS archived TINYINT(1) NOT NULL DEFAULT 0;
+  ALTER TABLE students ADD COLUMN IF NOT EXISTS graduated_at DATETIME NULL DEFAULT NULL;
+*/
 
 // ================= HANDLE GET: NEXT STUDENT ID =================
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'next_id') {
@@ -49,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     exit;
 }
 
-// ================= HANDLE GET REQUEST (FETCH) =================
+// ================= HANDLE GET: FETCH ACTIVE STUDENTS =================
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'fetch') {
 
     header('Content-Type: application/json');
@@ -65,13 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
         $sort_col = 'student_id';
     }
 
-    $where = "WHERE 1=1";
+    $where = "WHERE archived = 0";
 
     if (!empty($search)) {
         $where .= " AND (
             student_id LIKE '%$search%' OR
             first_name LIKE '%$search%' OR
-            last_name LIKE '%$search%'
+            last_name  LIKE '%$search%'
         )";
     }
 
@@ -83,11 +91,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
         $where .= " AND year_level = '$year_level'";
     }
 
-    $sql = "SELECT *,
-        TIMESTAMPDIFF(YEAR, birthday, CURDATE()) AS age
-        FROM students
-        $where
-        ORDER BY $sort_col $sort_dir";
+    $sql = "SELECT *, TIMESTAMPDIFF(YEAR, birthday, CURDATE()) AS age
+            FROM students
+            $where
+            ORDER BY $sort_col $sort_dir";
+
+    $result = $conn->query($sql);
+
+    if (!$result) {
+        echo json_encode(["success" => false, "message" => "Query failed: " . $conn->error]);
+        exit;
+    }
+
+    $students = [];
+    while ($row = $result->fetch_assoc()) {
+        $students[] = $row;
+    }
+
+    echo json_encode(["success" => true, "data" => $students]);
+    exit;
+}
+
+// ================= HANDLE GET: FETCH ARCHIVED STUDENTS =================
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'fetch_archived') {
+
+    header('Content-Type: application/json');
+
+    $search = $conn->real_escape_string($_GET['search'] ?? '');
+
+    $where = "WHERE archived = 1";
+
+    if (!empty($search)) {
+        $where .= " AND (
+            student_id LIKE '%$search%' OR
+            first_name LIKE '%$search%' OR
+            last_name  LIKE '%$search%'
+        )";
+    }
+
+    $sql = "SELECT *, TIMESTAMPDIFF(YEAR, birthday, CURDATE()) AS age
+            FROM students
+            $where
+            ORDER BY graduated_at DESC, student_id ASC";
 
     $result = $conn->query($sql);
 
@@ -128,8 +173,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit;
         }
 
-        $sql = "INSERT INTO students (student_id, first_name, last_name, email, gender, birthday, year_level, course)
-                VALUES ($student_id, '$first_name', '$last_name', '$email', '$gender', '$birthday', '$year_level', '$course')";
+        $sql = "INSERT INTO students (student_id, first_name, last_name, email, gender, birthday, year_level, course, archived)
+                VALUES ($student_id, '$first_name', '$last_name', '$email', '$gender', '$birthday', '$year_level', '$course', 0)";
 
         if ($conn->query($sql)) {
             echo json_encode(["success" => true, "message" => "Student added successfully."]);
@@ -141,14 +186,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     // ---------- EDIT STUDENT ----------
     if ($action === 'edit') {
-        $student_id     = intval($_POST['student_id']);
-        $first_name     = $conn->real_escape_string(trim($_POST['first_name']));
-        $last_name      = $conn->real_escape_string(trim($_POST['last_name']));
-        $email          = $conn->real_escape_string(trim($_POST['email']));
-        $gender         = $conn->real_escape_string($_POST['gender']);
-        $birthday       = $conn->real_escape_string($_POST['birthday']);
-        $year_level     = $conn->real_escape_string($_POST['year_level']);
-        $course         = $conn->real_escape_string($_POST['course']);
+        $student_id = intval($_POST['student_id']);
+        $first_name = $conn->real_escape_string(trim($_POST['first_name']));
+        $last_name  = $conn->real_escape_string(trim($_POST['last_name']));
+        $email      = $conn->real_escape_string(trim($_POST['email']));
+        $gender     = $conn->real_escape_string($_POST['gender']);
+        $birthday   = $conn->real_escape_string($_POST['birthday']);
+        $year_level = $conn->real_escape_string($_POST['year_level']);
+        $course     = $conn->real_escape_string($_POST['course']);
 
         $emailCheck = $conn->query("SELECT student_id FROM students WHERE email = '$email' AND student_id != $student_id");
         if ($emailCheck->num_rows > 0) {
@@ -171,6 +216,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } else {
             echo json_encode(["success" => false, "message" => "Failed to update student: " . $conn->error]);
         }
+        exit;
+    }
+
+    // ---------- PROMOTE ALL STUDENTS ----------
+    if ($action === 'promote_all') {
+        /*
+          Promotion logic:
+          1. Archive all current 4th Year students (they graduate)
+          2. Promote 3rd Year → 4th Year
+          3. Promote 2nd Year → 3rd Year
+          4. Promote 1st Year → 2nd Year
+          (New 1st Years for upcoming SY are added manually with the new prefix)
+        */
+
+        $conn->begin_transaction();
+
+        try {
+            // Step 1: Graduate (archive) all 4th Years
+            $graduateResult = $conn->query("
+                UPDATE students
+                SET archived      = 1,
+                    graduated_at  = NOW()
+                WHERE year_level  = '4th Year'
+                AND   archived    = 0
+            ");
+            if (!$graduateResult) throw new Exception($conn->error);
+            $graduated = $conn->affected_rows;
+
+            // Step 2: Promote 3rd → 4th
+            $r2 = $conn->query("UPDATE students SET year_level = '4th Year' WHERE year_level = '3rd Year' AND archived = 0");
+            if (!$r2) throw new Exception($conn->error);
+
+            // Step 3: Promote 2nd → 3rd
+            $r3 = $conn->query("UPDATE students SET year_level = '3rd Year' WHERE year_level = '2nd Year' AND archived = 0");
+            if (!$r3) throw new Exception($conn->error);
+
+            // Step 4: Promote 1st → 2nd
+            $r4 = $conn->query("UPDATE students SET year_level = '2nd Year' WHERE year_level = '1st Year' AND archived = 0");
+            if (!$r4) throw new Exception($conn->error);
+
+            $conn->commit();
+
+            $promoted = $conn->query("SELECT COUNT(*) AS cnt FROM students WHERE archived = 0")->fetch_assoc()['cnt'];
+
+            echo json_encode([
+                "success"   => true,
+                "message"   => "Promotion complete! {$graduated} student(s) graduated and archived. All other year levels have been promoted.",
+                "graduated" => $graduated
+            ]);
+
+        } catch (Exception $e) {
+            $conn->rollback();
+            echo json_encode(["success" => false, "message" => "Promotion failed: " . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // ---------- ARCHIVE SINGLE STUDENT ----------
+    if ($action === 'archive_student') {
+        $student_id = intval($_POST['student_id']);
+
+        $ok = $conn->query("
+            UPDATE students
+            SET archived     = 1,
+                graduated_at = NOW()
+            WHERE student_id = $student_id
+        ");
+
+        echo $ok
+            ? json_encode(["success" => true,  "message" => "Student archived successfully."])
+            : json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
+        exit;
+    }
+
+    // ---------- UNARCHIVE / RESTORE STUDENT ----------
+    if ($action === 'unarchive_student') {
+        $student_id = intval($_POST['student_id']);
+
+        $ok = $conn->query("
+            UPDATE students
+            SET archived     = 0,
+                graduated_at = NULL
+            WHERE student_id = $student_id
+        ");
+
+        echo $ok
+            ? json_encode(["success" => true,  "message" => "Student restored successfully."])
+            : json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
         exit;
     }
 
@@ -214,8 +347,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 continue;
             }
 
-            $sql = "INSERT INTO students (student_id, first_name, last_name, email, gender, birthday, year_level, course)
-                    VALUES ($student_id, '$first_name', '$last_name', '$email', '$gender', '$birthday', '$year_level', '$course')";
+            $sql = "INSERT INTO students (student_id, first_name, last_name, email, gender, birthday, year_level, course, archived)
+                    VALUES ($student_id, '$first_name', '$last_name', '$email', '$gender', '$birthday', '$year_level', '$course', 0)";
 
             if ($conn->query($sql)) {
                 $rowCount++;
@@ -236,6 +369,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     echo json_encode(["success" => false, "message" => "Unknown action."]);
     exit;
 }
+
+// ── Count archived for badge ──
+$archivedCountRes = $conn->query("SELECT COUNT(*) AS cnt FROM students WHERE archived = 1");
+$archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] : 0;
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -244,13 +381,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Students - UNITYCARE</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="logout.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* ── aStudents Sort ── */
-        .aStudents-sort-wrapper {
-            position: relative;
-            display: inline-block;
-        }
+        /* ── Sort dropdown ── */
+        .aStudents-sort-wrapper { position: relative; display: inline-block; }
         .aStudents-sort-dropdown {
             display: none;
             position: absolute;
@@ -281,23 +416,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             cursor: pointer;
             transition: var(--transition);
         }
-        .aStudents-sort-option:hover { background: rgba(73,136,196,0.08); }
-        .aStudents-sort-option.active {
-            background: rgba(17,63,103,0.1);
-            color: #113F67;
-            font-weight: 600;
-        }
-        .aStudents-sort-option i { width: 14px; text-align: center; font-size: 0.75rem; }
+        .aStudents-sort-option:hover  { background: rgba(73,136,196,0.08); }
+        .aStudents-sort-option.active { background: rgba(17,63,103,0.1); color: #113F67; font-weight: 600; }
+        .aStudents-sort-option i      { width: 14px; text-align: center; font-size: 0.75rem; }
 
-        /* ── Student ID auto-generate style ── */
-        .aStudents-id-field {
-            position: relative;
-        }
-        .aStudents-id-field input[readonly] {
-            background: var(--input-bg, #f0f2f5);
-            cursor: not-allowed;
-            color: #555;
-        }
+        /* ── Student ID field ── */
+        .aStudents-id-field { position: relative; }
+        .aStudents-id-field input[readonly] { background: var(--input-bg, #f0f2f5); cursor: not-allowed; color: #555; }
         .aStudents-id-badge {
             display: inline-flex;
             align-items: center;
@@ -308,11 +433,282 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
         .aStudents-id-badge i { font-size: 10px; }
 
-        /* ── Utility ── */
-        .aStudents-hidden        { display: none; }
+        /* ── Utilities ── */
+        .aStudents-hidden        { display: none !important; }
         .aStudents-table-loading { text-align: center; padding: 20px; }
         .aStudents-table-empty   { text-align: center; padding: 20px; color: #888; }
         .aStudents-table-error   { text-align: center; padding: 20px; color: red; }
+
+        /* ── Archive header button ── */
+        .aStudents-archive-btn {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+            padding: 10px 16px;
+            border-radius: var(--radius-md, 10px);
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+        }
+        .aStudents-archive-btn:hover { background: #e5e7eb; color: #374151; transform: translateY(-2px); }
+        .aStudents-archive-btn .archive-count {
+            background: #9ca3af;
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 999px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* ── Promote button ── */
+        .aStudents-promote-btn {
+            background: linear-gradient(135deg, #15803d, #22c55e);
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: var(--radius-md, 10px);
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+        }
+        .aStudents-promote-btn:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(21,128,61,0.25); }
+
+        /* ── Toast ── */
+        .aStudents-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #113F67;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translateY(8px);
+            z-index: 99999;
+            max-width: 340px;
+        }
+        .aStudents-toast.show { opacity: 1; transform: translateY(0); }
+
+        /* ── Shared modal base (reused for archives + promote confirm) ── */
+        .aStudents-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(17,63,103,0.25);
+            backdrop-filter: blur(6px);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .aStudents-modal.open { display: flex; }
+        .aStudents-modal-content {
+            width: 92%;
+            max-width: 700px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(18px);
+            border-radius: 18px;
+            padding: 24px;
+            border: 1px solid rgba(37,99,235,0.12);
+            box-shadow: 0 20px 60px rgba(17,63,103,0.18);
+            animation: aModalPop 0.22s ease;
+        }
+        .aStudents-modal-content.wide { max-width: 1000px; }
+        @keyframes aModalPop {
+            from { transform: scale(0.95); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
+        }
+        .aStudents-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        .aStudents-modal-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #113F67; }
+        .aStudents-modal-header p  { margin: 4px 0 0; font-size: 0.83rem; color: var(--text-light); }
+        .aStudents-modal-close {
+            background: rgba(17,63,103,0.07);
+            border: 1px solid rgba(17,63,103,0.12);
+            width: 32px; height: 32px;
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: #113F67;
+            flex-shrink: 0;
+        }
+        .aStudents-modal-close:hover { background: rgba(17,63,103,0.14); }
+        .aStudents-modal-footer {
+            margin-top: 22px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .aStudents-sec-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #4988C4;
+            letter-spacing: 0.07em;
+            margin: 4px 0 12px;
+        }
+        .aStudents-field-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+        .aStudents-field.full { grid-column: span 2; }
+        .aStudents-field label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+        .aStudents-field input,
+        .aStudents-field select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(37,99,235,0.18);
+            outline: none;
+            background: rgba(255,255,255,0.9);
+            font-size: 0.9rem;
+            color: var(--text);
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .aStudents-field input:focus,
+        .aStudents-field select:focus { border-color: #4988C4; box-shadow: 0 0 0 3px rgba(73,136,196,0.15); }
+
+        .aStudents-btn-cancel {
+            padding: 9px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: #f3f4f6;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text);
+            transition: background 0.15s;
+        }
+        .aStudents-btn-cancel:hover { background: #e5e7eb; }
+        .aStudents-btn-save {
+            padding: 9px 18px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #113F67, #4988C4);
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: opacity 0.15s, transform 0.15s;
+        }
+        .aStudents-btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
+        .aStudents-btn-danger {
+            padding: 9px 15px;
+            border-radius: 10px;
+            border: 1px solid #fca5a5;
+            background: #fff0f0;
+            color: #b91c1c;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background 0.15s;
+        }
+        .aStudents-btn-danger:hover { background: #fee2e2; }
+        .aStudents-btn-success-sm {
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #86efac;
+            padding: 5px 12px;
+            border-radius: var(--radius-sm, 6px);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .aStudents-btn-success-sm:hover { background: #dcfce7; }
+
+        /* ── Archive empty state ── */
+        .aArchive-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+        .aArchive-empty i { font-size: 2.5rem; opacity: 0.3; margin-bottom: 12px; display: block; }
+        .aArchive-empty p { margin: 0; font-size: 0.95rem; }
+
+        /* ── Promote confirm box ── */
+        .promote-confirm-box {
+            background: #eff6ff;
+            border: 1px solid #93c5fd;
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 18px;
+        }
+        .promote-confirm-box .promote-title {
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        .promote-flow {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .promote-chip {
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .chip-graduate { background: #fee2e2; color: #b91c1c; }
+        .chip-promote  { background: #dbeafe; color: #1d4ed8; }
+        .chip-arrow    { color: #9ca3af; font-size: 0.75rem; }
+
+        .promote-warning {
+            margin-top: 12px;
+            font-size: 0.82rem;
+            color: #92400e;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+        .promote-warning i { margin-top: 2px; flex-shrink: 0; }
+
+        /* ── Archive search ── */
+        .aArchive-search {
+            width: 100%;
+            padding: 9px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(37,99,235,0.18);
+            outline: none;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            color: var(--text);
+            background: rgba(255,255,255,0.9);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .aArchive-search:focus { border-color: #4988C4; box-shadow: 0 0 0 3px rgba(73,136,196,0.15); }
+
+        /* ── Badge ── */
+        .aBadge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
+        .aBadge-archived { background: #f3f4f6; color: #6b7280; }
+
+        /* Archive table loading/empty/error */
+        .archive-loading { text-align: center; padding: 30px; color: #888; }
+        .archive-empty   { text-align: center; padding: 30px; color: #888; }
+        .archive-error   { text-align: center; padding: 30px; color: red; }
     </style>
 </head>
 <body>
@@ -340,6 +736,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         <a href="ausers.php"><i class="fa fa-users"></i> Users</a>
         <a href="astudents.php" class="active"><i class="fa fa-user-graduate"></i> Students</a>
         <a href="acounselors.php"><i class="fa fa-user-doctor"></i> Counselors</a>
+        <a href="aadmins.php"><i class="fa fa-user-shield"></i> Admins</a>
         <a href="aappointments.php"><i class="fa fa-calendar"></i> Appointments</a>
         <p class="sidebar-title">SYSTEM</p>
         <a href="areports.php"><i class="fa fa-chart-line"></i> Reports</a>
@@ -424,6 +821,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 <p class="aStudents-muted">Complete list of registered students</p>
             </div>
             <div class="aStudents-record-actions">
+                <!-- Archive button (matches aadmins.php style) -->
+                <button onclick="openArchivesModal()" class="aStudents-archive-btn">
+                    <i class="fa fa-box-archive"></i>
+                    Graduated
+                    <span class="archive-count" id="archiveCountBadge"><?= $archivedCount ?></span>
+                </button>
+
+                <!-- Promote All button -->
+                <button onclick="openPromoteModal()" class="aStudents-promote-btn">
+                    <i class="fa fa-angles-up"></i> Promote All Students
+                </button>
+
                 <button onclick="openAddStudentModal()" class="aStudents-add-btn">
                     <i class="fa fa-user-plus"></i> Add Student
                 </button>
@@ -471,7 +880,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <div class="aStudents-modal-content">
         <div class="aStudents-modal-header">
             <div>
-                <h3>Add New Student</h3>
+                <h3><i class="fa fa-user-graduate"></i> Add New Student</h3>
                 <p>Fill in all the student's information below</p>
             </div>
             <button class="aStudents-modal-close" onclick="closeStudentModal()">✕</button>
@@ -560,7 +969,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <div class="aStudents-modal-content">
         <div class="aStudents-modal-header">
             <div>
-                <h3>Student Details</h3>
+                <h3><i class="fa fa-user-graduate"></i> Student Details</h3>
                 <p id="viewModalSubtitle">Viewing student information</p>
             </div>
             <button class="aStudents-modal-close" onclick="closeViewModal()">✕</button>
@@ -603,13 +1012,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <div class="aStudents-field-grid">
                 <div class="aStudents-field">
                     <label>Student ID</label>
-                    <!-- Always readonly — ID is never editable -->
                     <input type="text" id="viewStudentId" readonly
                            style="background: var(--input-bg, #f0f2f5); cursor: not-allowed;">
                 </div>
                 <div class="aStudents-field">
                     <label>Year Level</label>
-                    <!-- Always readonly — tied to Student ID prefix, never editable -->
                     <input type="text" id="viewYear" readonly
                            style="background: var(--input-bg, #f0f2f5); cursor: not-allowed;">
                 </div>
@@ -636,18 +1043,126 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             </div>
         </div>
 
+        <div class="aStudents-modal-footer" style="justify-content: space-between;">
+            <!-- Left: Archive single student -->
+            <div>
+                <button class="aStudents-btn-danger" id="archiveSingleBtn" onclick="archiveSingleStudent()">
+                    <i class="fa fa-box-archive"></i> Archive Student
+                </button>
+            </div>
+            <!-- Right: Close / Edit / Save -->
+            <div style="display:flex; gap:8px;">
+                <button class="aStudents-btn-cancel" onclick="closeViewModal()">Close</button>
+                <button class="aStudents-btn-cancel" id="editBtn" onclick="enableEdit()">
+                    <i class="fa fa-pen"></i> Edit
+                </button>
+                <button class="aStudents-btn-save aStudents-hidden" id="saveEditBtn" onclick="saveEdit()">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= PROMOTE CONFIRM MODAL ================= -->
+<div id="promoteModal" class="aStudents-modal">
+    <div class="aStudents-modal-content">
+        <div class="aStudents-modal-header">
+            <div>
+                <h3><i class="fa fa-angles-up" style="margin-right:6px;opacity:.7"></i>Promote All Students</h3>
+                <p>Please review what will happen before confirming</p>
+            </div>
+            <button class="aStudents-modal-close" onclick="closePromoteModal()">✕</button>
+        </div>
+
+        <div class="promote-confirm-box">
+            <div class="promote-title"><i class="fa fa-triangle-exclamation"></i> This action will affect all active students</div>
+            <div class="promote-flow">
+                <span class="promote-chip chip-graduate">4th Year → Graduated &amp; Archived</span>
+                <span class="chip-arrow">•</span>
+                <span class="promote-chip chip-promote">3rd Year → 4th Year</span>
+                <span class="chip-arrow">•</span>
+                <span class="promote-chip chip-promote">2nd Year → 3rd Year</span>
+                <span class="chip-arrow">•</span>
+                <span class="promote-chip chip-promote">1st Year → 2nd Year</span>
+            </div>
+            <div class="promote-warning">
+                <i class="fa fa-circle-info"></i>
+                <span>4th Year students will be moved to the <strong>Graduated</strong> archive automatically.
+                New incoming 1st Year students for the upcoming school year should be added manually
+                using the <strong>Add Student</strong> button (they will receive the new ID prefix automatically).</span>
+            </div>
+        </div>
+
         <div class="aStudents-modal-footer">
-            <button class="aStudents-btn-cancel" onclick="closeViewModal()">Close</button>
-            <button class="aStudents-btn-cancel" id="editBtn" onclick="enableEdit()">
-                <i class="fa fa-pen"></i> Edit
-            </button>
-            <button class="aStudents-btn-save aStudents-hidden" id="saveEditBtn" onclick="saveEdit()">
-                Save Changes
+            <button class="aStudents-btn-cancel" onclick="closePromoteModal()">Cancel</button>
+            <button class="aStudents-promote-btn" id="confirmPromoteBtn" onclick="confirmPromote()">
+                <i class="fa fa-angles-up"></i> Yes, Promote All
             </button>
         </div>
     </div>
 </div>
 
+<!-- ================= ARCHIVES (GRADUATED) MODAL ================= -->
+<div id="archivesModal" class="aStudents-modal">
+    <div class="aStudents-modal-content wide">
+        <div class="aStudents-modal-header">
+            <div>
+                <h3><i class="fa fa-box-archive" style="margin-right:6px;opacity:.7"></i>Graduated Students</h3>
+                <p>These students have graduated. You can restore them to active records if needed.</p>
+            </div>
+            <button class="aStudents-modal-close" onclick="closeArchivesModal()">✕</button>
+        </div>
+
+        <input type="text" class="aArchive-search" id="archiveSearch" placeholder="Search by ID or name..." oninput="searchArchive()">
+
+        <div class="aStudents-table-wrapper">
+            <table class="aStudents-table" id="archivesTable">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Last Name</th>
+                        <th>First Name</th>
+                        <th>Course</th>
+                        <th>Gender</th>
+                        <th>Birthday</th>
+                        <th>Graduated</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="archivesTableBody">
+                    <tr>
+                        <td colspan="9" class="archive-loading">
+                            <i class="fa fa-spinner fa-spin"></i> Loading...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="aStudents-modal-footer">
+            <button class="aStudents-btn-cancel" onclick="closeArchivesModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= TOAST ================= -->
+<div class="aStudents-toast" id="toast"></div>
+
+<div class="logout-overlay" id="logoutOverlay">
+  <div class="logout-modal">
+    <div class="logout-icon">
+      <i class="fa fa-right-from-bracket"></i>
+    </div>
+    <h3>Logout</h3>
+    <p>Are you sure you want to logout?</p>
+    <div class="logout-actions">
+      <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+      <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+    </div>
+  </div>
+</div>
 <!-- ================= SCRIPT ================= -->
 <script>
 
@@ -661,14 +1176,31 @@ function toggleTheme() {
     html.setAttribute("data-theme", html.getAttribute("data-theme") === "light" ? "dark" : "light");
 }
 function logout() {
-    localStorage.clear();
-    window.location.href = "index.php";
+    document.getElementById('logoutOverlay').classList.add('show');
 }
+function closeLogout() {
+    document.getElementById('logoutOverlay').classList.remove('show');
+}
+function confirmLogout() {
+    window.location.href = 'logout.php?role=admin';
+}
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeLogout();
+});
 document.addEventListener("click", e => {
     const menu = document.getElementById("settingsDropdown");
     const btn  = document.querySelector(".sidebar-settingsButton");
     if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("show");
 });
+
+// ================= TOAST =================
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = type === 'error' ? '#b91c1c' : '#113F67';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3400);
+}
 
 // ================= SORT =================
 let currentSortCol = 'student_id';
@@ -691,15 +1223,11 @@ function toggleSortDropdown(e) {
 function setSort(col, dir) {
     currentSortCol = col;
     currentSortDir = dir;
-
     document.getElementById('sortLabel').innerText = sortLabels[`${col}-${dir}`] || '';
-
     document.querySelectorAll('.aStudents-sort-option').forEach(o => o.classList.remove('active'));
     const active = document.getElementById(`sortOpt-${col}-${dir}`);
     if (active) active.classList.add('active');
-
     document.getElementById('sortDropdown').classList.remove('show');
-
     loadStudents();
 }
 
@@ -708,7 +1236,7 @@ document.addEventListener('click', e => {
     if (!e.target.closest('.aStudents-sort-wrapper')) dd.classList.remove('show');
 });
 
-// ================= LOAD STUDENTS FROM DB =================
+// ================= LOAD ACTIVE STUDENTS =================
 let searchTimer = null;
 
 function loadStudents() {
@@ -760,7 +1288,7 @@ function loadStudents() {
                     <td>${s.year_level}</td>
                     <td>${s.course}</td>
                     <td>
-                        <button class="aStudents-btn aStudents-btn-sm" onclick="viewStudent(this)">View</button>
+                        <button class="aStudents-btn aStudents-btn-sm" onclick="viewStudent(this)"> <i class="fa fa-eye"></i> View</button>
                     </td>`;
                 tbody.appendChild(row);
             });
@@ -862,22 +1390,10 @@ function saveStudent() {
     const course    = document.getElementById('course').value;
     const email     = document.getElementById('email').value.trim();
 
-    if (!yearLevel) {
-        alert("Please select a year level so a Student ID can be generated.");
-        return;
-    }
-    if (!studentId) {
-        alert("Student ID has not been generated yet. Please wait or re-select the year level.");
-        return;
-    }
-    if (!firstName || !lastName || !gender || !birthday || !course || !email) {
-        alert("Please fill in all required fields.");
-        return;
-    }
-    if (!age) {
-        alert("Please enter a valid birthday.");
-        return;
-    }
+    if (!yearLevel) { showToast("Please select a year level so a Student ID can be generated.", 'error'); return; }
+    if (!studentId) { showToast("Student ID has not been generated yet. Please wait or re-select the year level.", 'error'); return; }
+    if (!firstName || !lastName || !gender || !birthday || !course || !email) { showToast("Please fill in all required fields.", 'error'); return; }
+    if (!age) { showToast("Please enter a valid birthday.", 'error'); return; }
 
     const formData = new FormData();
     formData.append('action',     'add');
@@ -893,10 +1409,10 @@ function saveStudent() {
     fetch('astudents.php', { method: 'POST', body: formData })
         .then(res => res.json())
         .then(json => {
-            alert(json.message);
+            showToast(json.message, json.success ? 'success' : 'error');
             if (json.success) { closeStudentModal(); loadStudents(); }
         })
-        .catch(() => alert("Error saving student."));
+        .catch(() => showToast("Error saving student.", 'error'));
 }
 
 // ================= FILTER =================
@@ -961,7 +1477,6 @@ function setViewMode() {
     document.getElementById('viewFirstName').readOnly = true;
     document.getElementById('viewLastName').readOnly  = true;
     document.getElementById('viewEmail').readOnly     = true;
-    // Student ID is always readonly — never unlocked
     document.getElementById('viewStudentId').readOnly = true;
     document.getElementById('viewAge').readOnly       = true;
 
@@ -979,14 +1494,12 @@ function enableEdit() {
     document.getElementById('editGender').classList.remove('aStudents-hidden');
     document.getElementById('viewBirthday').classList.add('aStudents-hidden');
     document.getElementById('editBirthday').classList.remove('aStudents-hidden');
-    // viewYear stays visible and readonly — year level is locked
     document.getElementById('viewCourse').classList.add('aStudents-hidden');
     document.getElementById('editCourse').classList.remove('aStudents-hidden');
 
     document.getElementById('viewFirstName').readOnly = false;
     document.getElementById('viewLastName').readOnly  = false;
     document.getElementById('viewEmail').readOnly     = false;
-    // viewStudentId intentionally stays readonly here
 
     document.getElementById('editBtn').classList.add('aStudents-hidden');
     document.getElementById('saveEditBtn').classList.remove('aStudents-hidden');
@@ -1005,7 +1518,7 @@ function saveEdit() {
     const originalId = document.getElementById('originalStudentId').value;
 
     if (!firstName || !lastName || !email || !gender || !birthday || !yearLevel || !course) {
-        alert("Please fill in all fields.");
+        showToast("Please fill in all fields.", 'error');
         return;
     }
 
@@ -1023,10 +1536,10 @@ function saveEdit() {
     fetch('astudents.php', { method: 'POST', body: formData })
         .then(res => res.json())
         .then(json => {
-            alert(json.message);
+            showToast(json.message, json.success ? 'success' : 'error');
             if (json.success) { closeViewModal(); loadStudents(); }
         })
-        .catch(() => alert("Error updating student."));
+        .catch(() => showToast("Error updating student.", 'error'));
 }
 
 function closeViewModal() {
@@ -1037,6 +1550,177 @@ document.getElementById('viewStudentModal').addEventListener('click', function(e
     if (e.target === this) closeViewModal();
 });
 
+// ================= ARCHIVE SINGLE STUDENT =================
+function archiveSingleStudent() {
+    const id   = document.getElementById('originalStudentId').value;
+    const name = document.getElementById('viewFirstName').value + ' ' + document.getElementById('viewLastName').value;
+
+    if (!confirm(`Archive "${name}"?\nThis will move the student to the Graduated archive.\nYou can restore them anytime.`)) return;
+
+    const formData = new FormData();
+    formData.append('action',     'archive_student');
+    formData.append('student_id', id);
+
+    fetch('astudents.php', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(json => {
+            showToast(json.message, json.success ? 'success' : 'error');
+            if (json.success) {
+                closeViewModal();
+                loadStudents();
+                refreshArchiveCount();
+            }
+        })
+        .catch(() => showToast("Error archiving student.", 'error'));
+}
+
+// ================= PROMOTE ALL MODAL =================
+function openPromoteModal() {
+    document.getElementById('promoteModal').classList.add('open');
+}
+function closePromoteModal() {
+    document.getElementById('promoteModal').classList.remove('open');
+}
+document.getElementById('promoteModal').addEventListener('click', function(e) {
+    if (e.target === this) closePromoteModal();
+});
+
+function confirmPromote() {
+    const btn = document.getElementById('confirmPromoteBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+    const formData = new FormData();
+    formData.append('action', 'promote_all');
+
+    fetch('astudents.php', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(json => {
+            showToast(json.message, json.success ? 'success' : 'error');
+            if (json.success) {
+                closePromoteModal();
+                loadStudents();
+                refreshArchiveCount();
+            }
+        })
+        .catch(() => showToast("Promotion failed.", 'error'))
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-angles-up"></i> Yes, Promote All';
+        });
+}
+
+// ================= ARCHIVE COUNT BADGE =================
+function refreshArchiveCount() {
+    fetch('astudents.php?action=fetch_archived&search=')
+        .then(res => res.json())
+        .then(json => {
+            if (json.success) {
+                document.getElementById('archiveCountBadge').textContent = json.data.length;
+            }
+        })
+        .catch(() => {});
+}
+
+// ================= ARCHIVES MODAL =================
+let archiveSearchTimer = null;
+
+function openArchivesModal() {
+    document.getElementById('archivesModal').classList.add('open');
+    document.getElementById('archiveSearch').value = '';
+    loadArchivedStudents('');
+}
+function closeArchivesModal() {
+    document.getElementById('archivesModal').classList.remove('open');
+}
+document.getElementById('archivesModal').addEventListener('click', function(e) {
+    if (e.target === this) closeArchivesModal();
+});
+
+function searchArchive() {
+    clearTimeout(archiveSearchTimer);
+    archiveSearchTimer = setTimeout(() => {
+        loadArchivedStudents(document.getElementById('archiveSearch').value.trim());
+    }, 350);
+}
+
+function loadArchivedStudents(search) {
+    const tbody = document.getElementById('archivesTableBody');
+    tbody.innerHTML = `<tr><td colspan="9" class="archive-loading"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>`;
+
+    fetch(`astudents.php?action=fetch_archived&search=${encodeURIComponent(search)}`)
+        .then(res => res.json())
+        .then(json => {
+            tbody.innerHTML = '';
+
+            if (!json.success || json.data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="archive-empty">
+                    <i class="fa fa-box-archive" style="opacity:.3;font-size:1.5rem;display:block;margin-bottom:8px;"></i>
+                    No graduated students found.
+                </td></tr>`;
+                return;
+            }
+
+            json.data.forEach(s => {
+                const graduatedDate = s.graduated_at
+                    ? new Date(s.graduated_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' })
+                    : '—';
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${s.student_id}</td>
+                    <td>${s.last_name}</td>
+                    <td>${s.first_name}</td>
+                    <td>${s.course}</td>
+                    <td>${s.gender}</td>
+                    <td>${s.birthday}</td>
+                    <td>${graduatedDate}</td>
+                    <td><span class="aBadge aBadge-archived">Graduated</span></td>
+                    <td>
+                        <button class="aStudents-btn-success-sm"
+                            onclick="restoreStudent(${s.student_id}, '${s.first_name.replace(/'/g,"\\'")} ${s.last_name.replace(/'/g,"\\'")}', this)">
+                            <i class="fa fa-rotate-left"></i> Restore
+                        </button>
+                    </td>`;
+                tbody.appendChild(row);
+            });
+        })
+        .catch(() => {
+            tbody.innerHTML = `<tr><td colspan="9" class="archive-error">Failed to load archived students.</td></tr>`;
+        });
+}
+
+function restoreStudent(studentId, name, btn) {
+    if (!confirm(`Restore "${name}" back to active student records?`)) return;
+
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Restoring...';
+
+    const formData = new FormData();
+    formData.append('action',     'unarchive_student');
+    formData.append('student_id', studentId);
+
+    fetch('astudents.php', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(json => {
+            showToast(json.message, json.success ? 'success' : 'error');
+            if (json.success) {
+                loadStudents();
+                loadArchivedStudents(document.getElementById('archiveSearch').value.trim());
+                refreshArchiveCount();
+            } else {
+                btn.disabled  = false;
+                btn.innerHTML = '<i class="fa fa-rotate-left"></i> Restore';
+            }
+        })
+        .catch(() => {
+            showToast("Restore failed.", 'error');
+            btn.disabled  = false;
+            btn.innerHTML = '<i class="fa fa-rotate-left"></i> Restore';
+        });
+}
+
+// ================= CSV IMPORT =================
 document.getElementById('importCsvInput').addEventListener('change', function () {
     const file = this.files[0];
     if (!file) return;
@@ -1048,10 +1732,10 @@ document.getElementById('importCsvInput').addEventListener('change', function ()
     fetch('astudents.php', { method: 'POST', body: formData })
         .then(res => res.json())
         .then(json => {
-            alert(json.message);
+            showToast(json.message, json.success ? 'success' : 'error');
             if (json.success) loadStudents();
         })
-        .catch(() => alert("CSV import failed."));
+        .catch(() => showToast("CSV import failed.", 'error'));
 });
 </script>
 </body>

@@ -5,13 +5,13 @@ ini_set('display_errors', 0);
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 // ===== GUARD: must be logged in =====
-if (!isset($_SESSION['student_id'])) {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     header("Location: slogin.php");
     exit;
 }
 
-$conn = new mysqli("localhost", "root", "", "gcs_db");
-$sid  = $conn->real_escape_string($_SESSION['student_id']);
+$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$sid  = $conn->real_escape_string($_SESSION['user_id']);
 
 // ===== HANDLE PROFILE UPDATE (AJAX) =====
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_profile') {
@@ -116,6 +116,7 @@ $profileImg  = !empty($profile['profile_image'])
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UNITYCARE | Student Profile</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -269,8 +270,20 @@ function toggleTheme() {
   html.setAttribute("data-theme", html.getAttribute("data-theme") === "light" ? "dark" : "light");
 }
 function logout() {
-  fetch('logout.php').finally(() => { window.location.href = "slogin.php"; });
+  document.getElementById('logoutOverlay').classList.add('show');
 }
+function closeLogout() {
+  document.getElementById('logoutOverlay').classList.remove('show');
+}
+function confirmLogout() {
+    window.location.href = 'logout.php?role=student';
+}
+
+// Close when clicking outside
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeLogout();
+});
+
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
   const btn  = document.querySelector(".sidebar-settingsButton");
@@ -331,6 +344,20 @@ function saveProfile() {
     });
 }
 </script>
+<!-- LOGOUT MODAL -->
+  <div class="logout-overlay" id="logoutOverlay">
+    <div class="logout-modal">
+      <div class="logout-icon">
+        <i class="fa fa-right-from-bracket"></i>
+      </div>
+      <h3>Logout</h3>
+      <p>Are you sure you want to logout?</p>
+      <div class="logout-actions">
+        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>

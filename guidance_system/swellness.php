@@ -5,15 +5,15 @@ mysqli_report(MYSQLI_REPORT_OFF);
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-// ===== GUARD =====
-if (!isset($_SESSION['student_id'])) {
+// ===== GUARD: must be logged in =====
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     header("Location: slogin.php");
     exit;
 }
 
 // ===== LOAD STUDENT DATA =====
-$conn = new mysqli("localhost", "root", "", "gcs_db");
-$sid  = $conn->real_escape_string($_SESSION['student_id']);
+$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$sid  = $conn->real_escape_string($_SESSION['user_id']);
 
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
 $student    = $studentRes->fetch_assoc();
@@ -35,7 +35,7 @@ $profileImg = !empty($profile['profile_image'])
 <title>UNITYCARE | Wellness Check</title>
 
 <link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="sWellness.css">
+<link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -168,9 +168,19 @@ function toggleTheme(){
   );
 }
 
-function logout(){
-  fetch('logout.php').finally(() => { window.location.href = "slogin.php"; });
+function logout() {
+  document.getElementById('logoutOverlay').classList.add('show');
 }
+function closeLogout() {
+  document.getElementById('logoutOverlay').classList.remove('show');
+}
+function confirmLogout() {
+    window.location.href = 'logout.php?role=student';
+}
+// Close when clicking outside
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeLogout();
+});
 
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
@@ -200,6 +210,20 @@ function updateStress(v){
   document.getElementById("stressValue").innerText = `${t} (${v}%)`;
 }
 </script>
+<!-- LOGOUT MODAL -->
+  <div class="logout-overlay" id="logoutOverlay">
+    <div class="logout-modal">
+      <div class="logout-icon">
+        <i class="fa fa-right-from-bracket"></i>
+      </div>
+      <h3>Logout</h3>
+      <p>Are you sure you want to logout?</p>
+      <div class="logout-actions">
+        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>

@@ -1,10 +1,12 @@
 <?php
-$host = "localhost";
-$db   = "gcs_db";
-$user = "root";
-$pass = "";
+if (session_status() === PHP_SESSION_NONE) session_start();
 
-$conn = new mysqli($host, $user, $pass, $db);
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: slogin.php");
+    exit;
+}
+
+$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
 
 // ── HANDLE POST ACTIONS ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -88,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
+
     // ---------- IMPORT CSV ----------
     if ($action === 'import_csv') {
         if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
@@ -133,12 +136,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     echo json_encode(["success" => false, "message" => "Unknown action."]);
     exit;
+
+    
 }
 
 // ── FETCH COUNSELORS ──
 $counselorRows = [];
 $result = $conn->query("SELECT counselor_id, first_name, last_name, email, department, status FROM counselors ORDER BY counselor_id ASC");
 while ($row = $result->fetch_assoc()) $counselorRows[] = $row;
+
+// ── FETCH NEXT COUNSELOR ID ──
+$nextId = '000001';
+$lastResult = $conn->query("SELECT counselor_id FROM counselors ORDER BY counselor_id DESC LIMIT 1");
+if ($lastResult && $lastResult->num_rows > 0) {
+    $lastRow = $lastResult->fetch_assoc();
+    $lastNum = intval($lastRow['counselor_id']);
+    $nextId  = str_pad($lastNum + 1, 6, '0', STR_PAD_LEFT);
+}
 
 $conn->close();
 ?>
@@ -150,6 +164,7 @@ $conn->close();
 <title>UNITYCARE | Counselors</title>
 
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -193,6 +208,7 @@ $conn->close();
     <a href="ausers.php"><i class="fa fa-users"></i> Users</a>
     <a href="astudents.php"><i class="fa fa-user-graduate"></i> Students</a>
     <a href="acounselors.php" class="active"><i class="fa fa-user-doctor"></i> Counselors</a>
+    <a href="aadmins.php"><i class="fa fa-user-shield"></i> Admins</a>
     <a href="aappointments.php"><i class="fa fa-calendar"></i> Appointments</a>
 
     <p class="sidebar-title">SYSTEM</p>
@@ -279,7 +295,7 @@ $conn->close();
                   </span>
                 </td>
                 <td>
-                  <button class="aCounselors-btn aCounselors-btn-sm" onclick="viewCounselor(this)">View</button>
+                  <button class="aCounselors-btn aCounselors-btn-sm" onclick="viewCounselor(this)"> <i class="fa fa-eye"></i> View</button>
                 </td>
               </tr>
             <?php endforeach; ?>
@@ -298,7 +314,7 @@ $conn->close();
 
     <div class="aCounselors-modal-header">
       <div>
-        <h3>Create Counselor Account</h3>
+        <h3><i class="fa fa-user-doctor"></i> Create Counselor Account</h3>
         <p>Provide the counselor's details and set their initial password.</p>
       </div>
       <button class="aCounselors-modal-close" onclick="closeCounselorModal()">&#x2715;</button>
@@ -322,7 +338,7 @@ $conn->close();
 
         <div class="aCounselors-field">
           <label>Counselor ID</label>
-          <input id="counselorID" type="text" placeholder="e.g. 000002">
+          <input id="counselorID" type="text" value="<?= htmlspecialchars($nextId) ?>" readonly style="background:var(--input-readonly-bg, #f0f0f0); cursor:not-allowed;">
         </div>
 
         <div class="aCounselors-field">
@@ -386,7 +402,7 @@ $conn->close();
 
     <div class="aCounselors-modal-header">
       <div>
-        <h3>Counselor Details</h3>
+        <h3><i class="fa fa-user-doctor"></i> Counselor Details</h3>
         <p id="viewModalSubtitle">Viewing counselor information</p>
       </div>
       <button class="aCounselors-modal-close" onclick="closeViewModal()">✕</button>
@@ -462,6 +478,19 @@ $conn->close();
 
 <input type="file" id="importCsvInput" accept=".csv" style="display:none;">
 
+<div class="logout-overlay" id="logoutOverlay">
+  <div class="logout-modal">
+    <div class="logout-icon">
+      <i class="fa fa-right-from-bracket"></i>
+    </div>
+    <h3>Logout</h3>
+    <p>Are you sure you want to logout?</p>
+    <div class="logout-actions">
+      <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+      <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+    </div>
+  </div>
+</div>
 <!-- ================= SCRIPT ================= -->
 <script>
 
@@ -480,9 +509,17 @@ function toggleTheme() {
 }
 
 function logout() {
-  localStorage.clear();
-  window.location.href = "index.php";
+    document.getElementById('logoutOverlay').classList.add('show');
 }
+function closeLogout() {
+    document.getElementById('logoutOverlay').classList.remove('show');
+}
+function confirmLogout() {
+    window.location.href = 'logout.php?role=admin';
+}
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeLogout();
+});
 
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
@@ -590,7 +627,7 @@ function enableEdit() {
   document.getElementById("viewStatus").style.display     = "none";
   document.getElementById("editStatus").style.display     = "";
 
-  document.getElementById("viewCounselorId").readOnly = false;
+  document.getElementById("viewCounselorId").readOnly = true;
   document.getElementById("viewName").readOnly        = false;
   document.getElementById("viewEmail").readOnly       = false;
   document.getElementById("viewPassword").readOnly    = false;

@@ -1,11 +1,15 @@
 <?php
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 mysqli_report(MYSQLI_REPORT_OFF);
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-$conn = new mysqli("localhost", "root", "", "gcs_db");
+$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+if ($conn->connect_error) {
+    echo json_encode(["success" => false, "message" => "DB error: " . $conn->connect_error]);
+    exit;
+}
 
 // ================= HANDLE AJAX LOGIN =================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login') {
@@ -39,88 +43,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login
         unset($_SESSION[$lockKey], $_SESSION[$attemptsKey]);
     }
 
-    // ---------- FIND STUDENT ----------
-    $em         = $conn->real_escape_string($email);
-    $studentRes = $conn->query(
-        "SELECT student_id, first_name, last_name, email FROM students WHERE email='$em' LIMIT 1"
-    );
+    // =============================================
+    // CALL find_user_by_email procedure
+    // =============================================
+    $stmt = $conn->prepare("CALL find_user_by_email(?)");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user   = $result->fetch_assoc();
+    $stmt->close();
+    $conn->next_result(); // flush multi-result from stored proc
 
-    if (!$studentRes || $studentRes->num_rows === 0) {
+    // ---------- HELPER: handle failed attempt ----------
+    function handleFailedAttempt($attemptsKey, $lockKey, $lockoutSecs, $maxAttempts) {
         $_SESSION[$attemptsKey] = ($_SESSION[$attemptsKey] ?? 0) + 1;
         $attempts = $_SESSION[$attemptsKey];
         $left     = $maxAttempts - $attempts;
+
         if ($attempts >= $maxAttempts) {
             $_SESSION[$lockKey] = time() + $lockoutSecs;
             unset($_SESSION[$attemptsKey]);
-            echo json_encode(["success" => false, "locked" => true, "remaining" => $lockoutSecs,
-                "message" => "Too many failed attempts. Account suspended for 5 minutes."]);
-        } else {
-            echo json_encode(["success" => false, "locked" => false, "attempts" => $attempts,
-                "left" => $left, "message" => "Invalid email or password. {$left} attempt(s) remaining."]);
+            return ["success" => false, "locked" => true, "remaining" => $lockoutSecs,
+                    "message" => "Too many failed attempts. Account suspended for 5 minutes."];
         }
+
+        return ["success" => false, "locked" => false, "attempts" => $attempts,
+                "left" => $left, "message" => "Invalid email or password. {$left} attempt(s) remaining."];
+    }
+
+    // ---------- EMAIL NOT FOUND ----------
+    if (!$user) {
+        echo json_encode(handleFailedAttempt($attemptsKey, $lockKey, $lockoutSecs, $maxAttempts));
         exit;
     }
 
-    $student = $studentRes->fetch_assoc();
-    $sid     = $student['student_id'];
-
-    // ---------- FIND ACTIVATION ----------
-    $actRes = $conn->query(
-        "SELECT password, status, is_temp_password FROM activated_students WHERE student_id='$sid' LIMIT 1"
-    );
-
-    if (!$actRes || $actRes->num_rows === 0) {
-        echo json_encode(["success" => false,
-            "message" => "Account not yet activated. Please activate your account first."]);
-        exit;
-    }
-
-    $act = $actRes->fetch_assoc();
-
-    if ($act['status'] !== 'active') {
-        echo json_encode(["success" => false,
-            "message" => "Your account is inactive. Please contact your administrator."]);
+    // ---------- CHECK STATUS ----------
+    if (strtolower($user['status']) !== 'active') {
+        $messages = [
+            'student'   => "Account not yet activated. Please activate your account first.",
+            'counselor' => "Your counselor account is inactive. Please contact the administrator.",
+            'admin'     => "Your admin account is inactive. Please contact the system administrator.",
+        ];
+        echo json_encode([
+            "success" => false,
+            "message" => $messages[$user['role']] ?? "Your account is inactive."
+        ]);
         exit;
     }
 
     // ---------- VERIFY PASSWORD ----------
-    if (!password_verify($password, $act['password'])) {
-        $_SESSION[$attemptsKey] = ($_SESSION[$attemptsKey] ?? 0) + 1;
-        $attempts = $_SESSION[$attemptsKey];
-        $left     = $maxAttempts - $attempts;
-
-        if ($attempts >= $maxAttempts) {
-            $_SESSION[$lockKey] = time() + $lockoutSecs;
-            unset($_SESSION[$attemptsKey]);
-            echo json_encode(["success" => false, "locked" => true, "remaining" => $lockoutSecs,
-                "message" => "Too many failed attempts. Account suspended for 5 minutes."]);
-        } else {
-            echo json_encode(["success" => false, "locked" => false, "attempts" => $attempts,
-                "left" => $left, "message" => "Invalid email or password. {$left} attempt(s) remaining."]);
-        }
+    if (!password_verify($password, $user['password'])) {
+        echo json_encode(handleFailedAttempt($attemptsKey, $lockKey, $lockoutSecs, $maxAttempts));
         exit;
     }
 
-    // ---------- SUCCESS — clear counters, set session ----------
+    // ---------- LOGIN SUCCESS ----------
     unset($_SESSION[$lockKey], $_SESSION[$attemptsKey]);
 
-    $_SESSION['student_id']       = $student['student_id'];
-    $_SESSION['student_name']     = $student['first_name'] . ' ' . $student['last_name'];
-    $_SESSION['student_email']    = $student['email'];
-    $_SESSION['is_temp_password'] = (int) $act['is_temp_password']; // ✅ cast to int
+    $_SESSION['user_id']    = $user['user_id'];
+    $_SESSION['user_name']  = $user['full_name'];
+    $_SESSION['user_email'] = $user['email'];
+    $_SESSION['role']       = $user['role'];
+
+    if ($user['role'] === 'student') {
+        $_SESSION['is_temp_password'] = (int) $user['is_temp_password'];
+    }
 
     echo json_encode([
         "success"  => true,
         "message"  => "Login successful.",
-        "redirect" => "dashboard.php"
+        "redirect" => $user['redirect']
     ]);
     exit;
 }
 
-// Redirect if already logged in
-if (isset($_SESSION['student_id'])) {
-    header("Location: dashboard.php");
-    exit;
+// ================= REDIRECT IF ALREADY LOGGED IN =================
+if (isset($_SESSION['role'])) {
+    switch ($_SESSION['role']) {
+        case 'student':   header("Location: dashboard.php");  exit;
+        case 'counselor': header("Location: counselor.php");  exit;
+        case 'admin':     header("Location: admin.php");      exit;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -128,7 +131,7 @@ if (isset($_SESSION['student_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNITYCARE | Student Login</title>
+    <title>UNITYCARE | Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -227,10 +230,10 @@ if (isset($_SESSION['student_id'])) {
     <section class="auth-right">
         <div class="auth-box">
 
-            <h2 class="auth-title">Student Login</h2>
+            <h2 class="auth-title">Login</h2>
             <p class="auth-subtitle">Welcome back! Please sign in to continue.</p>
 
-            <form class="auth-form" id="loginForm" onsubmit="event.preventDefault(); loginStudent();">
+            <form class="auth-form" id="loginForm" onsubmit="event.preventDefault(); loginUser();">
 
                 <label class="auth-label">Email</label>
                 <input class="auth-input" id="email" type="email" placeholder="Enter your email" required>
@@ -332,7 +335,7 @@ function startCountdown(seconds) {
     countdownInterval = setInterval(tick, 1000);
 }
 
-function loginStudent() {
+function loginUser() {
     const email    = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const btn      = document.getElementById('loginBtn');

@@ -1,10 +1,12 @@
 <?php
-$host = "localhost";
-$db   = "gcs_db";
-$user = "root";
-$pass = "";
+if (session_status() === PHP_SESSION_NONE) session_start();
 
-$conn = new mysqli($host, $user, $pass, $db);
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: slogin.php");
+    exit;
+}
+
+$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
 
 // ── KPI COUNTS ──
 $students     = $conn->query("SELECT COUNT(*) AS c FROM students")->fetch_assoc()['c'];
@@ -38,10 +40,10 @@ $conn->close();
 <title>UNITYCARE | Administrator Dashboard</title>
 
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body class="body">
 
 <!-- ================= SIDEBAR ================= -->
@@ -81,6 +83,7 @@ $conn->close();
     <a href="ausers.php"><i class="fa fa-users"></i> Users</a>
     <a href="astudents.php"><i class="fa fa-user-graduate"></i> Students</a>
     <a href="acounselors.php"><i class="fa fa-user-doctor"></i> Counselors</a>
+    <a href="aadmins.php"><i class="fa fa-user-shield"></i> Admins</a>
     <a href="aappointments.php"><i class="fa fa-calendar"></i> Appointments</a>
 
     <p class="sidebar-title">SYSTEM</p>
@@ -204,6 +207,21 @@ $conn->close();
 
   </section>
 
+  <!-- LOGOUT MODAL -->
+<div class="logout-overlay" id="logoutOverlay">
+  <div class="logout-modal">
+    <div class="logout-icon">
+      <i class="fa fa-right-from-bracket"></i>
+    </div>
+    <h3>Logout</h3>
+    <p>Are you sure you want to logout?</p>
+    <div class="logout-actions">
+      <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+      <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+    </div>
+  </div>
+</div>
+
 </main>
 
 <script>
@@ -222,10 +240,19 @@ function toggleTheme(){
   );
 }
 
-function logout(){
-  localStorage.clear();
-  window.location.href = "index.php";
+function logout() {
+  document.getElementById('logoutOverlay').classList.add('show');
 }
+function closeLogout() {
+  document.getElementById('logoutOverlay').classList.remove('show');
+}
+function confirmLogout() {
+    window.location.href = 'logout.php?role=admin';
+}
+
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeLogout();
+});
 
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
