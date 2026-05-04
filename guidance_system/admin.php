@@ -83,7 +83,6 @@ $conn->close();
     <a href="ausers.php"><i class="fa fa-users"></i> Users</a>
     <a href="astudents.php"><i class="fa fa-user-graduate"></i> Students</a>
     <a href="acounselors.php"><i class="fa fa-user-doctor"></i> Counselors</a>
-    <a href="aadmins.php"><i class="fa fa-user-shield"></i> Admins</a>
     <a href="aappointments.php"><i class="fa fa-calendar"></i> Appointments</a>
 
     <p class="sidebar-title">SYSTEM</p>
