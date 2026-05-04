@@ -221,19 +221,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     // ---------- PROMOTE ALL STUDENTS ----------
     if ($action === 'promote_all') {
-        /*
-          Promotion logic:
-          1. Archive all current 4th Year students (they graduate)
-          2. Promote 3rd Year → 4th Year
-          3. Promote 2nd Year → 3rd Year
-          4. Promote 1st Year → 2nd Year
-          (New 1st Years for upcoming SY are added manually with the new prefix)
-        */
-
         $conn->begin_transaction();
 
         try {
-            // Step 1: Graduate (archive) all 4th Years
             $graduateResult = $conn->query("
                 UPDATE students
                 SET archived      = 1,
@@ -244,21 +234,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             if (!$graduateResult) throw new Exception($conn->error);
             $graduated = $conn->affected_rows;
 
-            // Step 2: Promote 3rd → 4th
             $r2 = $conn->query("UPDATE students SET year_level = '4th Year' WHERE year_level = '3rd Year' AND archived = 0");
             if (!$r2) throw new Exception($conn->error);
 
-            // Step 3: Promote 2nd → 3rd
             $r3 = $conn->query("UPDATE students SET year_level = '3rd Year' WHERE year_level = '2nd Year' AND archived = 0");
             if (!$r3) throw new Exception($conn->error);
 
-            // Step 4: Promote 1st → 2nd
             $r4 = $conn->query("UPDATE students SET year_level = '2nd Year' WHERE year_level = '1st Year' AND archived = 0");
             if (!$r4) throw new Exception($conn->error);
 
             $conn->commit();
-
-            $promoted = $conn->query("SELECT COUNT(*) AS cnt FROM students WHERE archived = 0")->fetch_assoc()['cnt'];
 
             echo json_encode([
                 "success"   => true,
@@ -439,7 +424,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         .aStudents-table-empty   { text-align: center; padding: 20px; color: #888; }
         .aStudents-table-error   { text-align: center; padding: 20px; color: red; }
 
-        /* ── Archive header button ── */
+        /* ── Archive header button (matches acounselors style) ── */
         .aStudents-archive-btn {
             background: #f3f4f6;
             color: #6b7280;
@@ -483,6 +468,41 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         }
         .aStudents-promote-btn:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(21,128,61,0.25); }
 
+        /* ── Add button (matches acounselors) ── */
+        .aStudents-add-btn {
+            background: linear-gradient(135deg, #113F67, #4988C4);
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: var(--radius-md, 10px);
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+        }
+        .aStudents-add-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(17,63,103,0.25); }
+
+        /* ── CSV buttons (matches acounselors) ── */
+        .aStudents-csv-actions { display: flex; gap: 8px; }
+        .aStudents-btn-import, .aStudents-btn-export {
+            padding: 10px 14px;
+            border-radius: var(--radius-md, 10px);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+        .aStudents-btn-import { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
+        .aStudents-btn-import:hover { background: #dcfce7; }
+        .aStudents-btn-export { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .aStudents-btn-export:hover { background: #dbeafe; }
+
         /* ── Toast ── */
         .aStudents-toast {
             position: fixed;
@@ -503,7 +523,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         }
         .aStudents-toast.show { opacity: 1; transform: translateY(0); }
 
-        /* ── Shared modal base (reused for archives + promote confirm) ── */
+        /* ── Modal (same as acounselors) ── */
         .aStudents-modal {
             display: none;
             position: fixed;
@@ -518,7 +538,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         .aStudents-modal-content {
             width: 92%;
             max-width: 700px;
-            background: rgba(255,255,255,0.95);
+            background: rgba(255,255,255,0.9);
             backdrop-filter: blur(18px);
             border-radius: 18px;
             padding: 24px;
@@ -550,13 +570,18 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
             flex-shrink: 0;
         }
         .aStudents-modal-close:hover { background: rgba(17,63,103,0.14); }
+
+        /* ── Modal footer (matches acounselors layout) ── */
         .aStudents-modal-footer {
             margin-top: 22px;
             display: flex;
             justify-content: flex-end;
+            align-items: center;
             gap: 8px;
             flex-wrap: wrap;
         }
+        .aStudents-modal-footer .left-actions { margin-right: auto; display: flex; gap: 8px; }
+
         .aStudents-sec-label {
             font-size: 0.72rem;
             font-weight: 700;
@@ -582,7 +607,19 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         }
         .aStudents-field input:focus,
         .aStudents-field select:focus { border-color: #4988C4; box-shadow: 0 0 0 3px rgba(73,136,196,0.15); }
+        .aStudents-field input[readonly],
+        .aStudents-field input.readonly-field {
+            background: rgba(243,244,246,0.8);
+            color: var(--text-light);
+            cursor: default;
+        }
+        .aStudents-field input.editable-field {
+            background: rgba(255,255,255,0.9);
+            color: var(--text);
+            cursor: text;
+        }
 
+        /* ── Buttons (same palette as acounselors) ── */
         .aStudents-btn-cancel {
             padding: 9px 15px;
             border-radius: 10px;
@@ -595,6 +632,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
             transition: background 0.15s;
         }
         .aStudents-btn-cancel:hover { background: #e5e7eb; }
+
         .aStudents-btn-save {
             padding: 9px 18px;
             border-radius: 10px;
@@ -607,6 +645,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
             transition: opacity 0.15s, transform 0.15s;
         }
         .aStudents-btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
+
         .aStudents-btn-danger {
             padding: 9px 15px;
             border-radius: 10px;
@@ -619,21 +658,28 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
             transition: background 0.15s;
         }
         .aStudents-btn-danger:hover { background: #fee2e2; }
-        .aStudents-btn-success-sm {
-            background: #f0fdf4;
-            color: #15803d;
-            border: 1px solid #86efac;
-            padding: 5px 12px;
-            border-radius: var(--radius-sm, 6px);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.15s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
+
+        /* ── View button in table ── */
+        .aStudents-btn-view {
+            background: #eef4ff; color: #113F67; border: 1px solid #c7d8f5;
+            padding: 5px 12px; border-radius: var(--radius-sm, 6px);
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            transition: 0.15s; display: inline-flex; align-items: center; gap: 5px;
         }
-        .aStudents-btn-success-sm:hover { background: #dcfce7; }
+        .aStudents-btn-view:hover { background: #dbe9ff; }
+
+        /* ── Restore button in archive table ── */
+        .aStudents-btn-restore {
+            background: #f0fdf4; color: #15803d; border: 1px solid #86efac;
+            padding: 5px 12px; border-radius: var(--radius-sm, 6px);
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            transition: 0.15s; display: inline-flex; align-items: center; gap: 5px;
+        }
+        .aStudents-btn-restore:hover { background: #dcfce7; }
+
+        /* ── Badge ── */
+        .aBadge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
+        .aBadge-archived { background: #f3f4f6; color: #6b7280; }
 
         /* ── Archive empty state ── */
         .aArchive-empty {
@@ -643,6 +689,22 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         }
         .aArchive-empty i { font-size: 2.5rem; opacity: 0.3; margin-bottom: 12px; display: block; }
         .aArchive-empty p { margin: 0; font-size: 0.95rem; }
+
+        /* ── Archive search ── */
+        .aArchive-search {
+            width: 100%;
+            padding: 9px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(37,99,235,0.18);
+            outline: none;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            color: var(--text);
+            background: rgba(255,255,255,0.9);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .aArchive-search:focus { border-color: #4988C4; box-shadow: 0 0 0 3px rgba(73,136,196,0.15); }
 
         /* ── Promote confirm box ── */
         .promote-confirm-box {
@@ -674,7 +736,6 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         .chip-graduate { background: #fee2e2; color: #b91c1c; }
         .chip-promote  { background: #dbeafe; color: #1d4ed8; }
         .chip-arrow    { color: #9ca3af; font-size: 0.75rem; }
-
         .promote-warning {
             margin-top: 12px;
             font-size: 0.82rem;
@@ -685,30 +746,50 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         }
         .promote-warning i { margin-top: 2px; flex-shrink: 0; }
 
-        /* ── Archive search ── */
-        .aArchive-search {
-            width: 100%;
-            padding: 9px 14px;
-            border-radius: 10px;
-            border: 1px solid rgba(37,99,235,0.18);
-            outline: none;
-            font-size: 0.9rem;
-            margin-bottom: 16px;
-            box-sizing: border-box;
-            color: var(--text);
-            background: rgba(255,255,255,0.9);
-            transition: border-color 0.2s, box-shadow 0.2s;
+        /* ── Pagination ── */
+        .aStudents-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 18px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        .aArchive-search:focus { border-color: #4988C4; box-shadow: 0 0 0 3px rgba(73,136,196,0.15); }
+        .aStudents-pagination-info {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        .aStudents-pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .aStudents-page-btn {
+            min-width: 34px;
+            height: 34px;
+            padding: 0 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(37,99,235,0.15);
+            background: #fff;
+            color: var(--text);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .aStudents-page-btn:hover:not(:disabled) { background: rgba(73,136,196,0.1); border-color: #4988C4; color: #113F67; }
+        .aStudents-page-btn.active { background: linear-gradient(135deg, #113F67, #4988C4); color: #fff; border-color: transparent; font-weight: 700; }
+        .aStudents-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-        /* ── Badge ── */
-        .aBadge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
-        .aBadge-archived { background: #f3f4f6; color: #6b7280; }
-
-        /* Archive table loading/empty/error */
+        /* ── Archive table states ── */
         .archive-loading { text-align: center; padding: 30px; color: #888; }
         .archive-empty   { text-align: center; padding: 30px; color: #888; }
         .archive-error   { text-align: center; padding: 30px; color: red; }
+
+        button:disabled { opacity: 0.4; cursor: not-allowed !important; transform: none !important; }
     </style>
 </head>
 <body>
@@ -821,29 +902,29 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
                 <p class="aStudents-muted">Complete list of registered students</p>
             </div>
             <div class="aStudents-record-actions">
-                <!-- Archive button (matches aadmins.php style) -->
                 <button onclick="openArchivesModal()" class="aStudents-archive-btn">
                     <i class="fa fa-box-archive"></i>
                     Graduated
                     <span class="archive-count" id="archiveCountBadge"><?= $archivedCount ?></span>
                 </button>
 
-                <!-- Promote All button -->
                 <button onclick="openPromoteModal()" class="aStudents-promote-btn">
                     <i class="fa fa-angles-up"></i> Promote All Students
                 </button>
 
-                <button onclick="openAddStudentModal()" class="aStudents-add-btn">
-                    <i class="fa fa-user-plus"></i> Add Student
-                </button>
                 <div class="aStudents-csv-actions">
-                    <button class="btn-import" onclick="triggerImportCsv()">
+                    <button class="aStudents-btn-import" onclick="triggerImportCsv()">
                         <i class="fa fa-file-import"></i> Import CSV
                     </button>
-                    <button class="btn-export" onclick="exportStudentCsv()">
+                    <button class="aStudents-btn-export" onclick="exportStudentCsv()">
                         <i class="fa fa-file-export"></i> Export CSV
                     </button>
                 </div>
+
+                <button onclick="openAddStudentModal()" class="aStudents-add-btn">
+                    <i class="fa fa-user-plus"></i> Add Student
+                </button>
+
             </div>
         </div>
 
@@ -872,197 +953,204 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
                 </tbody>
             </table>
         </div>
+
+        <!-- ── Pagination ── -->
+        <div class="aStudents-pagination" id="paginationWrapper" style="display:none;">
+            <div class="aStudents-pagination-info" id="paginationInfo"></div>
+            <div class="aStudents-pagination-controls" id="paginationControls"></div>
+        </div>
+
     </section>
 </main>
+
 
 <!-- ================= ADD STUDENT MODAL ================= -->
 <div id="studentModal" class="aStudents-modal">
     <div class="aStudents-modal-content">
         <div class="aStudents-modal-header">
             <div>
-                <h3><i class="fa fa-user-graduate"></i> Add New Student</h3>
+                <h3><i class="fa fa-user-graduate" style="margin-right:6px;opacity:.7"></i>Add New Student</h3>
                 <p>Fill in all the student's information below</p>
             </div>
             <button class="aStudents-modal-close" onclick="closeStudentModal()">✕</button>
         </div>
-        <div class="aStudents-modal-body">
-            <div class="aStudents-sec-label">PERSONAL INFORMATION</div>
-            <div class="aStudents-field-grid">
-                <div class="aStudents-field">
-                    <label>First Name</label>
-                    <input type="text" id="firstName" placeholder="e.g. Juan">
-                </div>
-                <div class="aStudents-field">
-                    <label>Last Name</label>
-                    <input type="text" id="lastName" placeholder="e.g. Dela Cruz">
-                </div>
-                <div class="aStudents-field">
-                    <label>Gender</label>
-                    <select id="gender">
-                        <option value="" disabled selected>Select Gender</option>
-                        <option>Male</option>
-                        <option>Female</option>
-                        <option>Prefer not to say</option>
-                    </select>
-                </div>
-                <div class="aStudents-field">
-                    <label>Birthday</label>
-                    <input type="date" id="birthday">
-                </div>
-                <div class="aStudents-field">
-                    <label>Age</label>
-                    <input type="number" id="studentAge" readonly>
-                </div>
+
+        <div class="aStudents-sec-label">PERSONAL INFORMATION</div>
+        <div class="aStudents-field-grid">
+            <div class="aStudents-field">
+                <label>First Name</label>
+                <input type="text" id="firstName" placeholder="e.g. Juan">
             </div>
-            <div class="aStudents-sec-label">ACADEMIC INFORMATION</div>
-            <div class="aStudents-field-grid">
-                <div class="aStudents-field">
-                    <label>Year Level</label>
-                    <select id="yearLevel">
-                        <option value="" disabled selected>Select Year</option>
-                        <option>1st Year</option>
-                        <option>2nd Year</option>
-                        <option>3rd Year</option>
-                        <option>4th Year</option>
-                    </select>
-                </div>
-                <div class="aStudents-field aStudents-id-field">
-                    <label>Student ID</label>
-                    <input type="text" id="studentId" placeholder="Select a year level first" readonly>
-                    <span class="aStudents-id-badge" id="studentIdBadge">
-                        <i class="fa fa-circle-info"></i> Auto-generated based on year level
-                    </span>
-                </div>
-                <div class="aStudents-field full">
-                    <label>Course</label>
-                    <select id="course">
-                        <option value="" disabled selected>Select Course</option>
-                        <option>AB Psychology</option>
-                        <option>BSBA</option>
-                        <option>BSA</option>
-                        <option>BEEd</option>
-                        <option>BSEd</option>
-                        <option>BSHM</option>
-                        <option>BSIT</option>
-                        <option>BSCS</option>
-                        <option>BSN</option>
-                        <option>BSECE</option>
-                    </select>
-                </div>
-                <div class="aStudents-field full">
-                    <label>Email Address</label>
-                    <input type="email" id="email" placeholder="e.g. juan@email.com">
-                </div>
+            <div class="aStudents-field">
+                <label>Last Name</label>
+                <input type="text" id="lastName" placeholder="e.g. Dela Cruz">
+            </div>
+            <div class="aStudents-field">
+                <label>Gender</label>
+                <select id="gender">
+                    <option value="" disabled selected>Select Gender</option>
+                    <option>Male</option>
+                    <option>Female</option>
+                    <option>Prefer not to say</option>
+                </select>
+            </div>
+            <div class="aStudents-field">
+                <label>Birthday</label>
+                <input type="date" id="birthday">
+            </div>
+            <div class="aStudents-field">
+                <label>Age</label>
+                <input type="number" id="studentAge" readonly>
             </div>
         </div>
+
+        <div class="aStudents-sec-label">ACADEMIC INFORMATION</div>
+        <div class="aStudents-field-grid">
+            <div class="aStudents-field">
+                <label>Year Level</label>
+                <select id="yearLevel">
+                    <option value="" disabled selected>Select Year</option>
+                    <option>1st Year</option>
+                    <option>2nd Year</option>
+                    <option>3rd Year</option>
+                    <option>4th Year</option>
+                </select>
+            </div>
+            <div class="aStudents-field aStudents-id-field">
+                <label>Student ID</label>
+                <input type="text" id="studentId" placeholder="Select a year level first" readonly>
+                <span class="aStudents-id-badge" id="studentIdBadge">
+                    <i class="fa fa-circle-info"></i> Auto-generated based on year level
+                </span>
+            </div>
+            <div class="aStudents-field full">
+                <label>Course</label>
+                <select id="course">
+                    <option value="" disabled selected>Select Course</option>
+                    <option>AB Psychology</option>
+                    <option>BSBA</option>
+                    <option>BSA</option>
+                    <option>BEEd</option>
+                    <option>BSEd</option>
+                    <option>BSHM</option>
+                    <option>BSIT</option>
+                    <option>BSCS</option>
+                    <option>BSN</option>
+                    <option>BSECE</option>
+                </select>
+            </div>
+            <div class="aStudents-field full">
+                <label>Email Address</label>
+                <input type="email" id="email" placeholder="e.g. juan@email.com">
+            </div>
+        </div>
+
         <div class="aStudents-modal-footer">
             <button class="aStudents-btn-cancel" onclick="closeStudentModal()">Cancel</button>
-            <button class="aStudents-btn-save" onclick="saveStudent()">Save Student</button>
+            <button class="aStudents-btn-save" onclick="saveStudent()">
+                <i class="fa fa-plus"></i> Save Student
+            </button>
         </div>
     </div>
 </div>
 
 <input type="file" id="importCsvInput" accept=".csv" class="aStudents-hidden">
 
+
 <!-- ================= VIEW / EDIT STUDENT MODAL ================= -->
 <div id="viewStudentModal" class="aStudents-modal">
     <div class="aStudents-modal-content">
         <div class="aStudents-modal-header">
             <div>
-                <h3><i class="fa fa-user-graduate"></i> Student Details</h3>
+                <h3><i class="fa fa-user-graduate" style="margin-right:6px;opacity:.7"></i>Student Details</h3>
                 <p id="viewModalSubtitle">Viewing student information</p>
             </div>
             <button class="aStudents-modal-close" onclick="closeViewModal()">✕</button>
         </div>
-        <div class="aStudents-modal-body">
 
-            <input type="hidden" id="originalStudentId">
+        <input type="hidden" id="originalStudentId">
 
-            <div class="aStudents-sec-label">PERSONAL INFORMATION</div>
-            <div class="aStudents-field-grid">
-                <div class="aStudents-field">
-                    <label>First Name</label>
-                    <input type="text" id="viewFirstName" readonly>
-                </div>
-                <div class="aStudents-field">
-                    <label>Last Name</label>
-                    <input type="text" id="viewLastName" readonly>
-                </div>
-                <div class="aStudents-field">
-                    <label>Gender</label>
-                    <input type="text" id="viewGender" readonly>
-                    <select id="editGender" class="aStudents-hidden">
-                        <option>Male</option>
-                        <option>Female</option>
-                        <option>Prefer not to say</option>
-                    </select>
-                </div>
-                <div class="aStudents-field">
-                    <label>Birthday</label>
-                    <input type="text" id="viewBirthday" readonly>
-                    <input type="date" id="editBirthday" class="aStudents-hidden">
-                </div>
-                <div class="aStudents-field">
-                    <label>Age</label>
-                    <input type="text" id="viewAge" readonly>
-                </div>
+        <div class="aStudents-sec-label">PERSONAL INFORMATION</div>
+        <div class="aStudents-field-grid">
+            <div class="aStudents-field">
+                <label>First Name</label>
+                <input type="text" id="viewFirstName" class="readonly-field" readonly>
             </div>
-
-            <div class="aStudents-sec-label">ACADEMIC INFORMATION</div>
-            <div class="aStudents-field-grid">
-                <div class="aStudents-field">
-                    <label>Student ID</label>
-                    <input type="text" id="viewStudentId" readonly
-                           style="background: var(--input-bg, #f0f2f5); cursor: not-allowed;">
-                </div>
-                <div class="aStudents-field">
-                    <label>Year Level</label>
-                    <input type="text" id="viewYear" readonly
-                           style="background: var(--input-bg, #f0f2f5); cursor: not-allowed;">
-                </div>
-                <div class="aStudents-field">
-                    <label>Course</label>
-                    <input type="text" id="viewCourse" readonly>
-                    <select id="editCourse" class="aStudents-hidden">
-                        <option>AB Psychology</option>
-                        <option>BSBA</option>
-                        <option>BSA</option>
-                        <option>BEEd</option>
-                        <option>BSEd</option>
-                        <option>BSHM</option>
-                        <option>BSIT</option>
-                        <option>BSCS</option>
-                        <option>BSN</option>
-                        <option>BSECE</option>
-                    </select>
-                </div>
-                <div class="aStudents-field">
-                    <label>Email Address</label>
-                    <input type="text" id="viewEmail" readonly>
-                </div>
+            <div class="aStudents-field">
+                <label>Last Name</label>
+                <input type="text" id="viewLastName" class="readonly-field" readonly>
+            </div>
+            <div class="aStudents-field">
+                <label>Gender</label>
+                <input type="text" id="viewGender" class="readonly-field" readonly>
+                <select id="editGender" class="aStudents-hidden">
+                    <option>Male</option>
+                    <option>Female</option>
+                    <option>Prefer not to say</option>
+                </select>
+            </div>
+            <div class="aStudents-field">
+                <label>Birthday</label>
+                <input type="text" id="viewBirthday" class="readonly-field" readonly>
+                <input type="date" id="editBirthday" class="aStudents-hidden">
+            </div>
+            <div class="aStudents-field">
+                <label>Age</label>
+                <input type="text" id="viewAge" class="readonly-field" readonly>
             </div>
         </div>
 
-        <div class="aStudents-modal-footer" style="justify-content: space-between;">
-            <!-- Left: Archive single student -->
-            <div>
+        <div class="aStudents-sec-label">ACADEMIC INFORMATION</div>
+        <div class="aStudents-field-grid">
+            <div class="aStudents-field">
+                <label>Student ID</label>
+                <input type="text" id="viewStudentId" class="readonly-field" readonly>
+            </div>
+            <div class="aStudents-field">
+                <label>Year Level</label>
+                <input type="text" id="viewYear" class="readonly-field" readonly>
+            </div>
+            <div class="aStudents-field">
+                <label>Course</label>
+                <input type="text" id="viewCourse" class="readonly-field" readonly>
+                <select id="editCourse" class="aStudents-hidden">
+                    <option>AB Psychology</option>
+                    <option>BSBA</option>
+                    <option>BSA</option>
+                    <option>BEEd</option>
+                    <option>BSEd</option>
+                    <option>BSHM</option>
+                    <option>BSIT</option>
+                    <option>BSCS</option>
+                    <option>BSN</option>
+                    <option>BSECE</option>
+                </select>
+            </div>
+            <div class="aStudents-field">
+                <label>Email Address</label>
+                <input type="text" id="viewEmail" class="readonly-field" readonly>
+            </div>
+        </div>
+
+        <div class="aStudents-modal-footer">
+            <!-- Left: Archive -->
+            <div class="left-actions">
                 <button class="aStudents-btn-danger" id="archiveSingleBtn" onclick="archiveSingleStudent()">
-                    <i class="fa fa-box-archive"></i> Archive Student
+                    <i class="fa fa-box-archive"></i> Archive
                 </button>
             </div>
             <!-- Right: Close / Edit / Save -->
-            <div style="display:flex; gap:8px;">
-                <button class="aStudents-btn-cancel" onclick="closeViewModal()">Close</button>
-                <button class="aStudents-btn-cancel" id="editBtn" onclick="enableEdit()">
-                    <i class="fa fa-pen"></i> Edit
-                </button>
-                <button class="aStudents-btn-save aStudents-hidden" id="saveEditBtn" onclick="saveEdit()">
-                    Save Changes
-                </button>
-            </div>
+            <button class="aStudents-btn-cancel" onclick="closeViewModal()">Close</button>
+            <button class="aStudents-btn-cancel" id="editBtn" onclick="enableEdit()">
+                <i class="fa fa-pen"></i> Edit
+            </button>
+            <button class="aStudents-btn-save aStudents-hidden" id="saveEditBtn" onclick="saveEdit()">
+                <i class="fa fa-floppy-disk"></i> Save
+            </button>
         </div>
     </div>
 </div>
+
 
 <!-- ================= PROMOTE CONFIRM MODAL ================= -->
 <div id="promoteModal" class="aStudents-modal">
@@ -1102,6 +1190,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         </div>
     </div>
 </div>
+
 
 <!-- ================= ARCHIVES (GRADUATED) MODAL ================= -->
 <div id="archivesModal" class="aStudents-modal">
@@ -1147,6 +1236,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
     </div>
 </div>
 
+
 <!-- ================= TOAST ================= -->
 <div class="aStudents-toast" id="toast"></div>
 
@@ -1163,6 +1253,8 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
     </div>
   </div>
 </div>
+
+
 <!-- ================= SCRIPT ================= -->
 <script>
 
@@ -1192,6 +1284,15 @@ document.addEventListener("click", e => {
     const btn  = document.querySelector(".sidebar-settingsButton");
     if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("show");
 });
+
+// ================= DATE FORMATTER =================
+// Converts YYYY-MM-DD  →  MM/DD/YYYY  (Philippine standard display)
+function formatBirthday(dateStr) {
+    if (!dateStr) return '—';
+    const [y, m, d] = dateStr.split('-');
+    if (!y || !m || !d) return dateStr;
+    return `${m}-${d}-${y}`;
+}
 
 // ================= TOAST =================
 function showToast(msg, type = 'success') {
@@ -1236,6 +1337,118 @@ document.addEventListener('click', e => {
     if (!e.target.closest('.aStudents-sort-wrapper')) dd.classList.remove('show');
 });
 
+// ================= PAGINATION =================
+const PAGE_SIZE = 20;
+let allStudentsData = [];
+let currentPage = 1;
+
+function renderPage(page) {
+    currentPage = page;
+    const tbody = document.getElementById('studentsTableBody');
+    tbody.innerHTML = '';
+
+    const total = allStudentsData.length;
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+    const start = (page - 1) * PAGE_SIZE;
+    const end   = Math.min(start + PAGE_SIZE, total);
+    const pageData = allStudentsData.slice(start, end);
+
+    if (pageData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="aStudents-table-empty">No students found.</td></tr>`;
+        document.getElementById('paginationWrapper').style.display = 'none';
+        return;
+    }
+
+    pageData.forEach(s => {
+        const row = document.createElement('tr');
+        row.dataset.id        = s.student_id;
+        row.dataset.firstName = s.first_name;
+        row.dataset.lastName  = s.last_name;
+        row.dataset.email     = s.email;
+        row.dataset.gender    = s.gender;
+        row.dataset.birthday     = s.birthday;          // raw YYYY-MM-DD kept for edit input
+        row.dataset.age       = s.age;
+        row.dataset.year      = s.year_level;
+        row.dataset.course    = s.course;
+
+        row.innerHTML = `
+            <td>${s.student_id}</td>
+            <td>${s.last_name}</td>
+            <td>${s.first_name}</td>
+            <td>${s.email}</td>
+            <td>${s.gender}</td>
+            <td>${formatBirthday(s.birthday)}</td>
+            <td>${s.age}</td>
+            <td>${s.year_level}</td>
+            <td>${s.course}</td>
+            <td>
+                <button class="aStudents-btn-view" onclick="viewStudent(this)">
+                    <i class="fa fa-eye"></i> View
+                </button>
+            </td>`;
+        tbody.appendChild(row);
+    });
+
+    // Show/hide pagination
+    const wrapper = document.getElementById('paginationWrapper');
+    if (total <= PAGE_SIZE) {
+        wrapper.style.display = 'none';
+        return;
+    }
+    wrapper.style.display = 'flex';
+
+    // Info text
+    document.getElementById('paginationInfo').textContent =
+        `Showing ${start + 1}–${end} of ${total} student${total !== 1 ? 's' : ''}`;
+
+    // Build page buttons
+    const controls = document.getElementById('paginationControls');
+    controls.innerHTML = '';
+
+    // Prev
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'aStudents-page-btn';
+    prevBtn.innerHTML = '<i class="fa fa-chevron-left"></i>';
+    prevBtn.disabled  = page === 1;
+    prevBtn.onclick   = () => renderPage(page - 1);
+    controls.appendChild(prevBtn);
+
+    // Page numbers with ellipsis
+    const makePageBtn = (num) => {
+        const btn = document.createElement('button');
+        btn.className = 'aStudents-page-btn' + (num === page ? ' active' : '');
+        btn.textContent = num;
+        btn.onclick = () => renderPage(num);
+        controls.appendChild(btn);
+    };
+    const makeEllipsis = () => {
+        const span = document.createElement('span');
+        span.textContent = '…';
+        span.style.cssText = 'padding:0 4px;color:var(--text-light);font-size:.85rem;align-self:center;';
+        controls.appendChild(span);
+    };
+
+    if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) makePageBtn(i);
+    } else {
+        makePageBtn(1);
+        if (page > 3) makeEllipsis();
+        const rangeStart = Math.max(2, page - 1);
+        const rangeEnd   = Math.min(totalPages - 1, page + 1);
+        for (let i = rangeStart; i <= rangeEnd; i++) makePageBtn(i);
+        if (page < totalPages - 2) makeEllipsis();
+        makePageBtn(totalPages);
+    }
+
+    // Next
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'aStudents-page-btn';
+    nextBtn.innerHTML = '<i class="fa fa-chevron-right"></i>';
+    nextBtn.disabled  = page === totalPages;
+    nextBtn.onclick   = () => renderPage(page + 1);
+    controls.appendChild(nextBtn);
+}
+
 // ================= LOAD ACTIVE STUDENTS =================
 let searchTimer = null;
 
@@ -1256,42 +1469,18 @@ function loadStudents() {
     const tbody = document.getElementById('studentsTableBody');
     tbody.innerHTML = `<tr><td colspan="10" class="aStudents-table-loading">
         <i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>`;
+    document.getElementById('paginationWrapper').style.display = 'none';
 
     fetch(`astudents.php?${params.toString()}`)
         .then(res => res.json())
         .then(json => {
-            tbody.innerHTML = '';
-            if (!json.success || json.data.length === 0) {
+            if (!json.success) {
                 tbody.innerHTML = `<tr><td colspan="10" class="aStudents-table-empty">No students found.</td></tr>`;
+                allStudentsData = [];
                 return;
             }
-            json.data.forEach(s => {
-                const row = document.createElement('tr');
-                row.dataset.id        = s.student_id;
-                row.dataset.firstName = s.first_name;
-                row.dataset.lastName  = s.last_name;
-                row.dataset.email     = s.email;
-                row.dataset.gender    = s.gender;
-                row.dataset.birthday  = s.birthday;
-                row.dataset.age       = s.age;
-                row.dataset.year      = s.year_level;
-                row.dataset.course    = s.course;
-
-                row.innerHTML = `
-                    <td>${s.student_id}</td>
-                    <td>${s.last_name}</td>
-                    <td>${s.first_name}</td>
-                    <td>${s.email}</td>
-                    <td>${s.gender}</td>
-                    <td>${s.birthday}</td>
-                    <td>${s.age}</td>
-                    <td>${s.year_level}</td>
-                    <td>${s.course}</td>
-                    <td>
-                        <button class="aStudents-btn aStudents-btn-sm" onclick="viewStudent(this)"> <i class="fa fa-eye"></i> View</button>
-                    </td>`;
-                tbody.appendChild(row);
-            });
+            allStudentsData = json.data || [];
+            renderPage(1);
         })
         .catch(() => {
             tbody.innerHTML = `<tr><td colspan="10" class="aStudents-table-error">Failed to load students.</td></tr>`;
@@ -1432,12 +1621,14 @@ function triggerImportCsv() {
     document.getElementById('importCsvInput').click();
 }
 function exportStudentCsv() {
-    const table = document.querySelector('.aStudents-table');
-    const rows  = Array.from(table.querySelectorAll('thead tr, tbody tr'));
-    const csv   = rows.map(row => {
-        const cells = Array.from(row.querySelectorAll('th, td')).slice(0, 9);
-        return cells.map(cell => `"${cell.innerText.replace(/"/g, '""')}"`).join(',');
-    }).join('\r\n');
+    // Export all data (not just current page)
+    if (!allStudentsData.length) { showToast('No data to export.', 'error'); return; }
+    const headers = ['Student ID','Last Name','First Name','Email','Gender','Birthday','Age','Year Level','Course'];
+    const rows = [headers, ...allStudentsData.map(s => [
+        s.student_id, s.last_name, s.first_name, s.email,
+        s.gender, formatBirthday(s.birthday), s.age, s.year_level, s.course
+    ])];
+    const csv  = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -1457,12 +1648,14 @@ function viewStudent(btn) {
     document.getElementById('viewLastName').value      = row.dataset.lastName;
     document.getElementById('viewEmail').value         = row.dataset.email;
     document.getElementById('viewGender').value        = row.dataset.gender;
-    document.getElementById('viewBirthday').value      = row.dataset.birthday;
+    document.getElementById('viewBirthday').value      = formatBirthday(row.dataset.birthday);
     document.getElementById('viewAge').value           = row.dataset.age;
     document.getElementById('viewYear').value          = row.dataset.year;
     document.getElementById('viewCourse').value        = row.dataset.course;
 
     setViewMode();
+    document.getElementById('viewModalSubtitle').innerText =
+        `Viewing info for ${row.dataset.firstName} ${row.dataset.lastName}`;
     document.getElementById('viewStudentModal').classList.add('open');
 }
 
@@ -1474,11 +1667,12 @@ function setViewMode() {
     document.getElementById('viewCourse').classList.remove('aStudents-hidden');
     document.getElementById('editCourse').classList.add('aStudents-hidden');
 
-    document.getElementById('viewFirstName').readOnly = true;
-    document.getElementById('viewLastName').readOnly  = true;
-    document.getElementById('viewEmail').readOnly     = true;
-    document.getElementById('viewStudentId').readOnly = true;
-    document.getElementById('viewAge').readOnly       = true;
+    ['viewFirstName','viewLastName','viewEmail','viewGender','viewBirthday','viewAge','viewCourse'].forEach(id => {
+        const el = document.getElementById(id);
+        el.readOnly = true;
+        el.classList.remove('editable-field');
+        el.classList.add('readonly-field');
+    });
 
     document.getElementById('editBtn').classList.remove('aStudents-hidden');
     document.getElementById('saveEditBtn').classList.add('aStudents-hidden');
@@ -1487,7 +1681,11 @@ function setViewMode() {
 
 function enableEdit() {
     document.getElementById('editGender').value   = document.getElementById('viewGender').value;
-    document.getElementById('editBirthday').value = document.getElementById('viewBirthday').value;
+    // viewBirthday holds MM/DD/YYYY — convert back to YYYY-MM-DD for the date input
+    const bdParts = document.getElementById('viewBirthday').value.split('/');
+    document.getElementById('editBirthday').value = bdParts.length === 3
+        ? `${bdParts[2]}-${bdParts[0]}-${bdParts[1]}`
+        : document.getElementById('viewBirthday').value;
     document.getElementById('editCourse').value   = document.getElementById('viewCourse').value;
 
     document.getElementById('viewGender').classList.add('aStudents-hidden');
@@ -1497,9 +1695,12 @@ function enableEdit() {
     document.getElementById('viewCourse').classList.add('aStudents-hidden');
     document.getElementById('editCourse').classList.remove('aStudents-hidden');
 
-    document.getElementById('viewFirstName').readOnly = false;
-    document.getElementById('viewLastName').readOnly  = false;
-    document.getElementById('viewEmail').readOnly     = false;
+    ['viewFirstName','viewLastName','viewEmail'].forEach(id => {
+        const el = document.getElementById(id);
+        el.readOnly = false;
+        el.classList.remove('readonly-field');
+        el.classList.add('editable-field');
+    });
 
     document.getElementById('editBtn').classList.add('aStudents-hidden');
     document.getElementById('saveEditBtn').classList.remove('aStudents-hidden');
@@ -1575,12 +1776,8 @@ function archiveSingleStudent() {
 }
 
 // ================= PROMOTE ALL MODAL =================
-function openPromoteModal() {
-    document.getElementById('promoteModal').classList.add('open');
-}
-function closePromoteModal() {
-    document.getElementById('promoteModal').classList.remove('open');
-}
+function openPromoteModal()  { document.getElementById('promoteModal').classList.add('open'); }
+function closePromoteModal() { document.getElementById('promoteModal').classList.remove('open'); }
 document.getElementById('promoteModal').addEventListener('click', function(e) {
     if (e.target === this) closePromoteModal();
 });
@@ -1673,11 +1870,11 @@ function loadArchivedStudents(search) {
                     <td>${s.first_name}</td>
                     <td>${s.course}</td>
                     <td>${s.gender}</td>
-                    <td>${s.birthday}</td>
+                    <td>${formatBirthday(s.birthday)}</td>
                     <td>${graduatedDate}</td>
                     <td><span class="aBadge aBadge-archived">Graduated</span></td>
                     <td>
-                        <button class="aStudents-btn-success-sm"
+                        <button class="aStudents-btn-restore"
                             onclick="restoreStudent(${s.student_id}, '${s.first_name.replace(/'/g,"\\'")} ${s.last_name.replace(/'/g,"\\'")}', this)">
                             <i class="fa fa-rotate-left"></i> Restore
                         </button>
@@ -1736,6 +1933,7 @@ document.getElementById('importCsvInput').addEventListener('change', function ()
             if (json.success) loadStudents();
         })
         .catch(() => showToast("CSV import failed.", 'error'));
+    this.value = '';
 });
 </script>
 </body>
