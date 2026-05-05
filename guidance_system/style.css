@@ -497,7 +497,7 @@ i, svg {
   padding: 32px 40px 20px;
   display: flex;
   justify-content: space-between;
-  align-items: center; /* fixed */
+  align-items: center;
   gap: 24px;
   flex-wrap: wrap;
 }
@@ -546,13 +546,12 @@ i, svg {
 
   transition: var(--transition);
 }
-/* focus state */
+
 .topbar-searchBox:focus-within {
   border-color: var(--primary);
   box-shadow: 0 0 0 4px var(--focus);
 }
 
-/* input */
 .topbar-searchBox input {
   border: none;
   outline: none;
@@ -563,6 +562,7 @@ i, svg {
   background: transparent;
   color: var(--text);
 }
+
 .topbar-actions {
   display: flex;
   gap: 10px;
@@ -590,7 +590,6 @@ i, svg {
   gap: 12px;
 }
 
-/* icon button */
 .topbar-icon {
   position: relative;
 
@@ -613,7 +612,6 @@ i, svg {
   transform: translateY(-2px);
 }
 
-/* icon */
 .topbar-icon i {
   font-size: 18px;
   color: var(--text);
@@ -628,10 +626,11 @@ i, svg {
   gap: 10px;
 
   position: sticky;
-  top: 100px; /* stays visible while scrolling */
+  top: 100px;
 
   padding: 10px;
 }
+
 .btn-filter {
   position: relative;
   border: 1px solid rgba(37, 99, 235, 0.12);
@@ -737,7 +736,6 @@ i, svg {
   box-shadow: var(--shadow);
 }
 
-/* avatar */
 .topbar-user img {
   width: 36px;
   height: 36px;
@@ -746,7 +744,6 @@ i, svg {
   object-fit: cover;
 }
 
-/* text */
 .topbar-user div {
   display: flex;
   flex-direction: column;
@@ -805,7 +802,6 @@ i, svg {
   transform: scale(0.98);
 }
 
-/* emergency variant (kept semantic but unified style) */
 .emergency-btn {
   background: linear-gradient(135deg, #ef4444, #b91c1c);
 }
@@ -813,14 +809,13 @@ i, svg {
 /* =========================
    TAG 
 ========================= */
-
 .tag {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  width: fit-content;   /* 🔥 FIX: prevents stretching */
-  flex-shrink: 0;       /* 🔥 FIX: keeps size stable */
+  width: fit-content;
+  flex-shrink: 0;
 
   padding: 6px 14px;
   border-radius: 999px;
@@ -836,7 +831,6 @@ i, svg {
   margin-top: 8px;
 }
 
-/* STATUS COLORS */
 .tag.stable {
   background: rgba(34, 197, 94, 0.15);
   color: #16a34a;
@@ -889,7 +883,6 @@ i, svg {
   100% { background-position: 0% 50%; }
 }
 
-/* glow */
 .uc-glow {
   position: fixed;
   width: 500px;
@@ -947,9 +940,6 @@ i, svg {
   gap: 12px;
 }
 
-/* =========================
-   BUTTON SYSTEM
-========================= */
 .uc-btn {
   padding: 10px 18px;
   border-radius: var(--radius);
@@ -991,7 +981,6 @@ i, svg {
   gap: 40px;
 }
 
-/* TEXT */
 .uc-hero__content {
   max-width: 520px;
 }
@@ -1020,7 +1009,6 @@ i, svg {
   line-height: 1.7;
 }
 
-/* CTA */
 .uc-cta {
   padding: 14px 28px;
   border-radius: var(--radius);
@@ -1035,7 +1023,6 @@ i, svg {
   transform: translateY(-2px);
 }
 
-/* VISUAL */
 .uc-hero__visual {
   flex: 1;
   display: flex;
@@ -1058,20 +1045,17 @@ i, svg {
 /* =========================
    AUTH BASE
 ========================= */
-/* BODY */
 .auth-body {
   margin: 0;
   font-family: "Poppins", sans-serif;
   background: var(--bg);
 }
 
-/* LAYOUT */
 .auth-container {
   display: flex;
   min-height: 100vh;
 }
 
-/* LEFT PANEL */
 .auth-left {
   flex: 1;
   background: linear-gradient(135deg, #113F67, #1f5f9a);
@@ -1088,7 +1072,6 @@ i, svg {
   background: rgba(0,0,0,0.25);
 }
 
-/* BRAND */
 .auth-brand {
   text-align: center;
   z-index: 2;
@@ -1119,7 +1102,6 @@ i, svg {
   opacity: 0.9;
 }
 
-/* RIGHT PANEL */
 .auth-right {
   flex: 1;
   display: flex;
@@ -1128,7 +1110,6 @@ i, svg {
   padding: 40px;
 }
 
-/* CARD */
 .auth-box {
   width: 100%;
   max-width: 420px;
@@ -1139,7 +1120,6 @@ i, svg {
   box-shadow: 0 10px 30px rgba(0,0,0,0.06);
 }
 
-/* TEXT */
 .auth-title {
   font-size: 24px;
   font-weight: 700;
@@ -1153,7 +1133,6 @@ i, svg {
   margin: 8px 0 20px;
 }
 
-/* FORM */
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -1166,7 +1145,6 @@ i, svg {
   color: var(--text);
 }
 
-/* INPUT */
 .auth-input {
   padding: 12px 14px;
   border-radius: 10px;
@@ -1181,7 +1159,6 @@ i, svg {
   box-shadow: 0 0 0 3px rgba(17,63,103,0.15);
 }
 
-/* BUTTON */
 .auth-btn {
   margin-top: 10px;
   padding: 12px;
@@ -1198,14 +1175,12 @@ i, svg {
   background: #0e3558;
 }
 
-/* MESSAGE */
 .auth-message {
   font-size: 13px;
   margin-top: 10px;
   min-height: 18px;
 }
 
-/* TEMP PASSWORD BOX */
 .auth-temp-box {
   margin-top: 18px;
   padding: 14px;
@@ -1235,7 +1210,6 @@ i, svg {
   color: var(--muted);
 }
 
-/* FOOTER */
 .auth-footer {
   margin-top: 20px;
   text-align: center;
@@ -1253,7 +1227,6 @@ i, svg {
   font-weight: 600;
 }
 
-/* ANIMATION */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1268,7 +1241,6 @@ i, svg {
 /* =========================
    RESET MODAL
 ========================= */
-
 .reset-modal {
   position: fixed;
   inset: 0;
@@ -1283,12 +1255,10 @@ i, svg {
   z-index: 99999;
 }
 
-/* SHOW STATE (IMPORTANT) */
 .reset-modal.active {
   display: flex;
 }
 
-/* MODAL BOX */
 .reset-box {
   width: 420px;
 
@@ -1306,14 +1276,12 @@ i, svg {
   animation: modalPop 0.25s ease;
 }
 
-/* TITLE */
 .reset-box h2 {
   margin-bottom: var(--spacing-sm);
   color: var(--primary);
   font-weight: 700;
 }
 
-/* TEXT */
 .reset-box p {
   margin-bottom: var(--spacing-lg);
   color: var(--text-muted);
@@ -1321,7 +1289,6 @@ i, svg {
   line-height: 1.5;
 }
 
-/* INPUT (if you have one in modal) */
 .reset-box input {
   width: 100%;
   padding: 12px;
@@ -1337,7 +1304,6 @@ i, svg {
   box-shadow: 0 0 0 3px rgba(17,63,103,0.15);
 }
 
-/* BUTTON (if inside modal) */
 .reset-box button {
   margin-top: 14px;
   width: 100%;
@@ -1359,7 +1325,6 @@ i, svg {
   background: #0e3558;
 }
 
-/* ANIMATION */
 @keyframes modalPop {
   from {
     opacity: 0;
@@ -1387,9 +1352,6 @@ i, svg {
   background: var(--bg);
 }
 
-/* =========================
-   STATS GRID
-========================= */
 .sDashboard-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1397,9 +1359,6 @@ i, svg {
   margin-bottom: var(--spacing-xl);
 }
 
-/* =========================
-   CONTENT GRID
-========================= */
 .sDashboard-content {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -1407,9 +1366,6 @@ i, svg {
   align-items: stretch;
 }
 
-/* =========================
-   BASE CARD STYLE
-========================= */
 .sDashboard-card,
 .card-emergency,
 .sDashboard-announcement {
@@ -1452,9 +1408,6 @@ i, svg {
   box-shadow: var(--shadow-hover);
 }
 
-/* =========================
-   ANNOUNCEMENT CARD
-========================= */
 .sDashboard-announcement {
   display: flex;
   flex-direction: column;
@@ -1477,9 +1430,6 @@ i, svg {
   align-self: flex-start;
 }
 
-/* =========================
-   SIDE COLUMN
-========================= */
 .sDashboard-side {
   display: flex;
   flex-direction: column;
@@ -1487,9 +1437,6 @@ i, svg {
   height: 100%;
 }
 
-/* =========================
-   MOOD SECTION
-========================= */
 .sDashboard-mood {
   display: flex;
   justify-content: center;
@@ -1499,9 +1446,6 @@ i, svg {
   padding: var(--spacing-md) 0;
 }
 
-/* =========================
-   MOOD DISPLAY
-========================= */
 .sDashboard-mood-display {
   display: flex;
   flex-direction: column;
@@ -1518,9 +1462,6 @@ i, svg {
   margin-bottom: var(--spacing-md);
 }
 
-/* =========================
-   MOOD BUTTONS
-========================= */
 .sDashboard-card button {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -1542,7 +1483,6 @@ i, svg {
   border-color: var(--primary);
 }
 
-/* ACTIVE STATE */
 .sWellness-mood-btn.active {
   background: var(--primary);
   color: var(--text-inverse);
@@ -1550,18 +1490,12 @@ i, svg {
   transform: translateY(-2px);
 }
 
-/* =========================
-   PROGRESS
-========================= */
 .sDashboard-progress {
   font-size: 24px;
   text-align: center;
   color: var(--primary);
 }
 
-/* =========================
-   ACTIVITY LIST
-========================= */
 .sDashboard-activity-item {
   display: flex;
   justify-content: space-between;
@@ -1590,9 +1524,6 @@ i, svg {
   background: var(--bg);
 }
 
-/* =========================
-   BOOKING CARD 
-========================= */
 .sBooking-card {
   position: relative;
 
@@ -1631,9 +1562,6 @@ i, svg {
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
 
-/* =========================
-   FORM GROUP
-========================= */
 .sBooking-formGroup {
   display: flex;
   flex-direction: column;
@@ -1649,9 +1577,6 @@ i, svg {
   opacity: 0.9;
 }
 
-/* =========================
-   GRID FORM SECTION
-========================= */
 .sBooking-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1668,10 +1593,6 @@ i, svg {
   border-radius: 14px;
 }
 
-
-/* =========================
-   INPUT CONTROLS
-========================= */
 .sBooking-grid input,
 .sBooking-grid select,
 .sBooking-grid textarea {
@@ -1701,15 +1622,11 @@ i, svg {
   box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
 }
 
-/* textarea */
 .sBooking-message textarea {
   min-height: 140px;
   resize: none;
 }
 
-/* =========================
-   SLOTS
-========================= */
 .sBooking-slots {
   display: flex;
   flex-wrap: wrap;
@@ -1737,22 +1654,17 @@ i, svg {
   border-color: var(--primary);
 }
 
-/* active */
 .sBooking-slotBtn.active-slot {
   background: var(--primary);
   color: white;
   border-color: var(--primary);
 }
 
-/* disabled */
 .sBooking-slotBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* =========================
-   BUTTON 
-========================= */
 .sBooking-button {
   width: 100%;
   padding: 14px;
@@ -1780,9 +1692,6 @@ i, svg {
   box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
 }
 
-/* =========================
-   FILE UPLOAD (MATCH INPUT STYLE)
-========================= */
 .sBooking-card input[type="file"] {
   margin-top: 10px;
   padding: 10px;
@@ -1794,10 +1703,6 @@ i, svg {
   color: var(--text);
 }
 
-
-/* =========================
-   PAGE LAYOUT
-========================= */
 .sConcern-main {
   margin-left: 280px;
 
@@ -1807,16 +1712,12 @@ i, svg {
   background: var(--bg);
 }
 
-/* container layout */
 .sConcern-container {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-/* =========================
-   CARD SYSTEM 
-========================= */
 .sConcern-card,
 .card-emergency {
   position: relative;
@@ -1858,9 +1759,6 @@ i, svg {
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
 
-/* =========================
-   EMERGENCY CARD
-========================= */
 .card-emergency::before {
   background: radial-gradient(
     circle at top left,
@@ -1869,9 +1767,6 @@ i, svg {
   );
 }
 
-/* =========================
-   FORM SYSTEM
-========================= */
 .sConcern-formGroup {
   display: flex;
   flex-direction: column;
@@ -1887,7 +1782,6 @@ i, svg {
   opacity: 0.9;
 }
 
-/* inputs */
 .sConcern-formGroup input,
 .sConcern-formGroup textarea {
   padding: 12px 14px;
@@ -1906,21 +1800,16 @@ i, svg {
   transition: 0.2s ease;
 }
 
-/* focus */
 .sConcern-formGroup input:focus,
 .sConcern-formGroup textarea:focus {
   border-color: #4988C4;
   box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
 }
 
-/* textarea */
 .sConcern-formGroup textarea {
   resize: none;
 }
 
-/* =========================
-   BUTTON
-========================= */
 .sConcern-button {
   margin-top: 15px;
 
@@ -1947,9 +1836,6 @@ i, svg {
   box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
 }
 
-/* =========================
-   TEXT SYSTEM
-========================= */
 .sConcern-text-muted {
   font-size: 13px;
   color: var(--text-muted);
@@ -1961,19 +1847,12 @@ i, svg {
   color: var(--primary);
 }
 
-/* =========================
-   EMERGENCY DETAILS
-========================= */
 .sConcern-emergency-details p {
   font-size: 13px;
   margin: 4px 0;
   color: var(--text);
 }
 
-
-/* =========================
-   WELLNESS PAGE LAYOUT
-========================= */
 .sWellness-main {
   margin-left: 280px;
   padding: 40px 28px;
@@ -1986,9 +1865,6 @@ i, svg {
   min-height: 100vh;
 }
 
-/* =========================
-   MAIN CARD
-========================= */
 .sWellness-card {
   width: 100%;
   max-width: 700px;
@@ -2027,9 +1903,6 @@ i, svg {
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
 
-/* =========================
-   MOOD BUTTONS
-========================= */
 .sWellness-mood-container {
   display: flex;
   gap: 10px;
@@ -2060,15 +1933,11 @@ i, svg {
   color: white;
 }
 
-/* active */
 .sWellness-mood-btn.active {
   background: #113F67;
   color: white;
 }
 
-/* =========================
-   MOOD DISPLAY
-========================= */
 .sWellness-mood-display {
   text-align: center;
   font-size: 16px;
@@ -2078,9 +1947,6 @@ i, svg {
   color: var(--text);
 }
 
-/* =========================
-   FORM GROUP 
-========================= */
 .sWellness-form-group {
   margin-bottom: 18px;
 }
@@ -2094,7 +1960,6 @@ i, svg {
   color: var(--text);
 }
 
-/* inputs */
 .sWellness-form-group input,
 .sWellness-form-group select {
   width: 100%;
@@ -2113,17 +1978,12 @@ i, svg {
   transition: 0.2s ease;
 }
 
-
-/* focus */
 .sWellness-form-group input:focus,
 .sWellness-form-group select:focus {
   border-color: #4988C4;
   box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
 }
 
-/* =========================
-   STRESS DISPLAY
-========================= */
 .sWellness-stress-display {
   text-align: center;
   margin-top: 10px;
@@ -2132,10 +1992,6 @@ i, svg {
   color: var(--text);
 }
 
-
-/* =========================
-   REFERRAL PAGE LAYOUT
-========================= */
 .sReferral-main {
   margin-left: 280px;
 
@@ -2149,9 +2005,6 @@ i, svg {
   min-height: 100vh;
 }
 
-/* =========================
-   REFERRAL CARD
-========================= */
 .sReferral-card {
   width: 900px;
 
@@ -2190,9 +2043,6 @@ i, svg {
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
 
-/* =========================
-   TITLE
-========================= */
 .sReferral-title {
   text-align: center;
 
@@ -2204,7 +2054,6 @@ i, svg {
   color: var(--text);
 }
 
-/* DATE */
 .sReferral-date {
   text-align: right;
   font-size: 14px;
@@ -2214,9 +2063,6 @@ i, svg {
   color: var(--text-muted);
 }
 
-/* =========================
-   SECTION HEADERS
-========================= */
 .sReferral-card h3 {
   font-size: 15px;
   font-weight: 600;
@@ -2230,7 +2076,6 @@ i, svg {
   padding-bottom: 6px;
 }
 
-/* TEXT */
 .sReferral-card p {
   font-size: 14px;
 
@@ -2240,9 +2085,6 @@ i, svg {
   color: var(--text);
 }
 
-/* =========================
-   SIGNATURE
-========================= */
 .sReferral-signature {
   width: 180px;
   margin-top: 18px;
@@ -2250,9 +2092,6 @@ i, svg {
   display: block;
 }
 
-/* =========================
-   BUTTON
-========================= */
 .sReferral-btn {
   margin-top: 30px;
 
@@ -2284,9 +2123,6 @@ i, svg {
   transform: scale(0.98);
 }
 
-/* =========================
-   PRINT MODE
-========================= */
 @media print {
   .sidebar,
   .topbar,
@@ -2316,11 +2152,6 @@ i, svg {
   }
 }
 
-
-
-/* =========================
-   ANNOUNCEMENTS LAYOUT
-========================= */
 .sAnnouncements-main {
   margin-left: 280px;
 
@@ -2333,9 +2164,6 @@ i, svg {
   background: var(--bg);
 }
 
-/* =========================
-   GRID CONTAINER
-========================= */
 .sAnnouncements-container {
   display: grid;
 
@@ -2346,9 +2174,6 @@ i, svg {
   max-width: 1200px;
 }
 
-/* =========================
-   ANNOUNCEMENT CARD
-========================= */
 .sAnnouncements-card {
   position: relative;
 
@@ -2388,9 +2213,6 @@ i, svg {
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
 
-/* =========================
-   TEXT SYSTEM
-========================= */
 .sAnnouncements-card h3 {
   font-size: 18px;
   margin-bottom: 10px;
@@ -2409,9 +2231,6 @@ i, svg {
   opacity: 0.8;
 }
 
-/* =========================
-   MODAL
-========================= */
 .announcement-modal {
   display: none;
   position: fixed;
@@ -2426,8 +2245,6 @@ i, svg {
   z-index: 9999;
 }
 
-
-/* MODAL CARD */
 .announcement-modal-content {
   position: relative;
 
@@ -2446,7 +2263,6 @@ i, svg {
   animation: modalPop 0.25s ease;
 }
 
-/* CLOSE BUTTON */
 .announcement-close {
   position: absolute;
   top: 14px;
@@ -2474,28 +2290,24 @@ i, svg {
   color: var(--primary);
 }
 
-/* IMAGE */
 #modalImage {
   width: 100%;
   border-radius: 14px;
   margin-bottom: 14px;
 }
 
-/* TITLE SPACE */
 .announcement-modal-content h3 {
   margin-top: 10px;
   color: var(--primary);
   font-weight: 700;
 }
 
-/* TEXT */
 .announcement-modal-content p {
   color: var(--text-muted);
   font-size: 14px;
   line-height: 1.5;
 }
 
-/* INTEREST SECTION */
 .modal-interest {
   margin-top: 18px;
 
@@ -2504,7 +2316,6 @@ i, svg {
   align-items: center;
 }
 
-/* BUTTON */
 #interestBtn {
   background: var(--primary);
   color: white;
@@ -2526,26 +2337,10 @@ i, svg {
   box-shadow: var(--shadow-hover);
 }
 
-/* ANIMATION */
-@keyframes modalPop {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
 #interestBtn:active {
   transform: scale(0.98);
 }
 
-
-/* =====================================================
-   REPORTS PAGE
-===================================================== */
 .sReports-main {
   margin-left: 280px;
 
@@ -2558,7 +2353,6 @@ i, svg {
   min-height: 100vh;
 }
 
-/* container */
 .sReports-container {
   width: 100%;
   max-width: 900px;
@@ -2568,9 +2362,6 @@ i, svg {
   gap: 18px;
 }
 
-/* =====================================================
-   REPORT CARD
-===================================================== */
 .sReports-card {
   position: relative;
 
@@ -2609,9 +2400,6 @@ i, svg {
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
 
-/* =====================================================
-   TEXT SYSTEM
-===================================================== */
 .sReports-card-title {
   display: flex;
   align-items: center;
@@ -2632,9 +2420,6 @@ i, svg {
   line-height: 1.5;
 }
 
-/* =====================================================
-   INPUT SYSTEM 
-===================================================== */
 .sReports-notesBox {
   width: 100%;
 
@@ -2655,22 +2440,16 @@ i, svg {
   transition: 0.2s ease;
 }
 
-
-/* focus */
 .sReports-notesBox:focus {
   border-color: #4988C4;
   box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
 }
 
-/* textarea */
 textarea.sReports-notesBox {
   min-height: 120px;
   resize: vertical;
 }
 
-/* =====================================================
-   BUTTON
-===================================================== */
 .sReports-exportBtn {
   margin-top: 14px;
 
@@ -2702,9 +2481,6 @@ textarea.sReports-notesBox {
   transform: scale(0.98);
 }
 
-/* =====================================================
-   STATUS TEXT
-===================================================== */
 .sReports-status {
   margin-top: 10px;
 
@@ -2714,19 +2490,13 @@ textarea.sReports-notesBox {
   color: var(--text-muted);
 }
 
-/* success */
 .sReports-status.success {
   color: #22c55e;
 }
 
-/* warning */
 .sReports-status.warning {
   color: #f59e0b;
 }
-
-/* =====================================================
-   FEEDBACK PAGE
-===================================================== */
 
 .sFeedback-main {
   margin-left: 280px;
@@ -2740,15 +2510,10 @@ textarea.sReports-notesBox {
   min-height: 100vh;
 }
 
-/* container */
 .sFeedback-container {
   width: 100%;
   max-width: 760px;
 }
-
-/* ===========================================
-   CARD
-=========================================== */
 
 .sFeedback-card {
   position: relative;
@@ -2761,8 +2526,7 @@ textarea.sReports-notesBox {
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(14px);
 
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 
   transition: 0.25s ease;
 
@@ -2789,13 +2553,8 @@ textarea.sReports-notesBox {
 
 .sFeedback-card:hover {
   transform: translateY(-6px);
-  box-shadow:
-    0 18px 45px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
-
-/* =====================================================
-   TYPOGRAPHY
-===================================================== */
 
 .sFeedback-title {
   font-size: 22px;
@@ -2812,10 +2571,6 @@ textarea.sReports-notesBox {
   margin-bottom: 22px;
 }
 
-/* =====================================================
-   FORM LAYOUT
-===================================================== */
-
 .sFeedback-form {
   display: flex;
   flex-direction: column;
@@ -2828,17 +2583,12 @@ textarea.sReports-notesBox {
   gap: 8px;
 }
 
-/* label */
 .form-group label {
   font-size: 13px;
   font-weight: 600;
   color: var(--text);
   opacity: 0.9;
 }
-
-/* =====================================================
-   INPUT FIELDS
-===================================================== */
 
 .form-group select,
 .form-group textarea {
@@ -2860,24 +2610,17 @@ textarea.sReports-notesBox {
   transition: 0.2s ease;
 }
 
-/* focus state */
 .form-group select:focus,
 .form-group textarea:focus {
   border-color: #4988C4;
 
-  box-shadow:
-    0 0 0 4px rgba(73, 136, 196, 0.15);
+  box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
 }
 
-/* textarea size */
 .form-group textarea {
   min-height: 140px;
   resize: vertical;
 }
-
-/* =====================================================
-   BUTTON
-===================================================== */
 
 .sFeedback-btn {
   padding: 14px;
@@ -2907,10 +2650,6 @@ textarea.sReports-notesBox {
   transform: scale(0.98);
 }
 
-
-/* =========================
-   PROFILE LAYOUT
-========================= */
 .sProfile-main {
   margin-left: 280px;
   padding: var(--spacing-xxl);
@@ -2921,7 +2660,6 @@ textarea.sReports-notesBox {
   align-items: flex-start;
 }
 
-/* container */
 .sTicket-container {
   width: 100%;
   max-width: 900px;
@@ -2929,9 +2667,6 @@ textarea.sReports-notesBox {
   justify-content: center;
 }
 
-/* =========================
-   PROFILE CARD
-========================= */
 .sProfile-card {
   width: 100%;
   max-width: 720px;
@@ -2953,9 +2688,6 @@ textarea.sReports-notesBox {
   box-shadow: var(--shadow-hover);
 }
 
-/* =========================
-   HEADER
-========================= */
 .sProfile-header {
   display: flex;
   align-items: center;
@@ -2964,9 +2696,6 @@ textarea.sReports-notesBox {
   margin-bottom: var(--spacing-xl);
 }
 
-/* =========================
-   AVATAR
-========================= */
 .sProfile-avatar {
   position: relative;
   width: 120px;
@@ -2984,7 +2713,6 @@ textarea.sReports-notesBox {
   box-shadow: var(--shadow-sm);
 }
 
-/* camera button */
 .sProfile-upload {
   position: absolute;
   bottom: 6px;
@@ -3011,9 +2739,6 @@ textarea.sReports-notesBox {
   transform: scale(1.1);
 }
 
-/* =========================
-   TEXT HEADER
-========================= */
 .sProfile-header h3 {
   font-size: 20px;
   color: var(--text);
@@ -3025,16 +2750,12 @@ textarea.sReports-notesBox {
   color: var(--text-muted);
 }
 
-/* =========================
-   FORM
-========================= */
 .sProfile-form {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
 }
 
-/* input group */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -3046,7 +2767,6 @@ textarea.sReports-notesBox {
   color: var(--text-muted);
 }
 
-/* input */
 .form-group input {
   padding: 12px;
 
@@ -3066,20 +2786,17 @@ textarea.sReports-notesBox {
   box-shadow: 0 0 0 3px var(--focus);
 }
 
-/* readonly inputs */
 .form-group input[readonly] {
   opacity: 0.75;
   cursor: not-allowed;
 }
+
 .emergency-section {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid rgba(0,0,0,0.08);
 }
 
-/* =========================
-   BUTTON
-========================= */
 .sProfile-saveBtn {
   padding: 14px;
 
@@ -3108,29 +2825,21 @@ textarea.sReports-notesBox {
   transform: scale(0.98);
 }
 
-/* =========================
-   STATUS MESSAGE
-========================= */
 .sProfile-status {
   margin-top: var(--spacing-md);
   font-size: 13px;
 }
+
 * {
   box-sizing: border-box;
 }
 
-/* =========================
-   MAIN LAYOUT
-========================= */
 .sHistory-main {
   margin-left: 280px;
   padding: var(--spacing-xxl);
   background: var(--bg);
 }
 
-/* =========================
-   LIST CONTAINER
-========================= */
 .sHistory-container {
   display: flex;
   flex-direction: column;
@@ -3140,13 +2849,9 @@ textarea.sReports-notesBox {
   max-width: 900px;
   margin: 0 auto;
 
-  /* ensures equal spacing inside layout */
   padding: 0;
 }
 
-/* =========================
-   LIST CARD (FULL WIDTH + BALANCED)
-========================= */
 .sHistory-card {
   position: relative;
 
@@ -3189,31 +2894,25 @@ textarea.sReports-notesBox {
   pointer-events: none;
 }
 
-/* =========================
-   TITLE
-========================= */
 .sHistory-card h3 {
   font-size: 18px;
   font-weight: 700;
   color: var(--text);
 
   margin: 0;
-  padding-right: 80px; 
+  padding-right: 80px;
 }
 
-
-/* =========================
-   TEXT
-========================= */
 .sHistory-card p {
   font-size: 14px;
   color: var(--text-muted);
 
   margin: 6px 0 0 0;
 }
+
 .sHistory-filter {
   display: flex;
-  justify-content: flex-end; /* pushes everything to the right */
+  justify-content: flex-end;
   gap: 10px;
   align-items: center;
   margin-bottom: 20px;
@@ -3237,6 +2936,7 @@ textarea.sReports-notesBox {
   background: var(--primary);
   color: white;
 }
+
 .sHistory-filter button:hover {
   background: var(--primary-hover);
   transform: translateY(-2px);
@@ -3255,11 +2955,6 @@ textarea.sReports-notesBox {
   color: var(--text);
 }
 
-
-
-/* =========================
-  DASHBOARD LAYOUT
-========================= */
 .cDashboard-main {
   margin-left: 280px;
   padding: var(--spacing-xxl);
@@ -3267,9 +2962,6 @@ textarea.sReports-notesBox {
   min-height: 100vh;
 }
 
-/* =========================
-   DASHBOARD GRID CONTAINER
-========================= */
 .cDashboard-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -3279,9 +2971,6 @@ textarea.sReports-notesBox {
   margin: 0 auto;
 }
 
-/* =========================
-   DASHBOARD CARD
-========================= */
 .cDashboard-card {
   position: relative;
 
@@ -3319,9 +3008,6 @@ textarea.sReports-notesBox {
   pointer-events: none;
 }
 
-/* =========================
-   CARD TEXT 
-========================= */
 .cDashboard-card h3 {
   font-size: 26px;
   font-weight: 700;
@@ -3342,9 +3028,6 @@ textarea.sReports-notesBox {
   margin-top: 8px;
 }
 
-/* =========================
-   DROPDOWN 
-========================= */
 .icon-dropdown {
   position: absolute;
   top: 45px;
@@ -3368,7 +3051,6 @@ textarea.sReports-notesBox {
   display: block;
 }
 
-/* notification text */
 .notif-header {
   font-weight: 600;
   font-size: 13px;
@@ -3383,9 +3065,6 @@ textarea.sReports-notesBox {
   padding: 10px;
 }
 
-/* =========================
-   MAIN LAYOUT
-========================= */
 .cAppointment-main {
   margin-left: 280px;
   padding: var(--spacing-xxl);
@@ -3393,9 +3072,6 @@ textarea.sReports-notesBox {
   min-height: 100vh;
 }
 
-/* =========================
-   GRID LAYOUT
-========================= */
 .cAppointment-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -3405,9 +3081,6 @@ textarea.sReports-notesBox {
   margin: 0 auto;
 }
 
-/* =========================
-   APPOINTMENT CARD
-========================= */
 .cAppointment-card {
   position: relative;
 
@@ -3447,9 +3120,6 @@ textarea.sReports-notesBox {
   pointer-events: none;
 }
 
-/* =========================
-   HEADER INSIDE CARD
-========================= */
 .cAppointment-card h3 {
   font-size: 18px;
   font-weight: 700;
@@ -3476,9 +3146,6 @@ textarea.sReports-notesBox {
   margin: 2px 0;
 }
 
-/* =========================
-   BUTTON GROUP
-========================= */
 .cAppointment-actions {
   display: flex;
   gap: 10px;
@@ -3487,9 +3154,6 @@ textarea.sReports-notesBox {
   flex-wrap: wrap;
 }
 
-/* =========================
-   MAIN ACTION BUTTONS
-========================= */
 .cAppointment-btn {
   border: none;
   padding: 10px 14px;
@@ -3507,7 +3171,6 @@ textarea.sReports-notesBox {
   gap: 6px;
 }
 
-/* APPROVE */
 .cAppointment-btn.approve {
   background: rgba(34, 197, 94, 0.15);
   color: #22c55e;
@@ -3519,7 +3182,6 @@ textarea.sReports-notesBox {
   color: white;
 }
 
-/* DECLINE */
 .cAppointment-btn.decline {
   background: rgba(239, 68, 68, 0.15);
   color: #ef4444;
@@ -3531,9 +3193,6 @@ textarea.sReports-notesBox {
   color: white;
 }
 
-/* =========================
-   SMALL VIEW PROFILE BUTTON
-========================= */
 .btn-small {
   font-size: 13px;
   padding: 4px 8px;
@@ -3555,9 +3214,6 @@ textarea.sReports-notesBox {
   border-color: var(--primary);
 }
 
-/* =========================
-   EXPORT BUTTON
-========================= */
 .cAppointment-exportBtn {
   margin-left: auto;
 
@@ -3581,9 +3237,6 @@ textarea.sReports-notesBox {
   border-color: var(--primary);
 }
 
-/* =========================
-   MAIN LAYOUT
-========================= */
 .cConcerns-main {
   margin-left: 280px;
   padding: var(--spacing-xxl);
@@ -3591,9 +3244,6 @@ textarea.sReports-notesBox {
   min-height: 100vh;
 }
 
-/* =========================
-   CONTAINER
-========================= */
 .cConcerns-container {
   display: flex;
   flex-direction: column;
@@ -3603,9 +3253,6 @@ textarea.sReports-notesBox {
   margin: 0 auto;
 }
 
-/* =========================
-   CONCERN CARD
-========================= */
 .cConcerns-card {
   position: relative;
 
@@ -3645,9 +3292,6 @@ textarea.sReports-notesBox {
   pointer-events: none;
 }
 
-/* =========================
-   HEADER
-========================= */
 .cConcerns-card h3 {
   display: flex;
   align-items: center;
@@ -3664,18 +3308,12 @@ textarea.sReports-notesBox {
   color: var(--primary);
 }
 
-/* =========================
-   TEXT
-========================= */
 .cConcerns-card p {
   font-size: 14px;
   color: var(--text-muted);
   margin: 2px 0;
 }
 
-/* =========================
-   REPLY BOX
-========================= */
 .cConcerns-replyBox {
   width: 100%;
   min-height: 90px;
@@ -3701,9 +3339,6 @@ textarea.sReports-notesBox {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-/* =========================
-   BUTTON
-========================= */
 .cConcerns-btn {
   align-self: flex-end;
 
@@ -3734,9 +3369,6 @@ textarea.sReports-notesBox {
   transform: scale(0.98);
 }
 
-/* =========================
-   RESULT MESSAGE
-========================= */
 .cConcerns-result {
   font-size: 13px;
   font-weight: 500;
@@ -3744,9 +3376,6 @@ textarea.sReports-notesBox {
   margin-top: 5px;
 }
 
-/* =========================
-   MAIN
-========================= */
 .cFeedback-main {
   margin-left: 240px;
   padding: var(--spacing-xl);
@@ -3756,17 +3385,11 @@ textarea.sReports-notesBox {
   justify-content: center;
 }
 
-/* =========================
-   CONTAINER
-========================= */
 .cFeedback-container {
   width: 100%;
   max-width: 900px;
 }
 
-/* =========================
-   FEEDBACK CARD (MATCHED)
-========================= */
 .cFeedback-card {
   position: relative;
 
@@ -3787,13 +3410,11 @@ textarea.sReports-notesBox {
   gap: 15px;
 }
 
-/* HOVER (same as concerns) */
 .cFeedback-card:hover {
   transform: translateY(-5px);
   box-shadow: var(--shadow-hover);
 }
 
-/* GLOW EFFECT */
 .cFeedback-card::after {
   content: "";
   position: absolute;
@@ -3808,9 +3429,6 @@ textarea.sReports-notesBox {
   pointer-events: none;
 }
 
-/* =========================
-   TEXT
-========================= */
 .cFeedback-title {
   margin: 0;
 }
@@ -3820,18 +3438,12 @@ textarea.sReports-notesBox {
   margin-bottom: 10px;
 }
 
-/* =========================
-   LIST
-========================= */
 .cFeedback-list {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-/* =========================
-   ITEM (MINI CARD STYLE)
-========================= */
 .cFeedback-item {
   position: relative;
 
@@ -3844,15 +3456,11 @@ textarea.sReports-notesBox {
   transition: var(--transition);
 }
 
-/* subtle hover (lighter than main card) */
 .cFeedback-item:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow);
 }
 
-/* =========================
-   HEADER
-========================= */
 .cFeedback-header {
   display: flex;
   justify-content: space-between;
@@ -3860,7 +3468,6 @@ textarea.sReports-notesBox {
   gap: 10px;
 }
 
-/* FIX: prevents layout breaking */
 .cFeedback-rating {
   white-space: nowrap;
   font-size: 14px;
@@ -3868,9 +3475,6 @@ textarea.sReports-notesBox {
   color: #facc15;
 }
 
-/* =========================
-   DATE + MESSAGE
-========================= */
 .cFeedback-date {
   font-size: 12px;
   color: var(--muted);
@@ -3881,10 +3485,6 @@ textarea.sReports-notesBox {
   line-height: 1.6;
   opacity: 0.9;
 }
-
-/* =====================================================
-   MAIN LAYOUT
-===================================================== */
 
 .cStudentList-main {
   margin-left: 280px;
@@ -3905,10 +3505,6 @@ textarea.sReports-notesBox {
   flex-direction: column;
   gap: 18px;
 }
-
-/* ==================================
-   STUDENT CARD 
-================================== */
 
 .cStudentList-item {
   padding: 20px;
@@ -3945,10 +3541,6 @@ textarea.sReports-notesBox {
   box-shadow: 0 18px 40px rgba(0,0,0,0.12);
 }
 
-/* =========================
-   CONTENT
-========================= */
-
 .cStudentList-info {
   display: flex;
   align-items: center;
@@ -3963,9 +3555,6 @@ textarea.sReports-notesBox {
   width: 100%;
 }
 
-/* =========================
-   FILTER BAR
-========================= */
 .cStudentList-filters {
   display: flex;
   align-items: center;
@@ -3975,9 +3564,6 @@ textarea.sReports-notesBox {
   margin-bottom: 20px;
 }
 
-/* =========================
-   INPUT + SELECT
-========================= */
 .cStudentList-filters input,
 .cStudentList-filters select {
   padding: 10px 14px;
@@ -3994,16 +3580,12 @@ textarea.sReports-notesBox {
   transition: 0.2s ease;
 }
 
-/* FOCUS STATE */
 .cStudentList-filters input:focus,
 .cStudentList-filters select:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
-/* =========================
-   BUTTONS
-========================= */
 .cStudentList-filters button {
   padding: 10px 16px;
   border-radius: 10px;
@@ -4018,20 +3600,17 @@ textarea.sReports-notesBox {
   transition: 0.2s ease;
 }
 
-/* HOVER */
 .cStudentList-filters button:hover {
   background: var(--primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(0,0,0,0.15);
 }
 
-/* ACTIVE */
 .cStudentList-filters button:active {
   transform: translateY(0);
   opacity: 0.85;
 }
 
-/* CLEAR BUTTON (SECONDARY) */
 .cStudentList-filters button:last-child {
   background: transparent;
   border: 1px solid var(--border);
@@ -4042,9 +3621,6 @@ textarea.sReports-notesBox {
   background: var(--bg);
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
 @media (max-width: 768px) {
   .cStudentList-filters {
     flex-direction: column;
@@ -4057,9 +3633,6 @@ textarea.sReports-notesBox {
     width: 100%;
   }
 }
-/* =================================
-   AVATAR
-================================= */
 
 .cStudentList-avatar {
   width: 52px;
@@ -4078,10 +3651,6 @@ textarea.sReports-notesBox {
 
   box-shadow: 0 6px 14px rgba(17,63,103,0.3);
 }
-
-/* =====================================================
-   LEFT SIDE
-===================================================== */
 
 .cStudentList-left {
   display: flex;
@@ -4107,15 +3676,12 @@ textarea.sReports-notesBox {
   color: var(--text-muted);
 }
 
-/* =====================================================
-   RIGHT SIDE
-===================================================== */
 .cStudentList-right {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 
-  height: 70px; /* KEY: forces separation */
+  height: 70px;
   align-items: flex-end;
 }
 
@@ -4136,6 +3702,7 @@ textarea.sReports-notesBox {
   font-size: 12px;
   color: var(--text-muted);
 }
+
 .cStudentList-meta {
   margin-top: auto;
   text-align: right;
@@ -4146,10 +3713,6 @@ textarea.sReports-notesBox {
   font-size: 12px;
   color: var(--text-muted);
 }
-
-/* =====================================================
-   BUTTON
-===================================================== */
 
 .btn-small {
   padding: 6px 12px;
@@ -4179,13 +3742,10 @@ textarea.sReports-notesBox {
   transform: scale(0.96);
 }
 
-/* =====================================================
-   MODAL
-===================================================== */
 .cStudentModal {
   position: fixed;
   inset: 0;
-  
+
   background: rgba(17, 63, 103, 0.25);
   backdrop-filter: blur(6px);
 
@@ -4205,9 +3765,6 @@ textarea.sReports-notesBox {
   pointer-events: auto;
 }
 
-/* =========================
-   MODAL CONTAINER
-========================= */
 .cStudentModal-container {
   width: 95%;
   max-width: 650px;
@@ -4224,9 +3781,6 @@ textarea.sReports-notesBox {
   overflow-y: auto;
 }
 
-/* =========================
-   HEADER
-========================= */
 .cStudentModal-header {
   display: flex;
   justify-content: space-between;
@@ -4249,15 +3803,13 @@ textarea.sReports-notesBox {
   cursor: pointer;
   line-height: 1;
 }
+
 .cStudentModal-body {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-/* =========================
-   PROFILE SECTION
-========================= */
 .cStudentModal-profile {
   display: flex;
   align-items: center;
@@ -4265,8 +3817,8 @@ textarea.sReports-notesBox {
 }
 
 .cStudentModal-profileText {
-  flex: 1;            
-  min-width: 0;         
+  flex: 1;
+  min-width: 0;
 }
 
 .cStudentModal-profileText h3 {
@@ -4279,6 +3831,7 @@ textarea.sReports-notesBox {
   font-size: 13px;
   color: var(--text-muted);
 }
+
 .cStudentModal-avatar {
   width: 48px;
   height: 48px;
@@ -4298,13 +3851,9 @@ textarea.sReports-notesBox {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;        
+  width: 100%;
 }
 
-
-/* =========================
-   BOXES
-========================= */
 .cStudentModal-box {
   padding: 16px;
   border-radius: 16px;
@@ -4321,18 +3870,12 @@ textarea.sReports-notesBox {
   margin: 0 0 10px;
 }
 
-/* =========================
-   GRID
-========================= */
 .cStudentModal-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
 }
 
-/* =========================
-   PROGRESS BAR
-========================= */
 .cStudentModal-progressBar {
   width: 100%;
   height: 10px;
@@ -4356,10 +3899,6 @@ body:has(.cStudentModal.show) .sidebar {
   pointer-events: none;
 }
 
-
-/* =====================================================
-   REPORTS PAGE
-===================================================== */
 .cReports-main {
   margin-left: 280px;
   padding: 40px 28px;
@@ -4384,10 +3923,6 @@ body:has(.cStudentModal.show) .sidebar {
   align-items: flex-start;
 }
 
-/* =====================================================
-   CONTAINER
-===================================================== */
-
 .cReports-grid {
   width: 100%;
   max-width: 760px;
@@ -4395,12 +3930,8 @@ body:has(.cStudentModal.show) .sidebar {
   margin: 0 auto;
 }
 
-/* =====================================================
-   CARD
-===================================================== */
-
 .cReports-card {
-   width: 100%;
+  width: 100%;
   max-width: 900px;
 
   padding: 36px;
@@ -4436,10 +3967,6 @@ body:has(.cStudentModal.show) .sidebar {
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
 
-/* =====================================================
-   TEXT
-===================================================== */
-
 .cReports-card h3 {
   font-size: 22px;
   font-weight: 700;
@@ -4454,10 +3981,6 @@ body:has(.cStudentModal.show) .sidebar {
   color: var(--text-muted);
   margin-bottom: 22px;
 }
-
-/* =====================================================
-   TEXTAREA
-===================================================== */
 
 .cReports-textarea {
   width: 100%;
@@ -4480,16 +4003,10 @@ body:has(.cStudentModal.show) .sidebar {
   resize: vertical;
 }
 
-/* focus */
 .cReports-textarea:focus {
   border-color: #4988C4;
   box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
 }
-
-
-/* =====================================================
-   BUTTON
-===================================================== */
 
 .cReports-btn {
   margin-top: 14px;
@@ -4522,21 +4039,12 @@ body:has(.cStudentModal.show) .sidebar {
   transform: scale(0.98);
 }
 
-/* =====================================================
-   STATUS
-===================================================== */
-
 .cReports-status {
   margin-top: 10px;
   font-size: 13px;
   color: var(--text-muted);
   opacity: 0.8;
 }
-
-
-/* =====================================================
-   ANNOUNCEMENTS PAGE
-===================================================== */
 
 .cAnnouncements-main {
   margin-left: 280px;
@@ -4550,10 +4058,6 @@ body:has(.cStudentModal.show) .sidebar {
   justify-content: center;
   align-items: flex-start;
 }
-
-/* =====================================================
-   CONTAINER CARD
-===================================================== */
 
 .cAnnouncements-card {
   width: 100%;
@@ -4593,10 +4097,6 @@ body:has(.cStudentModal.show) .sidebar {
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
 
-/* =====================================================
-   TITLE
-===================================================== */
-
 .cAnnouncements-card h2 {
   font-size: 22px;
   font-weight: 700;
@@ -4605,10 +4105,6 @@ body:has(.cStudentModal.show) .sidebar {
   color: var(--text);
   margin-bottom: 20px;
 }
-
-/* =====================================================
-   FORM INPUTS
-===================================================== */
 
 .cAnnouncements-input,
 .cAnnouncements-textarea {
@@ -4636,15 +4132,10 @@ body:has(.cStudentModal.show) .sidebar {
   box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
 }
 
-/* TEXTAREA SIZE */
 .cAnnouncements-textarea {
   min-height: 160px;
   resize: vertical;
 }
-
-/* =====================================================
-   BUTTON
-===================================================== */
 
 .cAnnouncements-btn {
   width: 100%;
@@ -4675,10 +4166,6 @@ body:has(.cStudentModal.show) .sidebar {
   transform: scale(0.98);
 }
 
-/* =====================================================
-   REFERRAL PAGE
-===================================================== */
-
 .cReferral-main {
   margin-left: 280px;
   padding: 40px 28px;
@@ -4692,10 +4179,6 @@ body:has(.cStudentModal.show) .sidebar {
 
   box-sizing: border-box;
 }
-
-/* =====================================================
-   MAIN CARD
-===================================================== */
 
 .cReferral-card {
   width: 100%;
@@ -4736,10 +4219,6 @@ body:has(.cStudentModal.show) .sidebar {
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
 
-/* =====================================================
-   TITLE
-===================================================== */
-
 .cReferral-card h2 {
   font-size: 22px;
   font-weight: 700;
@@ -4758,10 +4237,6 @@ body:has(.cStudentModal.show) .sidebar {
   opacity: 0.9;
 }
 
-/* =====================================================
-   FORM ROW LAYOUT
-===================================================== */
-
 .slip-row {
   display: flex;
   align-items: center;
@@ -4779,10 +4254,6 @@ body:has(.cStudentModal.show) .sidebar {
   color: var(--text);
   opacity: 0.85;
 }
-
-/* =====================================================
-   INPUTS
-===================================================== */
 
 .slip-input,
 .slip-textarea {
@@ -4803,23 +4274,17 @@ body:has(.cStudentModal.show) .sidebar {
   transition: 0.2s ease;
 }
 
-/* focus */
 .slip-input:focus,
 .slip-textarea:focus {
   border-color: #4988C4;
   box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
 }
 
-/* textarea sizing */
 .slip-textarea {
   min-height: 120px;
   resize: vertical;
   margin-bottom: 12px;
 }
-
-/* =====================================================
-   SIGNATURE SECTION
-===================================================== */
 
 .signature-img {
   width: 160px;
@@ -4835,10 +4300,6 @@ body:has(.cStudentModal.show) .sidebar {
   color: var(--text);
   opacity: 0.85;
 }
-
-/* =====================================================
-   BUTTON
-===================================================== */
 
 .cReferral-btn {
   width: 100%;
@@ -4871,11 +4332,6 @@ body:has(.cStudentModal.show) .sidebar {
   transform: scale(0.98);
 }
 
-
-/* =====================================================
-   PROFILE PAGE
-===================================================== */
-
 .cProfile-main {
   margin-left: 280px;
   padding: 40px 28px;
@@ -4890,15 +4346,10 @@ body:has(.cStudentModal.show) .sidebar {
   box-sizing: border-box;
 }
 
-/* container */
 .cProfile-container {
   width: 100%;
   max-width: 900px;
 }
-
-/* =====================================================
-   MAIN CARD
-===================================================== */
 
 .cProfile-card {
   padding: 36px;
@@ -4936,10 +4387,6 @@ body:has(.cStudentModal.show) .sidebar {
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
 
-/* =====================================================
-   HEADER SECTION
-===================================================== */
-
 .cProfile-header {
   display: flex;
   align-items: center;
@@ -4948,7 +4395,6 @@ body:has(.cStudentModal.show) .sidebar {
   margin-bottom: 24px;
 }
 
-/* avatar */
 .cProfile-avatar {
   position: relative;
 }
@@ -4963,7 +4409,6 @@ body:has(.cStudentModal.show) .sidebar {
   border: 3px solid rgba(73, 136, 196, 0.4);
 }
 
-/* upload button */
 .cProfile-upload {
   position: absolute;
   bottom: 6px;
@@ -4986,7 +4431,6 @@ body:has(.cStudentModal.show) .sidebar {
   box-shadow: 0 6px 16px rgba(17, 63, 103, 0.25);
 }
 
-/* name */
 .cProfile-header h3 {
   font-size: 20px;
   font-weight: 700;
@@ -4995,15 +4439,10 @@ body:has(.cStudentModal.show) .sidebar {
   margin-bottom: 4px;
 }
 
-/* subtitle */
 .cProfile-muted {
   font-size: 13px;
   color: var(--text-muted);
 }
-
-/* =====================================================
-   FORM
-===================================================== */
 
 .cProfile-form {
   display: flex;
@@ -5011,7 +4450,6 @@ body:has(.cStudentModal.show) .sidebar {
   gap: 16px;
 }
 
-/* form group */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -5026,7 +4464,6 @@ body:has(.cStudentModal.show) .sidebar {
   opacity: 0.9;
 }
 
-/* inputs */
 .form-group input {
   padding: 12px 14px;
 
@@ -5043,21 +4480,15 @@ body:has(.cStudentModal.show) .sidebar {
   transition: 0.2s ease;
 }
 
-/* focus */
 .form-group input:focus {
   border-color: #4988C4;
   box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
 }
 
-/* readonly style */
 .form-group input[readonly] {
   opacity: 0.7;
   cursor: not-allowed;
 }
-
-/* =====================================================
-   SAVE BUTTON
-===================================================== */
 
 .cProfile-saveBtn {
   margin-top: 10px;
@@ -5094,11 +4525,6 @@ body:has(.cStudentModal.show) .sidebar {
   font-size: 13px;
 }
 
-/* =====================================================
-   HISTORY PAGE
-===================================================== */
-
-/* MAIN */
 .cHistory-main {
   margin-left: 280px;
   padding: 40px 28px;
@@ -5109,13 +4535,10 @@ body:has(.cStudentModal.show) .sidebar {
   gap: 18px;
 }
 
-/* =====================================================
-   TABS
-===================================================== */
 .cHistory-topbarRow {
   display: flex;
   align-items: center;
-  gap: 12px; /* keeps tabs + button clean spacing */
+  gap: 12px;
   position: relative;
 }
 
@@ -5125,7 +4548,6 @@ body:has(.cStudentModal.show) .sidebar {
   flex-wrap: nowrap;
   width: auto;
 }
-
 
 .cHistory-tabs button {
   border: none;
@@ -5147,9 +4569,6 @@ body:has(.cStudentModal.show) .sidebar {
   color: #fff;
 }
 
-/* =====================================================
-   FILTER BAR
-===================================================== */
 .cHistory-filterBar {
   display: flex;
   gap: 12px;
@@ -5175,9 +4594,6 @@ body:has(.cStudentModal.show) .sidebar {
   box-shadow: 0 0 0 3px rgba(17,63,103,0.15);
 }
 
-/* =====================================================
-   CONTENT
-===================================================== */
 .cHistory-tabContent {
   background: #fff;
   border: 1px solid #e3e8ef;
@@ -5189,7 +4605,6 @@ body:has(.cStudentModal.show) .sidebar {
   display: none;
 }
 
-/* TABLE */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -5223,10 +4638,6 @@ tbody tr:hover {
   color: #888;
 }
 
-/* =========================
-   ADMIN DASHBOARD MAIN 
-========================= */
-
 .aDashboard-main {
   margin-left: 280px;
   padding: var(--spacing-xxl);
@@ -5234,12 +4645,8 @@ tbody tr:hover {
   background: var(--bg);
 }
 
-/* =========================
-   CARD BASE
-========================= */
-
 .aDashboard-card {
-  background: var(--cards);
+  background: var(--card);
   backdrop-filter: blur(14px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -5252,7 +4659,6 @@ tbody tr:hover {
   height: 100%;
   overflow: hidden;
 }
-
 
 .aDashboard-card::after {
   content: "";
@@ -5271,11 +4677,6 @@ tbody tr:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
 }
-
-
-/* =========================
-   LIVE STATUS
-========================= */
 
 .aDashboard-live-status {
   display: flex;
@@ -5317,10 +4718,6 @@ tbody tr:hover {
   }
 }
 
-/* =========================
-   STATS GRID
-========================= */
-
 .aDashboard-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -5349,10 +4746,6 @@ tbody tr:hover {
   line-height: 1.2;
 }
 
-/* =========================
-   QUICK ACTIONS
-========================= */
-
 .aDashboard-actions {
   margin-bottom: 24px;
 }
@@ -5369,10 +4762,6 @@ tbody tr:hover {
   flex-wrap: wrap;
   justify-content: center;
 }
-
-/* =========================
-   BUTTONS
-========================= */
 
 .aDashboard-btn {
   background: linear-gradient(135deg,#113F67,#4988C4);
@@ -5399,12 +4788,8 @@ tbody tr:hover {
 }
 
 .aDashboard-btn-secondary {
-   background: linear-gradient(135deg, #4988C4,#113F67);
+  background: linear-gradient(135deg, #4988C4,#113F67);
 }
-
-/* =========================
-   ANALYTICS SECTION
-========================= */
 
 .aDashboard-chart-grid {
   display: grid;
@@ -5441,18 +4826,12 @@ tbody tr:hover {
   max-width: 280px;
 }
 
-/* =========================
-   MAIN
-========================= */
 .aUsers-main {
   background: var(--bg);
   margin-left: 280px;
   padding: 20px;
 }
 
-/* =========================
-   TABS
-========================= */
 .aUsers-tabs {
   display: flex;
   gap: 10px;
@@ -5483,10 +4862,6 @@ tbody tr:hover {
   border-color: var(--primary);
 }
 
-/* =========================
-   TAB CONTENT (FIXED ISSUE)
-   THIS WAS THE PROBLEM
-========================= */
 .aUsers-tab {
   display: none;
 }
@@ -5494,10 +4869,6 @@ tbody tr:hover {
 .aUsers-tab.active {
   display: block;
 }
-
-/* =========================
-   CARD STYLE (optional shared look)
-========================= */
 
 .aUsers-card {
   background: var(--card);
@@ -5512,7 +4883,6 @@ tbody tr:hover {
   overflow: visible;
   position: relative;
 }
-
 
 .aUsers-card::after {
   content: "";
@@ -5531,9 +4901,7 @@ tbody tr:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
 }
-/* =========================
-   HEADER
-========================= */
+
 .aUsers-header {
   display: flex;
   justify-content: space-between;
@@ -5546,16 +4914,10 @@ tbody tr:hover {
   font-size: 13px;
 }
 
-/* =========================
-   TABLE WRAPPER
-========================= */
 .table-wrapper {
   overflow-x: auto;
 }
 
-/* =========================
-   TABLE FIX
-========================= */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -5579,9 +4941,6 @@ th {
   background: var(--bg);
 }
 
-/* =========================
-   BADGE
-========================= */
 .aBadge {
   display: inline-flex;
   align-items: center;
@@ -5597,9 +4956,6 @@ th {
   color: var(--success);
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
 @media (max-width: 768px) {
   .sidebar {
     display: none;
@@ -5615,11 +4971,6 @@ th {
   }
 }
 
-
-/* =========================================================
-   MAIN LAYOUT
-========================================================= */
-
 .aStudents-main {
   margin-left: 280px;
   background: var(--bg);
@@ -5632,12 +4983,8 @@ th {
   gap: 20px;
 }
 
-/* =========================================================
-   CARD
-========================================================= */
-
 .aStudents-card {
-  background: var(--cards);
+  background: var(--card);
   backdrop-filter: blur(14px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -5645,11 +4992,9 @@ th {
   box-shadow: var(--shadow);
   transition: var(--transition);
 
-
   height: 100%;
   overflow: hidden;
 }
-
 
 .aStudents-card::after {
   content: "";
@@ -5669,37 +5014,28 @@ th {
   box-shadow: var(--shadow-hover);
 }
 
-/* =========================================================
-   HEADER 
-========================================================= */
-
 .aStudents-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 
-  gap: 24px;              /* increased spacing */
-  padding-bottom: 12px;   /* breathing room */
+  gap: 24px;
+  padding-bottom: 12px;
 }
 
-/* LEFT SIDE (TEXT BLOCK) */
 .aStudents-header > div:first-child {
   display: flex;
   flex-direction: column;
-  gap: 4px;              /* spacing between title & subtitle */
+  gap: 4px;
   flex: 1;
   min-width: 0;
 }
 
-/* TEXT */
 .aStudents-title {
   font-size: 1.3rem;
   font-weight: 700;
 }
 
-/* =========================================================
-   ACTION BUTTONS
-========================================================= */
 .aStudents-record-actions {
   display: flex;
   gap: 12px;
@@ -5707,7 +5043,6 @@ th {
   align-items: center;
 }
 
-/* ADD BUTTON */
 .aStudents-add-btn {
   background: linear-gradient(135deg,#113F67,#4988C4);
   color: #fff;
@@ -5724,7 +5059,6 @@ th {
   box-shadow: var(--shadow-md);
 }
 
-/* CSV BUTTONS */
 .btn-import,
 .btn-export {
   background: #fff;
@@ -5758,11 +5092,6 @@ th {
   background: #dbe9ff;
 }
 
-
-/* =========================================================
-   TOPBAR SEARCH INPUT (FEEDBACK THEME)
-========================================================= */
-
 .topbar-search-input {
   padding: 10px 14px;
   width: 240px;
@@ -5782,36 +5111,27 @@ th {
   backdrop-filter: blur(8px);
 }
 
-/* hover effect */
 .topbar-search-input:hover {
   border-color: rgba(17, 63, 103, 0.3);
 }
 
-/* focus effect (important UX feedback style) */
 .topbar-search-input:focus {
   border-color: rgba(17, 63, 103, 0.6);
   box-shadow: 0 0 0 3px rgba(17, 63, 103, 0.12);
   background: rgba(255, 255, 255, 0.95);
 }
 
-/* =========================
-   FILTER WRAPPER
-========================= */
 .filter-wrapper {
   position: relative;
   display: inline-block;
 }
 
-/* =========================
-   FILTER BUTTON
-========================= */
 .filter-wrapper .btn {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-/* BACKDROP */
 .filter-backdrop {
   position: fixed;
   inset: 0;
@@ -5820,12 +5140,10 @@ th {
   z-index: 998;
 }
 
-/* SHOW BACKDROP */
 .filter-backdrop.show {
   display: block;
 }
 
-/* FILTER BOX (MODERN CARD STYLE) */
 #filterBox {
   position: absolute;
   top: 55px;
@@ -5846,12 +5164,10 @@ th {
   z-index: 999;
 }
 
-/* SHOW STATE */
 #filterBox.show {
   display: flex;
 }
 
-/* LABEL STYLE */
 #filterBox p {
   font-size: 12px;
   font-weight: 600;
@@ -5859,7 +5175,6 @@ th {
   color: #666;
 }
 
-/* INPUT STYLE */
 #filterBox select,
 #filterBox input {
   width: 100%;
@@ -5872,18 +5187,11 @@ th {
   outline: none;
 }
 
-/* BUTTON ROW */
 .filter-actions {
   display: flex;
   gap: 8px;
   margin-top: 8px;
 }
-
-
-
-/* =========================================================
-   MODAL BACKDROP
-========================================================= */
 
 .aStudents-modal {
   display: none;
@@ -5903,10 +5211,6 @@ th {
   display: flex;
 }
 
-/* =========================================================
-   MODAL CONTENT
-========================================================= */
-
 .aStudents-modal-content {
   width: 92%;
   max-width: 780px;
@@ -5925,7 +5229,6 @@ th {
   animation: modalPop 0.25s ease;
 }
 
-/* HEADER */
 .aStudents-modal-header {
   display: flex;
   justify-content: space-between;
@@ -5953,10 +5256,6 @@ th {
 
   cursor: pointer;
 }
-
-/* =========================================================
-   FORM
-========================================================= */
 
 .aStudents-sec-label {
   font-size: 0.75rem;
@@ -6001,10 +5300,6 @@ th {
   box-shadow: 0 0 0 3px rgba(17,63,103,0.12);
 }
 
-/* =========================================================
-   MODAL FOOTER
-========================================================= */
-
 .aStudents-modal-footer {
   margin-top: 18px;
 
@@ -6035,10 +5330,6 @@ th {
   cursor: pointer;
 }
 
-/* =========================================================
-   ANIMATION
-========================================================= */
-
 @keyframes modalPop {
   from {
     transform: scale(0.95);
@@ -6049,11 +5340,6 @@ th {
     opacity: 1;
   }
 }
-
-/* =========================================================
-   MAIN PAGE
-========================================================= */
-
 
 .aAppointments-main {
   margin-left: 280px;
@@ -6066,9 +5352,6 @@ th {
   gap: 20px;
 }
 
-/* =========================================================
-   STATUS SUMMARY
-========================================================= */
 .aAppointments-status-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -6076,9 +5359,8 @@ th {
   margin-bottom: 24px;
 }
 
-
 .aAppointments-summary-card {
-  background: var(--cards);
+  background: var(--card);
   backdrop-filter: blur(14px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -6086,11 +5368,9 @@ th {
   box-shadow: var(--shadow);
   transition: var(--transition);
 
-
   height: 100%;
   overflow: hidden;
 }
-
 
 .aAppointments-summary-card::after {
   content: "";
@@ -6108,7 +5388,6 @@ th {
   transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
 }
-
 
 .aAppointments-summary-card h3 {
   margin: 0 0 10px;
@@ -6130,10 +5409,6 @@ th {
   color: var(--text-light);
 }
 
-/* =========================================================
-   MAIN CARD
-========================================================= */
-
 .aAppointments-card {
   background: var(--card);
   backdrop-filter: blur(14px);
@@ -6143,11 +5418,9 @@ th {
   box-shadow: var(--shadow);
   transition: var(--transition);
 
-
   height: 100%;
   overflow: hidden;
 }
-
 
 .aAppointments-card::after {
   content: "";
@@ -6165,6 +5438,7 @@ th {
   transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
 }
+
 .aAppointments-card-header {
   display: flex;
   justify-content: space-between;
@@ -6181,9 +5455,6 @@ th {
   color: var(--text);
 }
 
-/* =========================================================
-   TABLE
-========================================================= */
 .aAppointments-table-wrapper {
   width: 100%;
   overflow-x: auto;
@@ -6223,9 +5494,6 @@ th {
   background: rgba(37, 99, 235, 0.03);
 }
 
-/* =========================================================
-   STATUS TAGS
-========================================================= */
 .tag {
   display: inline-flex;
   align-items: center;
@@ -6249,9 +5517,7 @@ th {
   background: rgba(239, 68, 68, 0.12);
   color: #b91c1c;
 }
-/* =========================
-   FILTER BAR LAYOUT
-========================= */
+
 .aAppointments-filter-bar {
   display: flex;
   justify-content: space-between;
@@ -6261,9 +5527,6 @@ th {
   margin-bottom: 20px;
 }
 
-/* =========================
-   STATUS FILTER BUTTONS
-========================= */
 .aAppointments-status-filters {
   display: flex;
   gap: 10px;
@@ -6282,14 +5545,11 @@ th {
 }
 
 .btn-filter.active {
-  background:  linear-gradient(var(--primary), var(--secondary));;
+  background: linear-gradient(var(--primary), var(--secondary));
   color: white;
   border-color: var(--primary);
 }
 
-/* =========================
-   DATE FILTER BOX
-========================= */
 .aAppointments-date-filters {
   display: flex;
   gap: 10px;
@@ -6297,7 +5557,6 @@ th {
   flex-wrap: wrap;
 }
 
-/* DATE INPUT */
 #filterDate {
   padding: 10px 14px;
   border-radius: 10px;
@@ -6313,9 +5572,6 @@ th {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-/* =========================
-   APPLY BUTTON
-========================= */
 .btn-apply {
   padding: 10px 14px;
   border-radius: 10px;
@@ -6332,9 +5588,6 @@ th {
   background: var(--primary-hover);
 }
 
-/* =========================
-   CLEAR BUTTON
-========================= */
 .btn-clear {
   padding: 10px 14px;
   border-radius: 10px;
@@ -6351,11 +5604,6 @@ th {
   background: var(--bg);
 }
 
-
-/* =========================================================
-   aCounselors PAGE — FEEDBACK THEME
-========================================================= */
-
 .aCounselors-main {
   margin-left: 280px;
   padding: var(--spacing-xxl);
@@ -6363,12 +5611,8 @@ th {
   min-height: 100vh;
 }
 
-/* =========================================================
-   CARD
-========================================================= */
-
 .aCounselors-card {
-  background: var(--cards);
+  background: var(--card);
   backdrop-filter: blur(14px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -6376,11 +5620,9 @@ th {
   box-shadow: var(--shadow);
   transition: var(--transition);
 
-
   height: 100%;
   overflow: hidden;
 }
-
 
 .aCounselors-card::after {
   content: "";
@@ -6400,8 +5642,6 @@ th {
   box-shadow: var(--shadow-hover);
 }
 
-
-/* HEADER */
 .aCounselors-header {
   display: flex;
   justify-content: space-between;
@@ -6424,9 +5664,6 @@ th {
   font-size: 0.95rem;
 }
 
-/* =========================================================
-   ACTION BUTTONS
-========================================================= */
 .aCounselors-record-actions {
   display: flex;
   gap: 12px;
@@ -6434,7 +5671,6 @@ th {
   align-items: center;
 }
 
-/* ADD BUTTON */
 .aCounselors-add-btn {
   background: linear-gradient(135deg,#113F67,#4988C4);
   color: #fff;
@@ -6451,7 +5687,6 @@ th {
   box-shadow: var(--shadow-md);
 }
 
-/* CSV BUTTONS */
 .aCounselors-btn-import,
 .aCounselors-btn-export {
   background: #fff;
@@ -6469,9 +5704,6 @@ th {
   transform: translateY(-2px);
 }
 
-/* =========================================================
-   TABLE
-========================================================= */
 .aCounselors-table-wrapper {
   overflow-x: auto;
   margin-top: 15px;
@@ -6501,9 +5733,6 @@ th {
   background: rgba(37, 99, 235, 0.03);
 }
 
-/* =========================================================
-   SMALL BUTTON
-========================================================= */
 .aCounselors-btn {
   padding: 6px 12px;
   border-radius: 8px;
@@ -6530,10 +5759,6 @@ th {
   background: #dbe9ff;
 }
 
-/* =========================================================
-   MODAL
-========================================================= */
-
 .aCounselors-modal {
   display: none;
   position: fixed;
@@ -6551,10 +5776,6 @@ th {
 .aCounselors-modal.open {
   display: flex;
 }
-
-/* =========================================================
-   MODAL CONTENT
-========================================================= */
 
 .aCounselors-modal-content {
   width: 92%;
@@ -6574,7 +5795,6 @@ th {
   animation: modalPop 0.25s ease;
 }
 
-/* HEADER */
 .aCounselors-modal-header {
   display: flex;
   justify-content: space-between;
@@ -6602,10 +5822,6 @@ th {
 
   cursor: pointer;
 }
-
-/* =========================================================
-   FORM
-========================================================= */
 
 .aCounselors-sec-label {
   font-size: 0.75rem;
@@ -6650,10 +5866,6 @@ th {
   box-shadow: 0 0 0 3px rgba(17,63,103,0.12);
 }
 
-/* =========================================================
-   MODAL FOOTER
-========================================================= */
-
 .aCounselors-modal-footer {
   margin-top: 18px;
 
@@ -6684,21 +5896,6 @@ th {
   cursor: pointer;
 }
 
-/* =========================================================
-   ANIMATION
-========================================================= */
-
-@keyframes modalPop {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
 .password-wrapper {
   position: relative;
   width: 100%;
@@ -6706,7 +5903,7 @@ th {
 
 .password-wrapper input {
   width: 100%;
-  padding-right: 40px; /* space for eye icon */
+  padding-right: 40px;
 }
 
 .aCounselors-toggle-eye {
@@ -6723,9 +5920,6 @@ th {
   color: rgba(0,0,0,0.8);
 }
 
-/* =========================
-   MAIN WRAPPER
-========================= */
 .aReports-main {
   background: var(--bg);
   margin-left: 280px;
@@ -6741,9 +5935,6 @@ th {
   box-sizing: border-box;
 }
 
-/* =========================
-   CARD
-========================= */
 .aReports-card {
   position: relative;
 
@@ -6761,7 +5952,6 @@ th {
   overflow: hidden;
 }
 
-/* glow */
 .aReports-card::after {
   content: "";
   position: absolute;
@@ -6781,24 +5971,17 @@ th {
   box-shadow: var(--shadow-hover);
 }
 
-/* =========================
-   TITLES
-========================= */
 .aReports-title {
   margin-bottom: 15px;
   font-size: 18px;
 }
 
-/* =========================
-   CHART GRID
-========================= */
 .aReports-chart-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
 }
 
-/* chart box */
 .aReports-chart-box {
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--border);
@@ -6812,9 +5995,6 @@ th {
   min-height: 320px;
 }
 
-/* =========================
-   CHART CONTAINERS (IMPORTANT FIX)
-========================= */
 .aReports-chart-container {
   position: relative;
   width: 100%;
@@ -6826,7 +6006,6 @@ th {
   height: 100% !important;
 }
 
-/* PIE CENTER FIX */
 .aReports-chart-center {
   display: flex;
   justify-content: center;
@@ -6839,9 +6018,6 @@ th {
   height: 240px;
 }
 
-/* =========================
-   STATS
-========================= */
 .aReports-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -6874,9 +6050,6 @@ th {
   margin: 0;
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
 @media (max-width: 900px) {
   .aReports-main {
     margin-left: 0;
@@ -6909,6 +6082,57 @@ th {
   background: rgba(52, 105, 154, 0.35);
 }
 
+/* ================= SCROLLBAR DARK MODE ================= */
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(96, 165, 250, 0.2);
+  border-radius: 10px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(96, 165, 250, 0.45);
+}
+
 html {
   scroll-behavior: smooth;
+}
+
+[data-theme="dark"] .sBooking-card,
+[data-theme="dark"] .sConcern-card,
+[data-theme="dark"] .card-emergency,
+[data-theme="dark"] .sWellness-card,
+[data-theme="dark"] .sReferral-card,
+[data-theme="dark"] .sAnnouncements-card,
+[data-theme="dark"] .sReports-card,
+[data-theme="dark"] .sFeedback-card,
+[data-theme="dark"] .cReferral-card,
+[data-theme="dark"] .cAnnouncements-card,
+[data-theme="dark"] .cReports-card,
+[data-theme="dark"] .cProfile-card,
+[data-theme="dark"] .cAppointment-card,
+[data-theme="dark"] .cConcerns-card,
+[data-theme="dark"] .cStudentList-item,
+[data-theme="dark"] .announcement-modal-content,
+[data-theme="dark"] .cStudentModal-container {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+/* Fix any hardcoded white input/form backgrounds inside cards */
+[data-theme="dark"] .sBooking-grid input,
+[data-theme="dark"] .sBooking-grid select,
+[data-theme="dark"] .sBooking-grid textarea,
+[data-theme="dark"] .sConcern-formGroup input,
+[data-theme="dark"] .sConcern-formGroup textarea,
+[data-theme="dark"] .sWellness-form-group input,
+[data-theme="dark"] .sWellness-form-group select,
+[data-theme="dark"] .sWellness-mood-btn,
+[data-theme="dark"] .sBooking-slotBtn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border);
+  color: var(--text);
 }

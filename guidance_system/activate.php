@@ -115,25 +115,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $student_id_int = (int) $student_id;
 
 
-    // ================= STEP 4: Call stored procedure =================
-    $stmt = $conn->prepare("CALL activate_student(?, ?)");
 
+    // ================= STEP 4: Generate activated_id =================
+    function generateActivatedId($conn): string {
+        do {
+            $id = str_pad(random_int(1, 999999), 6, '0', STR_PAD_LEFT);
+            $check = $conn->query("SELECT 1 FROM activated_students WHERE activated_id = '$id' LIMIT 1");
+        } while ($check && $check->num_rows > 0);
+        return $id;
+    }
+
+    $activated_id = generateActivatedId($conn);
+
+    // ================= STEP 5: Insert directly =================
+    $stmt = $conn->prepare("
+        INSERT INTO activated_students (activated_id, student_id, password, status, is_temp_password)
+        VALUES (?, ?, ?, 'active', 1)
+    ");
 
     if (!$stmt) {
         echo json_encode([
             "success" => false,
-            "message" => "Failed to prepare statement: " . $conn->error
+            "message" => "Prepare failed: " . $conn->error
         ]);
         exit;
     }
 
-
-    $stmt->bind_param("is", $student_id_int, $hashedPass);
+    $stmt->bind_param("sis", $activated_id, $student_id_int, $hashedPass);
     $executed = $stmt->execute();
     $stmt->close();
 
-
-    // ================= STEP 5: Return result =================
+    // ================= STEP 6: Return result =================
     if ($executed) {
         echo json_encode([
             "success"       => true,
@@ -143,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         echo json_encode([
             "success" => false,
-            "message" => "Failed to activate account. Please try again."
+            "message" => "Failed to activate account: " . $conn->error
         ]);
     }
     exit;
