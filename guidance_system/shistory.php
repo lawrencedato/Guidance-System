@@ -27,6 +27,18 @@ $email      = htmlspecialchars($student['email'] ?? '');
 $profileImg = !empty($profile['profile_image'])
               ? htmlspecialchars($profile['profile_image'])
               : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
+
+$historyRes = $conn->query("
+    SELECT a.appointment_date, a.appointment_time, a.status,
+           CONCAT(c.first_name, ' ', c.last_name) AS counselor_name
+    FROM appointments a
+    JOIN counselors c ON c.counselor_id = a.counselor_id
+    WHERE a.student_id = '$sid' AND a.status IN ('Approved','Completed')
+    ORDER BY a.appointment_date DESC
+");
+$sessions = [];
+while ($row = $historyRes->fetch_assoc()) $sessions[] = $row;
+
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -133,26 +145,47 @@ $profileImg = !empty($profile['profile_image'])
   <!-- CARDS -->
   <div class="sHistory-container">
 
-    <div class="sHistory-card" data-date="2026-01-10">
-      <h3>Guidance Counselling</h3>
-      <span class="tag info">Completed</span>
-      <p><b>Date:</b> January 10, 2026</p>
-      <p><b>Counselor:</b> Dr. Lawrence Dato</p>
-    </div>
+<?php if (empty($sessions)): ?>
+  <p style="text-align:center; color:var(--text-muted); padding:3rem;">No past sessions found.</p>
+<?php else: ?>
+  <?php foreach ($sessions as $sess): ?>
+  <div class="sHistory-card" data-date="<?= htmlspecialchars($sess['appointment_date']) ?>">
+    <h3>Guidance Counselling</h3>
+    <span class="tag info"><?= htmlspecialchars($sess['status']) ?></span>
+    <p><b>Date:</b> <?= date('F d, Y', strtotime($sess['appointment_date'])) ?></p>
+    <p><b>Time:</b> <?= date('g:i A', strtotime($sess['appointment_time'])) ?></p>
+    <p><b>Counselor:</b> <?= htmlspecialchars($sess['counselor_name']) ?></p>
+  </div>
+  <?php endforeach; ?>
+<?php endif; ?>
 
-    <div class="sHistory-card" data-date="2026-02-02">
-      <h3>Guidance Counselling</h3>
-      <span class="tag info">Completed</span>
-      <p><b>Date:</b> February 02, 2026</p>
-      <p><b>Counselor:</b> Dr. Lawrence Dato</p>
-    </div>
+<?php if (empty($sessions)): ?>
+  <p style="text-align:center; color:var(--text-muted); padding:3rem;">No past sessions found.</p>
+<?php else: ?>
+  <?php foreach ($sessions as $sess): ?>
+  <div class="sHistory-card" data-date="<?= htmlspecialchars($sess['appointment_date']) ?>">
+    <h3>Guidance Counselling</h3>
+    <span class="tag info"><?= htmlspecialchars($sess['status']) ?></span>
+    <p><b>Date:</b> <?= date('F d, Y', strtotime($sess['appointment_date'])) ?></p>
+    <p><b>Time:</b> <?= date('g:i A', strtotime($sess['appointment_time'])) ?></p>
+    <p><b>Counselor:</b> <?= htmlspecialchars($sess['counselor_name']) ?></p>
+  </div>
+  <?php endforeach; ?>
+<?php endif; ?>
 
-    <div class="sHistory-card" data-date="2026-03-15">
-      <h3>Follow-up Session</h3>
-      <span class="tag info">Completed</span>
-      <p><b>Date:</b> March 15, 2026</p>
-      <p><b>Notes:</b> Improvement observed</p>
-    </div>
+<?php if (empty($sessions)): ?>
+  <p style="text-align:center; color:var(--text-muted); padding:3rem;">No past sessions found.</p>
+<?php else: ?>
+  <?php foreach ($sessions as $sess): ?>
+  <div class="sHistory-card" data-date="<?= htmlspecialchars($sess['appointment_date']) ?>">
+    <h3>Guidance Counselling</h3>
+    <span class="tag info"><?= htmlspecialchars($sess['status']) ?></span>
+    <p><b>Date:</b> <?= date('F d, Y', strtotime($sess['appointment_date'])) ?></p>
+    <p><b>Time:</b> <?= date('g:i A', strtotime($sess['appointment_time'])) ?></p>
+    <p><b>Counselor:</b> <?= htmlspecialchars($sess['counselor_name']) ?></p>
+  </div>
+  <?php endforeach; ?>
+<?php endif; ?>
 
   </div>
 

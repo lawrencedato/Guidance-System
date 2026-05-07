@@ -1,3 +1,8 @@
+<?php
+$phone = htmlspecialchars($profile['contact_number'] ?? 'N/A');
+?>
+
+
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -7,6 +12,7 @@
 <title>UNITYCARE | History</title>
 
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="logout.css">
 <link rel="stylesheet" href="history.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -78,8 +84,8 @@
     <div class="topbar-user">
       <img src="counselor.jpg" alt="user">
       <div>
-        <strong>Dr. Lawrence Dato</strong>
-        <p>lawrencedato@gmail.com</p>
+        <p><?= $fullName ?></p>
+        <p><b>Contact:</b> <?= $phone ?> | <?= $email ?></p>
       </div>
     </div>
 
@@ -197,7 +203,17 @@
     </tbody>
   </table>
 </div>
-
+<div class="logout-overlay" id="logoutOverlay">
+  <div class="logout-modal">
+    <div class="logout-icon"><i class="fa fa-right-from-bracket"></i></div>
+    <h3>Logout</h3>
+    <p>Are you sure you want to logout?</p>
+    <div class="logout-actions">
+      <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+      <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+    </div>
+  </div>
+</div>
 </main>
 
 <script>
@@ -264,11 +280,18 @@ function toggleTheme(){
   );
 }
 
-function logout(){
-  localStorage.clear();
-  window.location.href = "clogin.php";
+function logout() {
+  document.getElementById('logoutOverlay').classList.add('show');
 }
-
+function closeLogout() {
+  document.getElementById('logoutOverlay').classList.remove('show');
+}
+function confirmLogout() {
+  window.location.href = 'logout.php?role=counselor';
+}
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeLogout();
+});
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
   const btn = document.querySelector(".sidebar-settingsButton");

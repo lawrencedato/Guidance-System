@@ -26,6 +26,42 @@ $email      = htmlspecialchars($student['email'] ?? '');
 $profileImg = !empty($profile['profile_image'])
               ? htmlspecialchars($profile['profile_image'])
               : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book') {
+    header('Content-Type: application/json');
+    $date     = $conn->real_escape_string($_POST['date']     ?? '');
+    $time     = $conn->real_escape_string($_POST['time']     ?? '');
+    $message  = $conn->real_escape_string($_POST['message']  ?? '');
+    $priority = $conn->real_escape_string($_POST['priority'] ?? 'Normal');
+
+    // Get an available counselor (least appointments today)
+    $cRes = $conn->query("
+        SELECT c.counselor_id
+        FROM counselors c
+        WHERE c.status = 'active'
+        ORDER BY (
+            SELECT COUNT(*) FROM appointments a
+            WHERE a.counselor_id = c.counselor_id
+            AND a.appointment_date = '$date'
+        ) ASC
+        LIMIT 1
+    ");
+    $counselorRow = $cRes ? $cRes->fetch_assoc() : null;
+
+    if (!$counselorRow) {
+        echo json_encode(['success' => false, 'message' => 'No available counselors for this date.']); exit;
+    }
+
+    $assignedCid = $counselorRow['counselor_id'];
+    $ok = $conn->query("
+        INSERT INTO appointments (student_id, counselor_id, appointment_date, appointment_time, message, priority, status, created_at)
+        VALUES ('$sid', '$assignedCid', '$date', '$time', '$message', '$priority', 'Pending', NOW())
+    ");
+    echo json_encode($ok
+        ? ['success' => true]
+        : ['success' => false, 'message' => 'Failed to book. Please try again.']);
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -244,27 +280,40 @@ function renderSlots(){
   });
 }
 
-function bookAppointment(){
-  const d = document.getElementById("date").value;
-  const t = document.getElementById("time").value;
+function bookAppointment() {
+  const d        = document.getElementById("date").value;
+  const t        = document.getElementById("time").value;
+  const msg      = document.getElementById("message").value.trim();
+  const priority = document.getElementById("priority").value;
+  const result   = document.getElementById("bookingResult");
 
-  if (!d || !t){
-    alert("Select date and time");
+  if (!d || !t) {
+    result.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please select a date and time.</span>";
     return;
   }
 
-  let data = JSON.parse(localStorage.getItem("appointments")) || [];
+  const fd = new FormData();
+  fd.append('action',   'book');
+  fd.append('date',     d);
+  fd.append('time',     t);
+  fd.append('message',  msg);
+  fd.append('priority', priority);
 
-  data.push({
-    id: "APP-" + Math.floor(Math.random()*100000),
-    date: d,
-    time: t,
-    status: "pending"
-  });
-
-  localStorage.setItem("appointments", JSON.stringify(data));
-
-  alert("Appointment submitted");
+  fetch('sappointment.php', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(json => {
+      result.innerHTML = json.success
+        ? "<span style='color:var(--success,#15803d);'>✔ Appointment submitted successfully!</span>"
+        : "<span style='color:var(--error,#e53e3e);'>❌ " + json.message + "</span>";
+      if (json.success) {
+        document.getElementById("date").value    = "";
+        document.getElementById("time").value    = "";
+        document.getElementById("message").value = "";
+      }
+    })
+    .catch(() => {
+      result.innerHTML = "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong.</span>";
+    });
 }
 
 window.onload = renderSlots;

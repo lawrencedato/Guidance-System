@@ -27,6 +27,21 @@ $email      = htmlspecialchars($student['email'] ?? '');
 $profileImg = !empty($profile['profile_image'])
               ? htmlspecialchars($profile['profile_image'])
               : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
+
+
+$apptRes = $conn->query("
+    SELECT appointment_id, appointment_date, appointment_time, status
+    FROM appointments
+    WHERE student_id = '$sid'
+    ORDER BY appointment_date DESC
+");
+$apptList = [];
+while ($r = $apptRes->fetch_assoc()) $apptList[] = $r;
+
+$latestApproved = null;
+foreach ($apptList as $a) {
+    if ($a['status'] === 'Approved') { $latestApproved = $a; break; }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -146,14 +161,16 @@ $profileImg = !empty($profile['profile_image'])
       </p>
 
       <div class="sReports-status">
-        <b>Status:</b>
-        <span id="status">Waiting for generation...</span>
-      </div>
+  <b>Status:</b>
+  <span><?= $latestApproved ? htmlspecialchars($latestApproved['status']) : 'No approved appointments yet' ?></span>
+</div>
 
-      <div class="sReports-ticket-section">
-        <p><b>Ticket ID:</b></p>
-        <div id="ticket" class="sReports-ticket-box">---</div>
-      </div>
+<div class="sReports-ticket-section">
+  <p><b>Ticket ID:</b></p>
+  <div class="sReports-ticket-box">
+    <?= $latestApproved ? 'APPT-' . $latestApproved['appointment_id'] : '---' ?>
+  </div>
+</div>
 
     </div>
 
@@ -168,8 +185,20 @@ $profileImg = !empty($profile['profile_image'])
         View all previously generated tickets.
       </p>
 
-      <p>Total Tickets: <span id="ticketCount">0</span></p>
-      <ul id="ticketList" class="sReports-history-list"></ul>
+     <p>Total Tickets: <span><?= count($apptList) ?></span></p>
+<ul class="sReports-history-list">
+  <?php foreach ($apptList as $ap): ?>
+    <li>
+      APPT-<?= $ap['appointment_id'] ?> &bull;
+      <?= htmlspecialchars($ap['status']) ?> &bull;
+      <?= date('M d, Y', strtotime($ap['appointment_date'])) ?> &bull;
+      <?= date('g:i A', strtotime($ap['appointment_time'])) ?>
+    </li>
+  <?php endforeach; ?>
+  <?php if (empty($apptList)): ?>
+    <li style="color:var(--text-muted);">No appointments yet.</li>
+  <?php endif; ?>
+</ul>
 
     </div>
 
@@ -231,32 +260,7 @@ function exportNotesPDF() {
   html2pdf().set(opt).from(element).save();
 }
 
-/* LOAD TICKETS */
-function updateTicketUI() {
-  let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
 
-  const approved = appointments.filter(a => a.status === "approved");
-
-  document.getElementById("ticketCount").innerText = approved.length;
-
-  const list = document.getElementById("ticketList");
-  list.innerHTML = "";
-
-  if (approved.length > 0) {
-    const latest = approved[approved.length - 1];
-    document.getElementById("ticket").innerText = latest.id;
-    document.getElementById("status").innerText = latest.status;
-  } else {
-    document.getElementById("ticket").innerText = "---";
-    document.getElementById("status").innerText = "Waiting for approval...";
-  }
-
-  approved.forEach(t => {
-    const li = document.createElement("li");
-    li.innerText = `${t.id} • ${t.status} • ${t.date} • ${t.time}`;
-    list.appendChild(li);
-  });
-}
 </script>
 <!-- LOGOUT MODAL -->
   <div class="logout-overlay" id="logoutOverlay">

@@ -1,4 +1,18 @@
 <?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_wellness') {
+    header('Content-Type: application/json');
+    $mood   = $conn->real_escape_string($_POST['mood_label']    ?? '');
+$stress = (int)($_POST['stress_level']                      ?? 0);
+$sleep  = $conn->real_escape_string($_POST['sleep_quality'] ?? '');
+$ok = $conn->query("
+    INSERT INTO wellness_checks (student_id, mood_label, stress_level, sleep_quality, created_at)
+    VALUES ('$sid', '$mood', $stress, '$sleep', NOW())
+");
+    echo json_encode($ok
+        ? ['success' => true]
+        : ['success' => false, 'message' => 'Failed to save. Please try again.']);
+    exit;
+}
 error_reporting(0);
 ini_set('display_errors', 0);
 mysqli_report(MYSQLI_REPORT_OFF);
@@ -149,7 +163,13 @@ $profileImg = !empty($profile['profile_image'])
       </select>
     </div>
 
-  </section>
+  <button class="sBooking-button" onclick="submitWellness()" style="margin-top: 16px;">
+    Save Check-in
+  </button>
+
+  <div id="wellnessResult" style="margin-top: 10px; font-size: 14px;"></div>
+
+</section>
 
 </main>
 
@@ -191,19 +211,40 @@ document.addEventListener("click", e => {
   }
 });
 
+let selectedMood = '';
+
 function setMood(emoji, text) {
-  localStorage.setItem("userMoodEmoji", emoji);
-  localStorage.setItem("userMoodText", text);
+  selectedMood = text;
   document.getElementById("moodValue").innerText = `${emoji} ${text}`;
 }
 
-window.addEventListener("load", () => {
-  const emoji = localStorage.getItem("userMoodEmoji");
-  const text  = localStorage.getItem("userMoodText");
-  if (emoji && text) {
-    document.getElementById("moodValue").innerText = `${emoji} ${text}`;
+function submitWellness() {
+  const stress = document.querySelector("input[type=range]").value;
+  const sleep  = document.querySelector(".sWellness-form-group select").value;
+  const result = document.getElementById("wellnessResult");
+
+  if (!selectedMood) {
+    result.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please select a mood first.</span>";
+    return;
   }
-});
+
+  const fd = new FormData();
+  fd.append('action',        'save_wellness');
+  fd.append('mood',          selectedMood);
+  fd.append('stress_level',  stress);
+  fd.append('sleep_quality', sleep);
+
+  fetch('swellness.php', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(json => {
+      result.innerHTML = json.success
+        ? "<span style='color:var(--success,#15803d);'>✔ Check-in saved!</span>"
+        : "<span style='color:var(--error,#e53e3e);'>❌ " + json.message + "</span>";
+    })
+    .catch(() => {
+      result.innerHTML = "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong.</span>";
+    });
+}
 
 function updateStress(v){
   let t = v < 30 ? "Low 😌" : v < 70 ? "Moderate 😐" : "High 😰";

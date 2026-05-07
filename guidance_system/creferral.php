@@ -1,3 +1,59 @@
+<?php
+error_reporting(0);
+ini_set('display_errors', 0);
+mysqli_report(MYSQLI_REPORT_OFF);
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'counselor') {
+    header("Location: slogin.php");
+    exit;
+}
+
+$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$cid  = $conn->real_escape_string($_SESSION['user_id']);
+
+
+$counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
+$counselor    = $counselorRes->fetch_assoc();
+
+$profileRes = $conn->query("SELECT profile_image FROM counselor_profiles WHERE counselor_id='$cid' LIMIT 1");
+$profile    = $profileRes ? $profileRes->fetch_assoc() : null;
+
+$fullName   = htmlspecialchars(($counselor['first_name'] ?? '') . ' ' . ($counselor['last_name'] ?? ''));
+$email      = htmlspecialchars($counselor['email'] ?? '');
+$profileImg = !empty($profile['profile_image'])
+    ? htmlspecialchars($profile['profile_image'])
+    : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
+$phone = htmlspecialchars($profile['contact_number'] ?? 'N/A');
+
+
+$pendingCount = (int)$conn->query(
+    "SELECT COUNT(*) c FROM appointments WHERE counselor_id='$cid' AND status='Pending'"
+)->fetch_assoc()['c'];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'create_referral') {
+    header('Content-Type: application/json');
+    $date    = $conn->real_escape_string($_POST['referral_date']    ?? '');
+    $name    = $conn->real_escape_string($_POST['student_name']     ?? '');
+    $year    = $conn->real_escape_string($_POST['year_level']       ?? '');
+    $course  = $conn->real_escape_string($_POST['course']           ?? '');
+    $reason  = $conn->real_escape_string($_POST['reason']           ?? '');
+    $remarks = $conn->real_escape_string($_POST['counselor_remarks']?? '');
+    if (!$date || !$name || !$year || !$course || !$reason) {
+        echo json_encode(['success' => false, 'message' => 'Missing required fields.']); exit;
+    }
+    $ok = $conn->query("
+        INSERT INTO referrals (counselor_id, student_name, year_level, course, reason, counselor_remarks, referral_date, created_at)
+        VALUES ('$cid', '$name', '$year', '$course', '$reason', '$remarks', '$date', NOW())
+    ");
+    echo json_encode($ok
+        ? ['success' => true]
+        : ['success' => false, 'message' => 'Failed to save. Please try again.']);
+    exit;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -7,6 +63,7 @@
 <title>UNITYCARE | Referral</title>
 
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -69,19 +126,26 @@
 
     <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
       <i class="fa fa-bell"></i>
-      <span class="badge">4</span>
+      <?php if ($pendingCount > 0): ?>
+  <span class="badge"><?= $pendingCount ?></span>
+<?php endif; ?>
 
-      <div class="icon-dropdown" id="notifDropdown">
-        <p>No new notifications</p>
-      </div>
+<div class="icon-dropdown" id="notifDropdown">
+  <?php if ($pendingCount > 0): ?>
+    <p><?= $pendingCount ?> pending appointment request(s)</p>
+  <?php else: ?>
+    <p>No new notifications</p>
+  <?php endif; ?>
+</div>
     </div>
 
     <div class="topbar-user">
-      <img src="counselor.jpg" alt="user">
-      <div>
-        <strong>Dr. Lawrence Dato</strong>
-        <p>lawrencedato@gmail.com</p>
-      </div>
+      <img src="<?= $profileImg ?>" alt="user"
+     onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff'">
+<div>
+  <strong><?= $fullName ?></strong>
+  <p><?= $email ?></p>
+</div>
     </div>
 
   </div>
@@ -141,15 +205,25 @@
 
     <img src="images/signature.png" class="signature-img" alt="Counselor Signature">
 
-    <p>Dr. Lawrence Dato</p>
-    <p><b>Contact:</b> 0912345678910 | lawrencedato@gmail.com</p>
+    <p><?= $fullName ?></p>
+    <p><b>Contact:</b> <?= $phone ?> | <?= $email ?></p>
 
     <button class="cReferral-btn" onclick="createReferral()">
       Create Referral
     </button>
-
+    <div id="referralResult" style="margin-top: 12px; font-size: 14px;"></div>
   </div>
-
+<div class="logout-overlay" id="logoutOverlay">
+  <div class="logout-modal">
+    <div class="logout-icon"><i class="fa fa-right-from-bracket"></i></div>
+    <h3>Logout</h3>
+    <p>Are you sure you want to logout?</p>
+    <div class="logout-actions">
+      <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+      <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+    </div>
+  </div>
+</div>
 </main>
 
 <!-- ================= SCRIPT ================= -->
@@ -177,41 +251,53 @@ function toggleTheme(){
   );
 }
 
-function logout(){
-  localStorage.clear();
-  window.location.href = "clogin.php";
+function logout() {
+  document.getElementById('logoutOverlay').classList.add('show');
 }
+function closeLogout() {
+  document.getElementById('logoutOverlay').classList.remove('show');
+}
+function confirmLogout() {
+  window.location.href = 'logout.php?role=counselor';
+}
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeLogout();
+});
 
 function createReferral() {
+  const date    = document.getElementById("refDate").value;
+  const name    = document.getElementById("refName").value.trim();
+  const year    = document.getElementById("refYear").value;
+  const course  = document.getElementById("refCourse").value;
+  const reason  = document.getElementById("refReason").value.trim();
+  const remarks = document.getElementById("refRemarks").value.trim();
 
-  const referral = {
-    date: document.getElementById("refDate").value,
-    studentName: document.getElementById("refName").value,
-    yearLevel: document.getElementById("refYear").value,
-    course: document.getElementById("refCourse").value,
-    reason: document.getElementById("refReason").value,
-    concern: document.getElementById("refRemarks").value || "",
-    createdAt: new Date().toLocaleString(),
-    status: "Active"
-  };
-
-  if (
-    !referral.date ||
-    !referral.studentName ||
-    !referral.yearLevel ||
-    !referral.course ||
-    !referral.reason
-  ) {
-    alert("Please complete all required fields.");
+  if (!date || !name || !year || !course || !reason) {
+    document.getElementById("referralResult").innerHTML =
+      "<span style='color:var(--error,#e53e3e);'>⚠ Please complete all required fields.</span>";
     return;
   }
 
-  let data = JSON.parse(localStorage.getItem("referrals")) || [];
-  data.unshift(referral);
-  localStorage.setItem("referrals", JSON.stringify(data));
+  const fd = new FormData();
+  fd.append('action',          'create_referral');
+  fd.append('referral_date',   date);
+  fd.append('student_name',    name);
+  fd.append('year_level',      year);
+  fd.append('course',          course);
+  fd.append('reason',          reason);
+  fd.append('counselor_remarks', remarks);
 
-  let count = parseInt(localStorage.getItem("referralCount")) || 0;
-  localStorage.setItem("referralCount", count + 1);
+  fetch('creferral.php', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(json => {
+      document.getElementById("referralResult").innerHTML = json.success
+        ? "<span style='color:var(--success,#15803d);'>✔ Referral created successfully!</span>"
+        : "<span style='color:var(--error,#e53e3e);'>❌ " + json.message + "</span>";
+    })
+    .catch(() => {
+      document.getElementById("referralResult").innerHTML =
+        "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong.</span>";
+    });
 }
 
 </script>

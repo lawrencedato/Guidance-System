@@ -1,3 +1,51 @@
+<?php
+error_reporting(0);
+ini_set('display_errors', 0);
+mysqli_report(MYSQLI_REPORT_OFF);
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'counselor') {
+    header("Location: slogin.php");
+    exit;
+}
+
+$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$cid  = $conn->real_escape_string($_SESSION['user_id']);
+
+
+$counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
+$counselor    = $counselorRes->fetch_assoc();
+
+$profileRes = $conn->query("SELECT profile_image FROM counselor_profiles WHERE counselor_id='$cid' LIMIT 1");
+$profile    = $profileRes ? $profileRes->fetch_assoc() : null;
+
+$fullName   = htmlspecialchars(($counselor['first_name'] ?? '') . ' ' . ($counselor['last_name'] ?? ''));
+$email      = htmlspecialchars($counselor['email'] ?? '');
+$profileImg = !empty($profile['profile_image'])
+    ? htmlspecialchars($profile['profile_image'])
+    : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
+
+
+$pendingCount = (int)$conn->query(
+    "SELECT COUNT(*) c FROM appointments WHERE counselor_id='$cid' AND status='Pending'"
+)->fetch_assoc()['c'];
+
+
+$studentsRes = $conn->query("
+    SELECT DISTINCT s.student_id, s.first_name, s.last_name, s.course, s.year_level,
+           MAX(a.appointment_date) AS last_session
+    FROM students s
+    JOIN appointments a ON a.student_id = s.student_id
+    WHERE a.counselor_id = '$cid'
+    GROUP BY s.student_id
+    ORDER BY s.last_name ASC
+");
+$students = [];
+while ($row = $studentsRes->fetch_assoc()) $students[] = $row;
+
+?>
+
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -7,6 +55,7 @@
 <title>UNITYCARE | Students List</title>
 
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -115,19 +164,26 @@
 
     <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
       <i class="fa fa-bell"></i>
-      <span class="badge">4</span>
+      <?php if ($pendingCount > 0): ?>
+  <span class="badge"><?= $pendingCount ?></span>
+<?php endif; ?>
 
-      <div class="icon-dropdown" id="notifDropdown">
-        <p>No new notifications</p>
-      </div>
+<div class="icon-dropdown" id="notifDropdown">
+  <?php if ($pendingCount > 0): ?>
+    <p><?= $pendingCount ?> pending appointment request(s)</p>
+  <?php else: ?>
+    <p>No new notifications</p>
+  <?php endif; ?>
+</div>
     </div>
 
     <div class="topbar-user">
-      <img src="counselor.jpg" alt="user">
-      <div>
-        <strong>Dr. Lawrence Dato</strong>
-        <p>lawrencedato@gmail.com</p>
-      </div>
+      <img src="<?= $profileImg ?>" alt="user"
+     onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff'">
+<div>
+  <strong><?= $fullName ?></strong>
+  <p><?= $email ?></p>
+</div>
     </div>
 
   </div>
@@ -138,41 +194,49 @@
 
   <div class="cStudentList-container">
 
-    <div class="cStudentList-item">
-      <div class="cStudentList-info">
-
-        <div class="cStudentList-avatar">JS</div>
-
-        <div class="cStudentList-content">
-
-          <div class="cStudentList-left">
-            <div class="cStudentList-nameRow">
-              <h3>Vincent Adolf Sablay</h3>
-              <button class="btn-small" onclick="openStudentModal()">
-                View Profile
-              </button>
-            </div>
-            <p>BSIT • 2nd Year</p>
+<?php if (empty($students)): ?>
+  <p style="text-align:center; color:var(--text-muted); padding:3rem;">No students yet.</p>
+<?php else: ?>
+  <?php foreach ($students as $s):
+    $sName    = htmlspecialchars($s['first_name'] . ' ' . $s['last_name']);
+    $initials = strtoupper(substr($s['first_name'],0,1) . substr($s['last_name'],0,1));
+    $lastSess = $s['last_session'] ? date('F d, Y', strtotime($s['last_session'])) : 'N/A';
+  ?>
+  <div class="cStudentList-item">
+    <div class="cStudentList-info">
+      <div class="cStudentList-avatar"><?= $initials ?></div>
+      <div class="cStudentList-content">
+        <div class="cStudentList-left">
+          <div class="cStudentList-nameRow">
+            <h3><?= $sName ?></h3>
+            <button class="btn-small" onclick="openStudentModal()">View Profile</button>
           </div>
-
-          <div class="cStudentList-right">
-
-            <div class="cStudentList-topRight">
-              <span class="tag stable">Stable</span>
-            </div>
-
-            <div class="cStudentList-bottomRight">
-              <p data-date="2026-04-10">Last Session: April 10, 2026</p>
-            </div>
-
-          </div>
-
+          <p><?= htmlspecialchars($s['course']) ?> • <?= htmlspecialchars($s['year_level']) ?></p>
         </div>
-
+        <div class="cStudentList-right">
+          <div class="cStudentList-bottomRight">
+            <p>Last Session: <?= $lastSess ?></p>
+          </div>
+        </div>
       </div>
     </div>
+  </div>
+  <?php endforeach; ?>
+<?php endif; ?>
 
   </div>
+  <div class="logout-overlay" id="logoutOverlay">
+  <div class="logout-modal">
+    <div class="logout-icon"><i class="fa fa-right-from-bracket"></i></div>
+    <h3>Logout</h3>
+    <p>Are you sure you want to logout?</p>
+    <div class="logout-actions">
+      <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+      <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+    </div>
+  </div>
+</div>
+
 </main>
 
 <!-- MODAL -->
@@ -313,8 +377,17 @@ function toggleTheme() {
 }
 
 function logout() {
-  window.location.href = "clogin.php";
+  document.getElementById('logoutOverlay').classList.add('show');
 }
+function closeLogout() {
+  document.getElementById('logoutOverlay').classList.remove('show');
+}
+function confirmLogout() {
+  window.location.href = 'logout.php?role=counselor';
+}
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeLogout();
+});
 </script>
 
 </body>

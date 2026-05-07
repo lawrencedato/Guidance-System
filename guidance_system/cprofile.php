@@ -1,3 +1,37 @@
+<?php
+error_reporting(0);
+ini_set('display_errors', 0);
+mysqli_report(MYSQLI_REPORT_OFF);
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'counselor') {
+    header("Location: slogin.php");
+    exit;
+}
+
+$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$cid  = $conn->real_escape_string($_SESSION['user_id']);
+
+
+$counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
+$counselor    = $counselorRes->fetch_assoc();
+
+$profileRes = $conn->query("SELECT profile_image FROM counselor_profiles WHERE counselor_id='$cid' LIMIT 1");
+$profile    = $profileRes ? $profileRes->fetch_assoc() : null;
+
+$fullName   = htmlspecialchars(($counselor['first_name'] ?? '') . ' ' . ($counselor['last_name'] ?? ''));
+$email      = htmlspecialchars($counselor['email'] ?? '');
+$profileImg = !empty($profile['profile_image'])
+    ? htmlspecialchars($profile['profile_image'])
+    : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
+
+
+$pendingCount = (int)$conn->query(
+    "SELECT COUNT(*) c FROM appointments WHERE counselor_id='$cid' AND status='Pending'"
+)->fetch_assoc()['c'];
+?>
+
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -66,19 +100,26 @@
 
     <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
       <i class="fa fa-bell"></i>
-      <span class="badge">4</span>
+      <?php if ($pendingCount > 0): ?>
+  <span class="badge"><?= $pendingCount ?></span>
+<?php endif; ?>
 
-      <div class="icon-dropdown" id="notifDropdown">
-        <p>No new notifications</p>
-      </div>
+<div class="icon-dropdown" id="notifDropdown">
+  <?php if ($pendingCount > 0): ?>
+    <p><?= $pendingCount ?> pending appointment request(s)</p>
+  <?php else: ?>
+    <p>No new notifications</p>
+  <?php endif; ?>
+</div>
     </div>
 
     <div class="topbar-user">
-      <img src="counselor.jpg" alt="user">
-      <div>
-        <strong>Dr. Lawrence Dato</strong>
-        <p>lawrencedato@gmail.com</p>
-      </div>
+      <img src="<?= $profileImg ?>" alt="user"
+     onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff'">
+<div>
+  <strong><?= $fullName ?></strong>
+  <p><?= $email ?></p>
+</div>
     </div>
 
   </div>
@@ -103,7 +144,7 @@
         </div>
 
         <div>
-          <h3 id="displayName">Dr. Maria Santos</h3>
+          <h3 id="displayName"><?= $fullName ?></h3>
           <p class="cProfile-muted">Counselor account</p>
         </div>
 
@@ -113,12 +154,12 @@
 
         <div class="form-group">
           <label>Full Name</label>
-          <input type="text" value="Dr. Maria Santos" readonly>
+          <input type="text" value="<?= $fullName ?>" readonly>
         </div>
 
         <div class="form-group">
           <label>Email</label>
-          <input type="email" value="maria.santos@unitycare.edu" readonly>
+          <input type="email" value="<?= $email ?>" readonly>
         </div>
 
         <div class="form-group">

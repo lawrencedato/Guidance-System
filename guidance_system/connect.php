@@ -3,7 +3,7 @@
 $servername = "localhost";
 $username = "root";
 $password = "";
-$database = "guidance_system";
+$database = "gcs_db";
 
 $conn = new mysqli($servername, $username, $password, $database);
 

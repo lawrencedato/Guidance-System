@@ -10,7 +10,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'counselor') {
     exit;
 }
 
-// ===== LOAD DATA =====
 $conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
 $cid  = $conn->real_escape_string($_SESSION['user_id']); // ✅ was $_SESSION['user_id'] but set wrong key before
 
@@ -28,7 +27,7 @@ $profileImg = !empty($profile['profile_image'])
     ? htmlspecialchars($profile['profile_image'])
     : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
 
-// ===== STATS =====
+
 $todaySessions = $conn->query(
     "SELECT COUNT(*) c FROM appointments 
      WHERE counselor_id='$cid' AND status='Approved' AND appointment_date = CURDATE()"

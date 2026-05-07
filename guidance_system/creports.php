@@ -1,3 +1,20 @@
+<?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_notes') {
+    header('Content-Type: application/json');
+    $notes = $conn->real_escape_string(trim($_POST['notes'] ?? ''));
+    if (!$notes) { echo json_encode(['success' => false, 'message' => 'Notes cannot be empty.']); exit; }
+    $ok = $conn->query("INSERT INTO session_notes (counselor_id, notes, created_at) VALUES ('$cid', '$notes', NOW())");
+    echo json_encode($ok
+        ? ['success' => true]
+        : ['success' => false, 'message' => 'Failed to save. Please try again.']);
+    exit;
+}
+
+
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -6,6 +23,7 @@
 <title>Reports - Counselor</title>
 
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -102,15 +120,25 @@
       <textarea class="cReports-textarea" placeholder="Write session notes here..."></textarea>
 
       <button class="cReports-btn" onclick="saveNotes(this)">
-        Save Notes
-      </button>
+  Save Notes
+</button>
 
-      <div class="cReports-status"></div>
-
+<div class="cReports-status" id="notesStatus"></div>
     </div>
 
   </div>
-
+<div class="logout-overlay" id="logoutOverlay">
+  <div class="logout-modal">
+    <div class="logout-icon"><i class="fa fa-right-from-bracket"></i></div>
+    <h3>Logout</h3>
+    <p>Are you sure you want to logout?</p>
+    <div class="logout-actions">
+      <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+      <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+    </div>
+    
+  </div>
+</div>
 </main>
 
 <script>
@@ -127,10 +155,18 @@ function toggleTheme(){
   );
 }
 
-function logout(){
-  localStorage.clear();
-  window.location.href = "clogin.php";
+function logout() {
+  document.getElementById('logoutOverlay').classList.add('show');
 }
+function closeLogout() {
+  document.getElementById('logoutOverlay').classList.remove('show');
+}
+function confirmLogout() {
+  window.location.href = 'logout.php?role=counselor';
+}
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeLogout();
+});
 
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
@@ -141,15 +177,39 @@ document.addEventListener("click", e => {
   }
 });
 
-function postAnnouncement() {
-  db.collection("announcements").add({
-    title: titleInput.value,
-    message: messageInput.value,
-    status: "active",
-    createdAt: new Date(),
-    eventDate: eventDateInput.value
-  });
+function saveNotes(btn) {
+  const textarea = btn.previousElementSibling.previousElementSibling;
+  const status   = document.getElementById('notesStatus');
+  const notes    = textarea.value.trim();
+
+  if (!notes) {
+    status.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please write your notes first.</span>";
+    return;
+  }
+
+  btn.disabled    = true;
+  btn.textContent = 'Saving...';
+
+  const fd = new FormData();
+  fd.append('action', 'save_notes');
+  fd.append('notes',  notes);
+
+  fetch('creports.php', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(json => {
+      btn.disabled    = false;
+      btn.textContent = 'Save Notes';
+      status.innerHTML = json.success
+        ? "<span style='color:var(--success,#15803d);'>✔ Notes saved.</span>"
+        : "<span style='color:var(--error,#e53e3e);'>❌ " + json.message + "</span>";
+    })
+    .catch(() => {
+      btn.disabled    = false;
+      btn.textContent = 'Save Notes';
+      status.innerHTML = "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong.</span>";
+    });
 }
+
 </script>
 
 </body>

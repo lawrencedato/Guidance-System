@@ -14,7 +14,43 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 // ===== DB CONNECTION =====
 $conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
 $sid  = $conn->real_escape_string($_SESSION['user_id']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'submit_feedback') {
+    header('Content-Type: application/json');
 
+    $rating  = $conn->real_escape_string($_POST['rating']  ?? '');
+    $message = $conn->real_escape_string($_POST['message'] ?? '');
+
+    $allowed = ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+    if (!in_array($rating, $allowed) || !$message) {
+        echo json_encode(['success' => false, 'message' => 'Please complete all fields.']);
+        exit;
+    }
+
+    // Get the most recent approved counselor for this student
+    $cRes = $conn->query("
+        SELECT counselor_id FROM appointments
+        WHERE student_id = '$sid' AND status = 'Approved'
+        ORDER BY appointment_date DESC
+        LIMIT 1
+    ");
+    $cRow = $cRes ? $cRes->fetch_assoc() : null;
+
+    if (!$cRow) {
+        echo json_encode(['success' => false, 'message' => 'No completed session found to give feedback on.']);
+        exit;
+    }
+
+    $counselorId = (int)$cRow['counselor_id'];
+    $ok = $conn->query("
+        INSERT INTO feedback (student_id, counselor_id, rating, message, created_at)
+        VALUES ('$sid', $counselorId, '$rating', '$message', NOW())
+    ");
+
+    echo json_encode($ok
+        ? ['success' => true]
+        : ['success' => false, 'message' => 'Failed to submit. Please try again.']);
+    exit;
+}
 // ===== LOAD STUDENT DATA =====
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
 $student    = $studentRes->fetch_assoc();
@@ -137,9 +173,10 @@ $profileImg = !empty($profile['profile_image'])
           <textarea rows="6" placeholder="Write your feedback here..."></textarea>
         </div>
 
-        <button class="sFeedback-btn sFeedback-submit">
-          Submit Feedback
-        </button>
+<button class="sFeedback-btn sFeedback-submit" onclick="submitFeedback()">
+  Submit Feedback
+</button>
+<div id="feedbackResult" style="margin-top:12px; font-size:14px;"></div>
 
       </div>
 
@@ -185,6 +222,33 @@ document.addEventListener("click", function(e) {
     dropdown.classList.remove("show");
   }
 });
+
+function submitFeedback() {
+  const rating   = document.querySelector('.sFeedback-form select').value;
+  const message  = document.querySelector('.sFeedback-form textarea').value.trim();
+  const result   = document.getElementById('feedbackResult');
+
+  if (!message) {
+    result.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please write your feedback first.</span>";
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append('action',  'submit_feedback');
+  fd.append('rating',  rating);
+  fd.append('message', message);
+
+  fetch('sfeedback.php', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(json => {
+      result.innerHTML = json.success
+        ? "<span style='color:var(--success,#15803d);'>✔ Feedback submitted. Thank you!</span>"
+        : "<span style='color:var(--error,#e53e3e);'>❌ " + json.message + "</span>";
+    })
+    .catch(() => {
+      result.innerHTML = "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong.</span>";
+    });
+}
 </script>
 
 <!-- LOGOUT MODAL -->

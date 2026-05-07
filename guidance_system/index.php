@@ -255,10 +255,22 @@
 
   <!-- IMAGE SECTION -->
   <section class="uc-hero__visual">
-    <img 
-      src="https://img.freepik.com/free-vector/feedback-concept-illustration_114360-1395.jpg"
-      alt="Student Feedback Illustration"
-    >
+    <svg viewBox="0 0 420 340" xmlns="http://www.w3.org/2000/svg" style="width:420px; max-width:100%;">
+  <rect x="40" y="40" width="340" height="240" rx="18" fill="#e8f0fb"/>
+  <rect x="70" y="70" width="280" height="180" rx="12" fill="#ffffff" stroke="#c3d6f5" stroke-width="1.5"/>
+  <rect x="100" y="100" width="180" height="14" rx="7" fill="#113f67"/>
+  <rect x="100" y="124" width="220" height="10" rx="5" fill="#c3d6f5"/>
+  <rect x="100" y="142" width="200" height="10" rx="5" fill="#c3d6f5"/>
+  <rect x="100" y="160" width="160" height="10" rx="5" fill="#c3d6f5"/>
+  <rect x="100" y="186" width="70" height="28" rx="8" fill="#113f67"/>
+  <text x="135" y="205" text-anchor="middle" font-size="11" fill="#ffffff" font-family="sans-serif">Submit</text>
+  <circle cx="340" cy="90" r="28" fill="#34699A"/>
+  <text x="340" y="96" text-anchor="middle" font-size="20" fill="#ffffff" font-family="sans-serif">✓</text>
+  <circle cx="60" cy="220" r="18" fill="#e8f0fb" stroke="#113f67" stroke-width="1.5"/>
+  <text x="60" y="226" text-anchor="middle" font-size="14" fill="#113f67" font-family="sans-serif">🎓</text>
+  <circle cx="380" cy="200" r="14" fill="#e8f0fb" stroke="#34699A" stroke-width="1.5"/>
+  <text x="380" y="206" text-anchor="middle" font-size="11" fill="#34699A" font-family="sans-serif">♥</text>
+</svg>
   </section>
 
 </main>

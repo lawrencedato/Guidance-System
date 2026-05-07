@@ -208,41 +208,18 @@ document.addEventListener("click", e => {
   }
 });
 
-/* SAVE RESPONSE */
-function respond(key, value, id) {
-  localStorage.setItem(key, value);
-
-  const el = document.getElementById(id);
-  el.innerText = value;
-
-  el.style.color = "var(--primary)";
-  el.style.fontWeight = "700";
-  el.style.transition = "0.3s";
-}
-
-/* LOAD SAVED RESPONSES */
-function loadResponses() {
-  const map = [
-    { key: "seminar1", id: "res1" },
-    { key: "counselingWeek", id: "res2" },
-    { key: "wellnessReminder", id: "res3" }
-  ];
-
-  map.forEach(item => {
-    const value = localStorage.getItem(item.key);
-    const el = document.getElementById(item.id);
-
-    if (value && el) {
-      el.innerText = value;
-      el.style.color = "var(--primary)";
-      el.style.fontWeight = "700";
-    }
-  });
+function toggleInterest() {
+  const btn   = document.getElementById('interestBtn');
+  const count = document.getElementById('interestCount');
+  const active = btn.dataset.active === '1';
+  btn.dataset.active   = active ? '0' : '1';
+  btn.textContent      = active ? '☆ Interested' : '★ Interested';
+  let n = parseInt(count.textContent) || 0;
+  count.textContent    = (active ? n - 1 : n + 1) + ' interested';
 }
 
 /* AUTO SCROLL FROM DASHBOARD */
 window.addEventListener("load", () => {
-  loadResponses();
 
   const hash = window.location.hash;
   if (hash) {
