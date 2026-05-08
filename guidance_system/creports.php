@@ -116,16 +116,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
   <?php else: ?>
     <p>No new notifications</p>
   <?php endif; ?>
-</div>
-...
+  </div>
+  </div>
+   <div class="topbar-user">
 <img src="<?= $profileImg ?>" alt="user"
      onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff'">
 <div>
   <strong><?= $fullName ?></strong>
   <p><?= $email ?></p>
 </div>
-    </div>
-
   </div>
 </header>
 
