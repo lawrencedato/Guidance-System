@@ -38,6 +38,47 @@ $studentsRes = $conn->query("
     GROUP BY s.student_id
     ORDER BY s.last_name ASC
 ");
+
+// ── HANDLE GET: student profile for modal ──
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_student') {
+    header('Content-Type: application/json');
+
+    $studentId = (int)($_GET['student_id'] ?? 0);
+    if (!$studentId) {
+        echo json_encode(['success' => false, 'message' => 'Missing student ID.']);
+        exit;
+    }
+
+    $res = $conn->query("
+        SELECT s.student_id, s.first_name, s.last_name,
+               s.email, s.course, s.year_level,
+               sp.emergency_contact_name    AS emergency_name,
+               sp.relationship_to_emergency_contact AS emergency_relation,
+               sp.emergency_contact_number  AS emergency_number,
+               w.mood_label                 AS last_mood,
+               DATE_FORMAT(w.created_at, '%M %d, %Y') AS last_wellness
+        FROM students s
+        LEFT JOIN student_profiles sp ON sp.student_id = s.student_id
+        LEFT JOIN wellness_checks w
+               ON w.wellness_id = (
+                   SELECT wellness_id FROM wellness_checks
+                   WHERE student_id = s.student_id
+                   ORDER BY created_at DESC LIMIT 1
+               )
+        WHERE s.student_id = $studentId
+        LIMIT 1
+    ");
+
+    $student = $res ? $res->fetch_assoc() : null;
+
+    if (!$student) {
+        echo json_encode(['success' => false, 'message' => 'Student not found.']);
+        exit;
+    }
+
+    echo json_encode(['success' => true, 'student' => $student]);
+    exit;
+}
 $students = [];
 while ($row = $studentsRes->fetch_assoc()) $students[] = $row;
 
@@ -206,7 +247,7 @@ while ($row = $studentsRes->fetch_assoc()) $students[] = $row;
         <div class="cStudentList-left">
           <div class="cStudentList-nameRow">
             <h3><?= $sName ?></h3>
-            <button class="btn-small" onclick="openStudentModal()">View Profile</button>
+            <button class="btn-small" onclick="openStudentModal(<?= $s['student_id'] ?>)">View Profile</button>
           </div>
           <p><?= htmlspecialchars($s['course']) ?> • <?= htmlspecialchars($s['year_level']) ?></p>
         </div>
@@ -259,53 +300,9 @@ while ($row = $studentsRes->fetch_assoc()) $students[] = $row;
       <button onclick="closeStudentModal()">✕</button>
     </div>
 
-    <div class="cStudentModal-body">
-
-      <div class="cStudentModal-profile">
-
-        <div class="cStudentModal-avatar">JS</div>
-
-        <div class="cStudentModal-profileText">
-
-          <div class="cStudentModal-nameRow">
-            <h3>Vincent Adolf Sablay</h3>
-            <span id="studentStatusTag" class="tag stable">Stable</span>
-          </div>
-
-          <p>BSIT • 2nd Year</p>
-
-        </div>
-      </div>
-
-      <div class="cStudentModal-box">
-        <h4>Wellness Progress: Good</h4>
-        <p><b>Overall Score:</b> 82%</p>
-
-        <div class="cStudentModal-progressBar">
-          <div class="cStudentModal-progressFill"></div>
-        </div>
-
-        <p><b>Recent Check-in:</b> April 22</p>
-      </div>
-
-      <div class="cStudentModal-grid">
-
-        <div class="cStudentModal-box">
-          <h4>Academic Information</h4>
-          <p><b>Program:</b> BSIT</p>
-          <p><b>Year Level:</b> 2nd Year</p>
-        </div>
-
-        <div class="cStudentModal-box">
-          <h4>Emergency Contact</h4>
-          <p><b>Name:</b> Maria L.</p>
-          <p><b>Relation:</b> Mother</p>
-          <p><b>Contact:</b> 0918-222-3333</p>
-        </div>
-
-      </div>
-
-    </div>
+<div class="cStudentModal-body" id="studentModalBody">
+  <p style="text-align:center; padding:2rem; color:var(--text-muted);">Loading...</p>
+</div>
 
   </div>
 </div>
@@ -356,8 +353,62 @@ function clearFilters() {
   });
 }
 
-function openStudentModal() {
-  document.getElementById("studentModal").classList.add("show");
+function openStudentModal(studentId) {
+  const modal = document.getElementById("studentModal");
+  const body  = document.getElementById("studentModalBody");
+
+  modal.classList.add("show");
+  body.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--text-muted);">Loading...</p>';
+
+  fetch('cstudents.php?action=get_student&student_id=' + studentId)
+    .then(r => r.json())
+    .then(json => {
+      if (!json.success) {
+        body.innerHTML = '<p style="padding:2rem; color:var(--text-muted);">Could not load profile.</p>';
+        return;
+      }
+
+      const s        = json.student;
+      const initials = (s.first_name[0] + s.last_name[0]).toUpperCase();
+      const lastCheck = s.last_wellness ? s.last_wellness : 'No check-in yet';
+
+      body.innerHTML = `
+        <div class="cStudentModal-profile">
+          <div class="cStudentModal-avatar">${initials}</div>
+          <div class="cStudentModal-profileText">
+            <div class="cStudentModal-nameRow">
+              <h3>${s.first_name} ${s.last_name}</h3>
+              <span class="tag stable">Active</span>
+            </div>
+            <p>${s.course} • ${s.year_level}</p>
+          </div>
+        </div>
+
+        <div class="cStudentModal-grid">
+          <div class="cStudentModal-box">
+            <h4>Academic Information</h4>
+            <p><b>Program:</b> ${s.course}</p>
+            <p><b>Year Level:</b> ${s.year_level}</p>
+            <p><b>Email:</b> ${s.email}</p>
+          </div>
+          <div class="cStudentModal-box">
+            <h4>Emergency Contact</h4>
+            <p><b>Name:</b> ${s.emergency_name || 'N/A'}</p>
+            <p><b>Relation:</b> ${s.emergency_relation || 'N/A'}</p>
+            <p><b>Contact:</b> ${s.emergency_number || 'N/A'}</p>
+          </div>
+        </div>
+
+        <div class="cStudentModal-box" style="margin-top:12px;">
+          <h4>Wellness</h4>
+          <p><b>Last Check-in:</b> ${lastCheck}</p>
+          <p><b>Last Mood:</b> ${s.last_mood || 'N/A'}</p>
+        </div>
+      `;
+    })
+    .catch(() => {
+      body.innerHTML = '<p style="padding:2rem; color:var(--text-muted);">Could not load profile.</p>';
+    });
 }
 
 function closeStudentModal() {
