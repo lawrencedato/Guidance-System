@@ -13,6 +13,32 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'counselor') {
 $conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
 $cid  = $conn->real_escape_string($_SESSION['user_id']);
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['concern_id']) && isset($_POST['reply'])) {
+
+    $concern_id = intval($_POST['concern_id']);
+    $reply = $conn->real_escape_string($_POST['reply']);
+    $counselor_id = $cid;
+
+    $insert = $conn->query("
+        INSERT INTO concern_replies (concern_id, counselor_id, reply, replied_at)
+        VALUES ('$concern_id', '$counselor_id', '$reply', NOW())
+    ");
+
+    if ($insert) {
+
+        $conn->query("
+            UPDATE concerns
+            SET status='Reviewed'
+            WHERE concern_id='$concern_id'
+        ");
+
+        echo "✔ Reply sent successfully.";
+    } else {
+        echo "Error sending reply.";
+    }
+
+    exit;
+}
 
 $counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
 $counselor    = $counselorRes->fetch_assoc();
@@ -174,9 +200,10 @@ while ($row = $concernRes->fetch_assoc()) $concerns[] = $row;
   <p style="text-align:center; color:var(--text-muted); padding:2rem;">No student concerns at the moment.</p>
 <?php else: ?>
   <?php foreach ($concerns as $c): ?>
-  <div class="cConcerns-card"
-     data-date="<?= date('Y-m-d', strtotime($c['created_at'])) ?>"
-     data-status="<?= htmlspecialchars($c['status']) ?>">
+    <div class="cConcerns-card"
+      data-id="<?= $c['concern_id'] ?>"
+      data-date="<?= date('Y-m-d', strtotime($c['created_at'])) ?>"
+      data-status="<?= htmlspecialchars($c['status']) ?>">
     <h3><i class="fa fa-user"></i> <?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?></h3>
     <p><b>Subject:</b> <?= htmlspecialchars($c['subject']) ?></p>
     <p><b>Message:</b> <?= htmlspecialchars($c['message']) ?></p>
@@ -266,17 +293,35 @@ document.addEventListener("click", e => {
 });
 
 function sendReply(btn){
+
   const card = btn.closest(".cConcerns-card");
   const textarea = card.querySelector(".cConcerns-replyBox");
   const result = card.querySelector(".cConcerns-result");
 
-  if (!textarea.value.trim()) {
+  const concernId = card.dataset.id;
+  const reply = textarea.value.trim();
+
+  if (!reply) {
     alert("Please write a reply first.");
     return;
   }
 
-  result.innerHTML = "✔ Reply sent successfully.";
-  textarea.value = "";
+  fetch("", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: "concern_id=" + concernId + "&reply=" + encodeURIComponent(reply)
+  })
+  .then(response => response.text())
+  .then(data => {
+      result.innerHTML = data;
+      textarea.value = "";
+  })
+  .catch(error => {
+      result.innerHTML = "Error sending reply.";
+  });
+
 }
 
 </script>
