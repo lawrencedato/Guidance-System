@@ -26,6 +26,23 @@ $email      = htmlspecialchars($student['email'] ?? '');
 $profileImg = !empty($profile['profile_image'])
               ? htmlspecialchars($profile['profile_image'])
               : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'submit_concern') {
+    header('Content-Type: application/json');
+    $subject = $conn->real_escape_string(trim($_POST['subject'] ?? ''));
+    $message = $conn->real_escape_string(trim($_POST['message'] ?? ''));
+    if (!$subject || !$message) {
+        echo json_encode(['success' => false, 'message' => 'Please complete all fields.']); exit;
+    }
+    $ok = $conn->query("
+        INSERT INTO concerns (student_id, subject, message, status, created_at)
+        VALUES ('$sid', '$subject', '$message', 'Pending', NOW())
+    ");
+    echo json_encode($ok
+        ? ['success' => true]
+        : ['success' => false, 'message' => 'Failed to submit. Please try again.']);
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -199,16 +216,34 @@ document.addEventListener("click", e => {
 });
 
 function submitConcern() {
-  const subject = document.getElementById("subject").value;
-  const message = document.getElementById("message").value;
+  const subject = document.getElementById("subject").value.trim();
+  const message = document.getElementById("message").value.trim();
+  const result  = document.getElementById("result");
 
   if (!subject || !message) {
-    alert("Please complete all fields.");
+    result.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please complete all fields.</span>";
     return;
   }
 
-  document.getElementById("result").innerHTML =
-    "✔ Concern submitted successfully.";
+  const fd = new FormData();
+  fd.append('action',  'submit_concern');
+  fd.append('subject', subject);
+  fd.append('message', message);
+
+  fetch('sconcerns.php', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(json => {
+      result.innerHTML = json.success
+        ? "<span style='color:var(--success,#15803d);'>✔ Concern submitted successfully.</span>"
+        : "<span style='color:var(--error,#e53e3e);'>❌ " + json.message + "</span>";
+      if (json.success) {
+        document.getElementById("subject").value = "";
+        document.getElementById("message").value = "";
+      }
+    })
+    .catch(() => {
+      result.innerHTML = "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong.</span>";
+    });
 }
 </script>
 <!-- LOGOUT MODAL -->

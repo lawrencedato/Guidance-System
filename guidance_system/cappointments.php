@@ -17,19 +17,46 @@ $cid  = $conn->real_escape_string($_SESSION['user_id']);
 $counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
 $counselor    = $counselorRes->fetch_assoc();
 
-$profileRes = $conn->query("SELECT profile_image FROM counselor_profiles WHERE counselor_id='$cid' LIMIT 1");
-$profile    = $profileRes ? $profileRes->fetch_assoc() : null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_status') {
+    header('Content-Type: application/json');
+    $apptId  = (int)($_POST['appointment_id'] ?? 0);
+    $status  = $_POST['status'] ?? '';
+    $allowed = ['Approved', 'Rejected'];
+    if (!$apptId || !in_array($status, $allowed)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid request.']); exit;
+    }
+    $ok = $conn->query(
+        "UPDATE appointments SET status='$status' WHERE appointment_id=$apptId AND counselor_id='$cid'"
+    );
+    echo json_encode($ok && $conn->affected_rows > 0
+        ? ['success' => true]
+        : ['success' => false, 'message' => 'Could not update.']);
+    exit;
+}
 
 $fullName   = htmlspecialchars(($counselor['first_name'] ?? '') . ' ' . ($counselor['last_name'] ?? ''));
 $email      = htmlspecialchars($counselor['email'] ?? '');
-$profileImg = !empty($profile['profile_image'])
-    ? htmlspecialchars($profile['profile_image'])
+$profileImg = !empty($counselor['profile_image'])
+    ? htmlspecialchars($counselor['profile_image'])
     : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
 
 
 $pendingCount = (int)$conn->query(
     "SELECT COUNT(*) c FROM appointments WHERE counselor_id='$cid' AND status='Pending'"
 )->fetch_assoc()['c'];
+
+// Add to PHP header after $pendingCount:
+$apptRes = $conn->query("
+    SELECT a.appointment_id, a.appointment_date, a.appointment_time,
+           a.status, a.priority, a.message,
+           s.student_id, s.first_name, s.last_name, s.course, s.year_level
+    FROM appointments a
+    JOIN students s ON s.student_id = a.student_id
+    WHERE a.counselor_id='$cid' AND a.status='Pending'
+    ORDER BY a.appointment_date ASC
+");
+$appointments = [];
+while ($row = $apptRes->fetch_assoc()) $appointments[] = $row;
 ?>
 
 
@@ -163,40 +190,34 @@ $pendingCount = (int)$conn->query(
 
   <section class="cAppointment-grid">
 
-    <div class="cAppointment-card"
-         data-file="uploads/chie-roque-file.pdf"
-         data-id="app-001">
-
-      <h3>
-        <i class="fa fa-user"></i> Chie Roque
-        <button class="btn-small" onclick="openStudentModal()">View Profile</button>
-      </h3>
-
-      <p><b>Reason:</b> Stress Counseling</p>
-      <p><b>Department:</b> Sophomore - BSIT</p>
-
-      <p><b>Date:</b> April 25, 2026</p>
-      <p><b>Time:</b> 10:30 AM</p>
-
-      <p><b>Status:</b> Pending</p>
-
-      <div class="cAppointment-actions">
-
-        <button class="cAppointment-btn approve">
-          <i class="fa fa-check"></i> Approve
-        </button>
-
-        <button class="cAppointment-btn decline">
-          <i class="fa fa-times"></i> Decline
-        </button>
-
-        <button class="cAppointment-exportBtn" onclick="exportAppointment(this)" style="display:none;">
-          <i class="fa fa-download"></i>
-        </button>
-
-      </div>
-
+<?php if (empty($appointments)): ?>
+  <div style="text-align:center; padding:3rem; color:var(--text-muted); grid-column:1/-1;">
+    <i class="fa fa-calendar-check" style="font-size:2.5rem; opacity:0.3; display:block; margin-bottom:1rem;"></i>
+    <p>No pending appointment requests.</p>
+  </div>
+<?php else: ?>
+  <?php foreach ($appointments as $appt):
+    $sName = htmlspecialchars($appt['first_name'] . ' ' . $appt['last_name']);
+    $apptId = (int)$appt['appointment_id'];
+  ?>
+  <div class="cAppointment-card" data-id="<?= $apptId ?>">
+    <h3><i class="fa fa-user"></i> <?= $sName ?></h3>
+    <p><b>Reason:</b> <?= htmlspecialchars($appt['message'] ?? 'N/A') ?></p>
+    <p><b>Program:</b> <?= htmlspecialchars($appt['year_level'] . ' - ' . $appt['course']) ?></p>
+    <p><b>Date:</b> <?= date('F d, Y', strtotime($appt['appointment_date'])) ?></p>
+    <p><b>Time:</b> <?= date('g:i A', strtotime($appt['appointment_time'])) ?></p>
+    <p><b>Priority:</b> <?= htmlspecialchars($appt['priority']) ?></p>
+    <div class="cAppointment-actions">
+      <button class="cAppointment-btn approve" onclick="updateStatus(<?= $apptId ?>, 'Approved', this)">
+        <i class="fa fa-check"></i> Approve
+      </button>
+      <button class="cAppointment-btn decline" onclick="updateStatus(<?= $apptId ?>, 'Rejected', this)">
+        <i class="fa fa-times"></i> Decline
+      </button>
     </div>
+  </div>
+  <?php endforeach; ?>
+<?php endif; ?>
 
   </section>
 
@@ -268,7 +289,7 @@ function toggleTheme(){
 
 function logout(){
   localStorage.clear();
-  window.location.href = "clogin.php";
+  window.location.href = 'logout.php?role=counselor';
 }
 
 function openStudentModal(){
@@ -307,7 +328,25 @@ function exportAppointment(btn){
   a.click();
   document.body.removeChild(a);
 }
-
+function updateStatus(apptId, status, btn) {
+  if (!confirm(`${status === 'Approved' ? 'Approve' : 'Decline'} this appointment?`)) return;
+  const fd = new FormData();
+  fd.append('action', 'update_status');
+  fd.append('appointment_id', apptId);
+  fd.append('status', status);
+  fetch('cappointments.php', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(json => {
+      if (json.success) {
+        const card = btn.closest('.cAppointment-card');
+        card.style.opacity = '0';
+        card.style.transition = '0.3s';
+        setTimeout(() => card.remove(), 300);
+      } else {
+        alert(json.message || 'Failed to update.');
+      }
+    });
+}
 </script>
 
 </body>

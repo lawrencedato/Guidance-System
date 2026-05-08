@@ -1,18 +1,4 @@
 <?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_wellness') {
-    header('Content-Type: application/json');
-    $mood   = $conn->real_escape_string($_POST['mood_label']    ?? '');
-$stress = (int)($_POST['stress_level']                      ?? 0);
-$sleep  = $conn->real_escape_string($_POST['sleep_quality'] ?? '');
-$ok = $conn->query("
-    INSERT INTO wellness_checks (student_id, mood_label, stress_level, sleep_quality, created_at)
-    VALUES ('$sid', '$mood', $stress, '$sleep', NOW())
-");
-    echo json_encode($ok
-        ? ['success' => true]
-        : ['success' => false, 'message' => 'Failed to save. Please try again.']);
-    exit;
-}
 error_reporting(0);
 ini_set('display_errors', 0);
 mysqli_report(MYSQLI_REPORT_OFF);
@@ -40,6 +26,21 @@ $email      = htmlspecialchars($student['email'] ?? '');
 $profileImg = !empty($profile['profile_image'])
               ? htmlspecialchars($profile['profile_image'])
               : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_wellness') {
+    header('Content-Type: application/json');
+    $mood   = $conn->real_escape_string($_POST['mood_label']    ?? '');
+$stress = (int)($_POST['stress_level']                      ?? 0);
+$sleep  = $conn->real_escape_string($_POST['sleep_quality'] ?? '');
+$ok = $conn->query("
+    INSERT INTO wellness_checks (student_id, mood_label, stress_level, sleep_quality, created_at)
+    VALUES ('$sid', '$mood', $stress, '$sleep', NOW())
+");
+    echo json_encode($ok
+        ? ['success' => true]
+        : ['success' => false, 'message' => 'Failed to save. Please try again.']);
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -230,7 +231,7 @@ function submitWellness() {
 
   const fd = new FormData();
   fd.append('action',        'save_wellness');
-  fd.append('mood',          selectedMood);
+  fd.append('mood_label', selectedMood);
   fd.append('stress_level',  stress);
   fd.append('sleep_quality', sleep);
 

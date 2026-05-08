@@ -10,7 +10,7 @@ $conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
 
 // ── KPI COUNTS ──
 $students     = $conn->query("SELECT COUNT(*) AS c FROM students")->fetch_assoc()['c'];
-$counselors   = $conn->query("SELECT COUNT(*) AS c FROM counselors WHERE status = 'active'")->fetch_assoc()['c'];
+$counselors   = $conn->query("SELECT COUNT(*) AS c FROM counselors WHERE status = 'Active'")->fetch_assoc()['c'];
 $accounts     = $conn->query("SELECT COUNT(*) AS c FROM activated_students WHERE status = 'active'")->fetch_assoc()['c'];
 $appointments = $conn->query("SELECT COUNT(*) AS c FROM appointments")->fetch_assoc()['c'];
 

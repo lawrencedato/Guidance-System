@@ -17,13 +17,11 @@ $cid  = $conn->real_escape_string($_SESSION['user_id']);
 $counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
 $counselor    = $counselorRes->fetch_assoc();
 
-$profileRes = $conn->query("SELECT profile_image FROM counselor_profiles WHERE counselor_id='$cid' LIMIT 1");
-$profile    = $profileRes ? $profileRes->fetch_assoc() : null;
 
 $fullName   = htmlspecialchars(($counselor['first_name'] ?? '') . ' ' . ($counselor['last_name'] ?? ''));
 $email      = htmlspecialchars($counselor['email'] ?? '');
-$profileImg = !empty($profile['profile_image'])
-    ? htmlspecialchars($profile['profile_image'])
+$profileImg = !empty($counselor['profile_image'])
+    ? htmlspecialchars($counselor['profile_image'])
     : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
 
 
@@ -164,40 +162,6 @@ $ratingStars = [
 
       <div class="cFeedback-list">
 
-        <?php if (empty($feedbacks)): ?>
-  <p style="text-align:center; color:var(--text-muted); padding:2rem;">No feedback received yet.</p>
-<?php else: ?>
-<?php foreach ($feedbacks as $f):
-    $stars = $ratingStars[$f['rating']] ?? '⭐';
-?>
-<div class="cFeedback-item">
-  <div class="cFeedback-header">
-    <h4><?= htmlspecialchars($f['first_name'] . ' ' . $f['last_name']) ?></h4>
-    <span class="cFeedback-rating"><?= $stars ?> <?= htmlspecialchars($f['rating']) ?></span>
-  </div>
-  <p class="cFeedback-date">Submitted on <?= date('F d, Y', strtotime($f['created_at'])) ?></p>
-  <p class="cFeedback-message"><?= htmlspecialchars($f['feedback_text']) ?></p>
-</div>
-<?php endforeach; ?>
-<?php endif; ?>
-
-<?php if (empty($feedbacks)): ?>
-  <p style="text-align:center; color:var(--text-muted); padding:2rem;">No feedback received yet.</p>
-<?php else: ?>
-<?php foreach ($feedbacks as $f):
-    $stars = $ratingStars[$f['rating']] ?? '⭐';
-?>
-<div class="cFeedback-item">
-  <div class="cFeedback-header">
-    <h4><?= htmlspecialchars($f['first_name'] . ' ' . $f['last_name']) ?></h4>
-    <span class="cFeedback-rating"><?= $stars ?> <?= htmlspecialchars($f['rating']) ?></span>
-  </div>
-  <p class="cFeedback-date">Submitted on <?= date('F d, Y', strtotime($f['created_at'])) ?></p>
-  <p class="cFeedback-message"><?= htmlspecialchars($f['feedback_text']) ?></p>
-</div>
-<?php endforeach; ?>
-<?php endif; ?>
-
 <?php if (empty($feedbacks)): ?>
   <p style="text-align:center; color:var(--text-muted); padding:2rem;">No feedback received yet.</p>
 <?php else: ?>
@@ -226,33 +190,28 @@ $ratingStars = [
 <script>
 function toggleSettingsMenu(e) {
   e.stopPropagation();
-  const menu = document.getElementById("settingsMenu");
-  menu.style.display = menu.style.display === "block" ? "none" : "block";
+  document.getElementById("settingsMenu").classList.toggle("show");
 }
 
 function toggleDropdown(id, e) {
   e.stopPropagation();
-  const dropdown = document.getElementById(id);
-  dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+  document.getElementById(id).classList.toggle("show");
 }
 
-function toggleTheme() {
-  const html = document.documentElement;
-  html.setAttribute(
-    "data-theme",
-    html.getAttribute("data-theme") === "light" ? "dark" : "light"
-  );
-}
-
-function logout() {
-  localStorage.clear();
-  window.location.href = "clogin.php";
-}
+document.addEventListener("click", function () {
+  document.getElementById("settingsMenu").classList.remove("show");
+  document.getElementById("notifDropdown").classList.remove("show");
+});
 
 document.addEventListener("click", function () {
   document.getElementById("settingsMenu").style.display = "none";
   document.getElementById("notifDropdown").style.display = "none";
 });
+
+function logout() {
+  localStorage.clear();
+  window.location.href = 'logout.php?role=counselor';
+}
 </script>
 
 </body>
