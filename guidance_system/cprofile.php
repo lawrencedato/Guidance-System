@@ -16,7 +16,44 @@ $cid  = $conn->real_escape_string($_SESSION['user_id']);
 
 $counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
 $counselor    = $counselorRes->fetch_assoc();
+// ── HANDLE PROFILE UPDATE (AJAX) ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_profile') {
+    header('Content-Type: application/json');
 
+    $phone = $conn->real_escape_string(trim($_POST['phone'] ?? ''));
+
+    $profileImage = null;
+    if (!empty($_FILES['profile_image']['name'])) {
+        $uploadDir = 'uploads/profiles/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+        $ext     = strtolower(pathinfo($_FILES['profile_image']['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+
+        if (!in_array($ext, $allowed)) {
+            echo json_encode(['success' => false, 'message' => 'Only JPG, PNG, or WEBP images allowed.']);
+            exit;
+        }
+        if ($_FILES['profile_image']['size'] > 2 * 1024 * 1024) {
+            echo json_encode(['success' => false, 'message' => 'Image must be under 2MB.']);
+            exit;
+        }
+
+        $fileName     = 'counselor_' . $cid . '_' . time() . '.' . $ext;
+        $profileImage = $uploadDir . $fileName;
+        move_uploaded_file($_FILES['profile_image']['tmp_name'], $profileImage);
+    }
+
+    $imgSql = $profileImage ? ", profile_image='" . $conn->real_escape_string($profileImage) . "'" : "";
+    $ok = $conn->query(
+        "UPDATE counselors SET contact_number='$phone' $imgSql WHERE counselor_id='$cid'"
+    );
+
+    echo json_encode($ok
+        ? ['success' => true, 'message' => 'Profile updated successfully.', 'image' => $profileImage]
+        : ['success' => false, 'message' => 'Failed to save. Please try again.']);
+    exit;
+}
 
 $fullName   = htmlspecialchars(($counselor['first_name'] ?? '') . ' ' . ($counselor['last_name'] ?? ''));
 $email      = htmlspecialchars($counselor['email'] ?? '');
@@ -112,7 +149,7 @@ $pendingCount = (int)$conn->query(
     </div>
 
     <div class="topbar-user">
-      <img src="<?= $profileImg ?>" alt="user"
+        <img id="topbarAvatar" src="<?= $profileImg ?>" alt="user"
      onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff'">
 <div>
   <strong><?= $fullName ?></strong>
@@ -218,18 +255,40 @@ function loadImage(event) {
     URL.createObjectURL(event.target.files[0]);
 }
 
-/* save only phone */
 function saveProfile() {
-  const phone = document.getElementById("phone").value;
+  const phone     = document.getElementById("phone").value.trim();
+  const fileInput = document.getElementById("fileUpload");
+  const statusEl  = document.getElementById("status");
 
-  if (phone.trim() === "") {
-    document.getElementById("status").innerHTML =
-      "<span class='tag warning'>Please enter contact number</span>";
+  if (!phone) {
+    statusEl.innerHTML = "<span class='tag warning'>Please enter your contact number.</span>";
     return;
   }
 
-  document.getElementById("status").innerHTML =
-    "<span class='tag info'>Profile updated successfully</span>";
+  const fd = new FormData();
+  fd.append('action', 'update_profile');
+  fd.append('phone',  phone);
+  if (fileInput.files[0]) fd.append('profile_image', fileInput.files[0]);
+
+  statusEl.innerHTML = "<span class='tag info'>Saving...</span>";
+
+  fetch('cprofile.php', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(json => {
+      if (json.success) {
+        statusEl.innerHTML = "<span class='tag info'>" + json.message + "</span>";
+        if (json.image) {
+          document.getElementById("preview").src = json.image;
+          const topbar = document.getElementById("topbarAvatar");
+          if (topbar) topbar.src = json.image;
+        }
+      } else {
+        statusEl.innerHTML = "<span class='tag warning'>" + json.message + "</span>";
+      }
+    })
+    .catch(() => {
+      statusEl.innerHTML = "<span class='tag warning'>Something went wrong. Please try again.</span>";
+    });
 }
 </script>
 
