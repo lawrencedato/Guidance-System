@@ -29,7 +29,7 @@ $profileImg = !empty($profile['profile_image'])
               : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -172,18 +172,21 @@ $profileImg = !empty($profile['profile_image'])
 
 <!-- ================= SCRIPT ================= -->
 <script>
+(function() {
+    const saved = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", saved);
+})();
 
 function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
-function toggleTheme(){
-  const html = document.documentElement;
-  html.setAttribute(
-    "data-theme",
-    html.getAttribute("data-theme") === "light" ? "dark" : "light"
-  );
+function toggleTheme() {
+    const html = document.documentElement;
+    const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+    html.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
 }
 function logout() {
   document.getElementById('logoutOverlay').classList.add('show');

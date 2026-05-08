@@ -41,7 +41,7 @@ while ($row = $historyRes->fetch_assoc()) $sessions[] = $row;
 
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -193,6 +193,10 @@ while ($row = $historyRes->fetch_assoc()) $sessions[] = $row;
 
 <!-- SCRIPT -->
 <script>
+(function() {
+    const saved = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", saved);
+})();
 
 function toggleFilterBox() {
   document.getElementById("filterBox").classList.toggle("show");
@@ -236,12 +240,11 @@ function toggleSettingsMenu(e){
   document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
-function toggleTheme(){
-  const html = document.documentElement;
-  html.setAttribute(
-    "data-theme",
-    html.getAttribute("data-theme") === "light" ? "dark" : "light"
-  );
+function toggleTheme() {
+    const html = document.documentElement;
+    const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+    html.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
 }
 
 function logout() {
