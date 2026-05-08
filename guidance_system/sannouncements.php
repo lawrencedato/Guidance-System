@@ -5,6 +5,49 @@ mysqli_report(MYSQLI_REPORT_OFF);
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+/* =========================
+   AJAX: PARTICIPATE TOGGLE
+   ========================= */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['announcement_id'])) {
+
+    header('Content-Type: application/json');
+
+    $student_id = $_SESSION['user_id'];
+    $announcement_id = $_POST['announcement_id'];
+
+    $check = $conn->query("
+        SELECT * FROM announcement_responses
+        WHERE announcement_id='$announcement_id'
+        AND student_id='$student_id'
+        AND response='interested'
+    ");
+
+    if ($check->num_rows > 0) {
+
+        $conn->query("
+            DELETE FROM announcement_responses
+            WHERE announcement_id='$announcement_id'
+            AND student_id='$student_id'
+            AND response='interested'
+        ");
+
+        echo json_encode(["action" => "removed"]);
+        exit;
+
+    } else {
+
+        $conn->query("
+            INSERT INTO announcement_responses
+            (announcement_id, student_id, response, responded_at)
+            VALUES
+            ('$announcement_id', '$student_id', 'interested', NOW())
+        ");
+        echo json_encode(["action" => "added"]);
+        exit;
+    }
+    
+}
 // ===== GUARD: must be logged in =====
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     header("Location: slogin.php");
@@ -12,7 +55,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 }
 
 // ===== DB CONNECTION =====
-$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+
 $sid  = $conn->real_escape_string($_SESSION['user_id']);
 
 // ===== LOAD STUDENT DATA =====
@@ -27,6 +70,27 @@ $email      = htmlspecialchars($student['email'] ?? '');
 $profileImg = !empty($profile['profile_image'])
               ? htmlspecialchars($profile['profile_image'])
               : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
+
+$announcements = $conn->query("
+SELECT 
+    a.*,
+    c.first_name,
+    c.last_name,
+    COALESCE(r.interested_count, 0) AS interested_count
+FROM announcements a
+JOIN counselors c 
+    ON a.counselor_id = c.counselor_id
+LEFT JOIN (
+    SELECT 
+        announcement_id,
+        COUNT(*) AS interested_count
+    FROM announcement_responses
+    WHERE response = 'interested'
+    GROUP BY announcement_id
+) r 
+ON a.announcement_id = r.announcement_id
+ORDER BY a.created_at DESC
+");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -112,61 +176,39 @@ $profileImg = !empty($profile['profile_image'])
 
   <div class="sAnnouncements-container">
 
-    <!-- CARD 1 -->
-    <div class="sAnnouncements-card"
-      onclick="openModal(
-        'Mental Health Seminar',
-        'A full session focused on emotional resilience, stress management, and coping strategies for students.',
-        '📅 April 25, 2026 <br> ⏰ 2:00 PM – 4:00 PM <br> 📍 Auditorium / Online',
-        'https://images.unsplash.com/photo-1521737604893-d14cc237f11d'
-      )">
+<?php while($a = $announcements->fetch_assoc()): ?>
 
-      <h3>Mental Health Seminar</h3>
+<div class="sAnnouncements-card"
+     onclick="openModalFromCard(this)"
+     data-id="<?= $a['announcement_id'] ?>"
+     data-title="<?= htmlspecialchars($a['title']) ?>"
+     data-message="<?= htmlspecialchars($a['message']) ?>"
+     data-author="<?= htmlspecialchars($a['first_name']." ".$a['last_name']) ?>"
+     data-date="<?= date("F j, Y g:i A", strtotime($a['created_at'])) ?>"
+     data-file="<?= !empty($a['file_path']) ? htmlspecialchars($a['file_path']) : "" ?>"
+     data-count="<?= $a['interested_count'] ?>">
 
-      <p>
-        Learn how to manage stress, build emotional strength, and improve mental wellness.
-      </p>
+  <h3><?= htmlspecialchars($a['title']) ?></h3>
 
-      <small>Click for details</small>
-    </div>
+  <h6 class="announcement-author">
+    Posted by <?= htmlspecialchars($a['first_name']." ".$a['last_name']) ?>
+  </h6>
 
-    <!-- CARD 2 -->
-    <div class="sAnnouncements-card"
-      onclick="openModal(
-        'Study Skills Workshop',
-        'A workshop designed to improve study habits, time management, and academic performance.',
-        '📅 April 28, 2026 <br> ⏰ 10:00 AM – 12:00 PM <br> 📍 Learning Center / Online',
-        'https://images.unsplash.com/photo-1523240795612-9a054b0db644'
-      )">
+  <p>
+    <?= substr(htmlspecialchars($a['message']),0,120) ?>...
+  </p>
 
-      <h3>Study Skills Workshop</h3>
+  <p class="interest-count">
+    👥 <?= $a['interested_count'] ?> interested
+  </p>
 
-      <p>
-        Improve your study techniques and academic performance through guided strategies.
-      </p>
+  <small>Click for details</small>
 
-      <small>Click for details</small>
-    </div>
+</div>
 
-    <!-- CARD 3 -->
-    <div class="sAnnouncements-card"
-      onclick="openModal(
-        'Student Wellness Activity',
-        'An interactive group activity promoting teamwork, stress relief, and mental wellness.',
-        '📅 May 2, 2026 <br> ⏰ 1:00 PM – 3:00 PM <br> 📍 School Gym',
-        'https://images.unsplash.com/photo-1522202176988-66273c2fd55f'
-      )">
+<?php endwhile; ?>
 
-      <h3>Student Wellness Activity</h3>
-
-      <p>
-        Engage in fun group activities that support mental wellness and connection.
-      </p>
-
-      <small>Click for details</small>
-    </div>
-
-  </div>
+</div>
 
 </main>
 
@@ -211,16 +253,6 @@ document.addEventListener("click", e => {
   }
 });
 
-function toggleInterest() {
-  const btn   = document.getElementById('interestBtn');
-  const count = document.getElementById('interestCount');
-  const active = btn.dataset.active === '1';
-  btn.dataset.active   = active ? '0' : '1';
-  btn.textContent      = active ? '☆ Interested' : '★ Interested';
-  let n = parseInt(count.textContent) || 0;
-  count.textContent    = (active ? n - 1 : n + 1) + ' interested';
-}
-
 /* AUTO SCROLL FROM DASHBOARD */
 window.addEventListener("load", () => {
 
@@ -238,20 +270,40 @@ window.addEventListener("load", () => {
   }
 });
 
-function openModal(title, body, extra, image) {
-  document.getElementById("modalTitle").innerText = title;
-  document.getElementById("modalBody").innerText = body;
-  document.getElementById("modalExtra").innerHTML = extra;
+function openModalFromCard(card) {
 
+  // title + message
+  document.getElementById("modalTitle").innerText = card.dataset.title;
+  document.getElementById("modalBody").innerText = card.dataset.message;
+
+  // author + date
+  document.getElementById("modalExtra").innerHTML =
+    card.dataset.author + "<br>" + card.dataset.date;
+
+  // image/file
   const img = document.getElementById("modalImage");
 
-  if (image) {
-    img.src = image;
+  if (card.dataset.file && card.dataset.file.trim() !== "") {
+    img.src = encodeURI(card.dataset.file);
     img.style.display = "block";
   } else {
     img.style.display = "none";
   }
 
+  // set interest count
+  const count = parseInt(card.dataset.count) || 0;
+  const countEl = document.getElementById("modalCount");
+
+  countEl.innerText = count + " interested";
+  countEl.dataset.count = count;
+
+  // attach announcement ID to button
+  const btn = document.getElementById("participateBtn");
+  btn.dataset.id = card.dataset.id;
+  btn.innerText = "⭐ Participate";
+  btn.disabled = false;
+
+  // show modal
   document.getElementById("announcementModal").style.display = "flex";
 }
 
@@ -278,37 +330,81 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (map[openId]) {
     const d = map[openId];
-    openModal(d.title, d.body, d.extra, d.image);
+    const fakeCard = {
+  dataset: {
+    id: openId,
+    title: d.title,
+    message: d.body,
+    author: "",
+    date: d.extra,
+    file: d.image,
+    count: 0
+  }
+};
+
+openModalFromCard(fakeCard);
   }
 
 });
+document.addEventListener("click", function (e) {
 
+  const btn = e.target.closest("#participateBtn");
+  if (!btn) return;
+
+  e.stopPropagation(); // IMPORTANT
+
+  const announcementId = btn.dataset.id;
+
+  fetch("sannouncements.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: "announcement_id=" + announcementId
+  })
+  .then(res => res.json())
+  .then(data => {
+
+    const countEl = document.getElementById("modalCount");
+    let current = parseInt(countEl.dataset.count || countEl.innerText) || 0;
+
+    if (data.action === "added") {
+      current++;
+      btn.innerText = "⭐ Participating";
+    } else {
+      current--;
+      btn.innerText = "⭐ Participate";
+    }
+
+    countEl.dataset.count = current;
+    countEl.innerText = current + " interested";
+
+  })
+  .catch(err => console.log("AJAX ERROR:", err));
+});
 </script>
 
 
 <div id="announcementModal" class="announcement-modal">
   <div class="announcement-modal-content">
 
-    <!-- HEADER -->
     <div class="announcement-header">
       <h2 id="modalTitle"></h2>
       <span class="announcement-close" onclick="closeModal()">&times;</span>
     </div>
 
-    <!-- IMAGE -->
     <img id="modalImage">
 
-    <!-- BODY -->
     <p id="modalBody"></p>
 
     <div id="modalExtra"></div>
 
-    <!-- INTEREST -->
     <div class="modal-interest">
-      <button id="interestBtn" onclick="toggleInterest()">
-        ⭐ Interested
-      </button>
-      <p id="interestCount">0 interested</p>
+<button id="participateBtn">
+  Participate
+</button>
+
+      <p id="modalCount">0 interested</p>
     </div>
 
   </div>
