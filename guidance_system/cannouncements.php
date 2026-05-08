@@ -82,7 +82,7 @@ $pendingCount = (int)$conn->query(
     <a href="cstudents.php"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
-    <a href="creports.php"><i class="fa fa-file"></i> Reports</a>
+    <a href="creports.php"><i class="fa fa-file"></i> Session Notes</a>
 
     <p class="sidebar-title">INFORMATION</p>
     <a href="cannouncements.php" class="active"><i class="fa fa-bullhorn"></i> Announcements</a>
