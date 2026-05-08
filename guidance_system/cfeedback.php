@@ -62,6 +62,7 @@ $ratingStars = [
 <title>UNITYCARE | Counselor Feedback Review</title>
 
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -103,7 +104,7 @@ $ratingStars = [
     <a href="cstudents.php"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
-    <a href="creports.php"><i class="fa fa-file"></i> Reports</a>
+    <a href="creports.php"><i class="fa fa-file"></i> Session Notes</a>
 
     <p class="sidebar-title">INFORMATION</p>
     <a href="cannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
@@ -184,7 +185,19 @@ $ratingStars = [
     </div>
 
   </div>
-
+  <div class="logout-overlay" id="logoutOverlay">
+    <div class="logout-modal">
+      <div class="logout-icon">
+        <i class="fa fa-right-from-bracket"></i>
+      </div>
+      <h3>Logout</h3>
+      <p>Are you sure you want to logout?</p>
+      <div class="logout-actions">
+        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -209,9 +222,18 @@ document.addEventListener("click", function () {
 });
 
 function logout() {
-  localStorage.clear();
+  document.getElementById('logoutOverlay').classList.add('show');
+}
+function closeLogout() {
+  document.getElementById('logoutOverlay').classList.remove('show');
+}
+function confirmLogout() {
   window.location.href = 'logout.php?role=counselor';
 }
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeLogout();
+});
+
 </script>
 
 </body>

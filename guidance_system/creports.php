@@ -205,7 +205,7 @@ document.addEventListener("click", e => {
 });
 
 function saveNotes(btn) {
-  const textarea = btn.previousElementSibling.previousElementSibling;
+  const textarea = document.querySelector(".cReports-textarea");
   const status   = document.getElementById('notesStatus');
   const notes    = textarea.value.trim();
 

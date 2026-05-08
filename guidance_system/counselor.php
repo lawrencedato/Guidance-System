@@ -112,7 +112,7 @@ while ($row = $concernsRes->fetch_assoc()) $recentConcerns[] = $row;
         <p class="sidebar-title">STUDENTS</p>
         <a href="cstudents.php"><i class="fa fa-users"></i> Students</a>
         <p class="sidebar-title">REPORTS</p>
-        <a href="creports.php"><i class="fa fa-file"></i> Reports</a>
+        <a href="creports.php"><i class="fa fa-file"></i> Session Notes</a>
         <p class="sidebar-title">INFORMATION</p>
         <a href="cannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
         <a href="creferral.php"><i class="fa fa-route"></i> Referrals</a>

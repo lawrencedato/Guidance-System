@@ -135,7 +135,7 @@ while ($row = $studentsRes->fetch_assoc()) $students[] = $row;
     <a href="cstudents.php" class="active"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
-    <a href="creports.php"><i class="fa fa-file"></i> Reports</a>
+    <a href="creports.php"><i class="fa fa-file"></i> Session Notes</a>
 
     <p class="sidebar-title">INFORMATION</p>
     <a href="cannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
@@ -263,17 +263,6 @@ while ($row = $studentsRes->fetch_assoc()) $students[] = $row;
 <?php endif; ?>
 
   </div>
-  <div class="logout-overlay" id="logoutOverlay">
-  <div class="logout-modal">
-    <div class="logout-icon"><i class="fa fa-right-from-bracket"></i></div>
-    <h3>Logout</h3>
-    <p>Are you sure you want to logout?</p>
-    <div class="logout-actions">
-      <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
-      <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
-    </div>
-  </div>
-</div>
   <!-- LOGOUT MODAL -->
   <div class="logout-overlay" id="logoutOverlay">
     <div class="logout-modal">

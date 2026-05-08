@@ -28,6 +28,36 @@ $profileImg = !empty($counselor['profile_image'])
 $pendingCount = (int)$conn->query(
     "SELECT COUNT(*) c FROM appointments WHERE counselor_id='$cid' AND status='Pending'"
 )->fetch_assoc()['c'];
+
+if(isset($_POST['action']) && $_POST['action']=="post_announcement"){
+
+$title   = $conn->real_escape_string($_POST['title']);
+$message = $conn->real_escape_string($_POST['message']);
+
+$fileName = "";
+$filePath = "";
+
+if(!empty($_FILES['image']['name'])){
+
+    $uploadDir = "uploads/";
+    if(!is_dir($uploadDir)){
+        mkdir($uploadDir,0777,true);
+    }
+
+    $fileName = time()."_".$_FILES['image']['name'];
+    $filePath = $uploadDir.$fileName;
+
+    move_uploaded_file($_FILES['image']['tmp_name'],$filePath);
+}
+
+$conn->query("INSERT INTO announcements 
+(counselor_id,title,message,file_name,file_path)
+VALUES
+('$cid','$title','$message','$fileName','$filePath')");
+
+echo json_encode(["success"=>true]);
+exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -142,9 +172,20 @@ $pendingCount = (int)$conn->query(
     <button class="cAnnouncements-btn" onclick="postAnnouncement()">
       Post Announcement
     </button>
-
   </div>
-
+  <div class="logout-overlay" id="logoutOverlay">
+    <div class="logout-modal">
+      <div class="logout-icon">
+        <i class="fa fa-right-from-bracket"></i>
+      </div>
+      <h3>Logout</h3>
+      <p>Are you sure you want to logout?</p>
+      <div class="logout-actions">
+        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -188,16 +229,37 @@ document.getElementById('logoutOverlay').addEventListener('click', function(e) {
 });
 
 function postAnnouncement(){
-  const title = document.getElementById("title").value;
-  const message = document.getElementById("message").value;
-  const file = document.getElementById("imageFile").files[0];
 
-  if(!title || !message){
-    alert("Please fill all fields");
-    return;
-  }
+const title = document.getElementById("title").value;
+const message = document.getElementById("message").value;
+const file = document.getElementById("imageFile").files[0];
 
-  alert("Announcement posted (Firebase code not included in this version)");
+if(!title || !message){
+alert("Please fill all fields");
+return;
+}
+
+const fd = new FormData();
+
+fd.append("action","post_announcement");
+fd.append("title",title);
+fd.append("message",message);
+
+if(file){
+fd.append("image",file);
+}
+
+fetch("cannouncements.php",{
+method:"POST",
+body:fd
+})
+.then(res=>res.json())
+.then(data=>{
+if(data.success){
+alert("Announcement posted successfully");
+location.reload();
+}
+});
 }
 
 </script>

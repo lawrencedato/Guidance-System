@@ -75,6 +75,7 @@ $pendingCount = (int)$conn->query(
 <title>Counselor Profile</title>
 
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -117,7 +118,7 @@ $pendingCount = (int)$conn->query(
     <a href="cstudents.php"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
-    <a href="creports.php"><i class="fa fa-file"></i> Reports</a>
+    <a href="creports.php"><i class="fa fa-file"></i> Session Notes</a>
 
     <p class="sidebar-title">INFORMATION</p>
     <a href="cannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
@@ -218,7 +219,19 @@ $pendingCount = (int)$conn->query(
 
     </div>
   </div>
-
+  <div class="logout-overlay" id="logoutOverlay">
+    <div class="logout-modal">
+      <div class="logout-icon">
+        <i class="fa fa-right-from-bracket"></i>
+      </div>
+      <h3>Logout</h3>
+      <p>Are you sure you want to logout?</p>
+      <div class="logout-actions">
+        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -235,10 +248,18 @@ function toggleTheme(){
   );
 }
 
-function logout(){
-  localStorage.clear();
+function logout() {
+  document.getElementById('logoutOverlay').classList.add('show');
+}
+function closeLogout() {
+  document.getElementById('logoutOverlay').classList.remove('show');
+}
+function confirmLogout() {
   window.location.href = 'logout.php?role=counselor';
 }
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeLogout();
+});
 
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");

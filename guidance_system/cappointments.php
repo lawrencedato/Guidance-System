@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_stu
     <a href="cstudents.php"><i class="fa fa-users"></i> Students</a>
 
     <p class="sidebar-title">REPORTS</p>
-    <a href="creports.php"><i class="fa fa-file"></i> Reports</a>
+    <a href="creports.php"><i class="fa fa-file"></i> Session Notes</a>
 
     <p class="sidebar-title">INFORMATION</p>
     <a href="cannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
