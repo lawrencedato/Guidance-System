@@ -116,14 +116,23 @@ while ($row = $concernRes->fetch_assoc()) $concerns[] = $row;
         <i class="fa fa-filter"></i> Filter
       </button>
 
-      <div id="filterBox" class="filter-box">
-        <input type="date" id="filterDate">
+<div id="filterBox" class="filter-box">
 
-        <div class="filter-actions">
-          <button onclick="applyConcernFilter()" class="btn-apply">Apply</button>
-          <button onclick="clearConcernFilter()" class="btn-clear">Clear</button>
-        </div>
-      </div>
+  <select id="filterStatus">
+    <option value="all">All Status</option>
+    <option value="Pending">Pending</option>
+    <option value="Reviewed">Reviewed</option>
+    <option value="Resolved">Resolved</option>
+  </select>
+
+  <input type="date" id="filterDate">
+
+  <div class="filter-actions">
+    <button onclick="applyConcernFilter()" class="btn-apply">Apply</button>
+    <button onclick="clearConcernFilter()" class="btn-clear">Clear</button>
+  </div>
+
+</div>
 
     </div>
 
@@ -165,7 +174,9 @@ while ($row = $concernRes->fetch_assoc()) $concerns[] = $row;
   <p style="text-align:center; color:var(--text-muted); padding:2rem;">No student concerns at the moment.</p>
 <?php else: ?>
   <?php foreach ($concerns as $c): ?>
-  <div class="cConcerns-card">
+  <div class="cConcerns-card"
+     data-date="<?= date('Y-m-d', strtotime($c['created_at'])) ?>"
+     data-status="<?= htmlspecialchars($c['status']) ?>">
     <h3><i class="fa fa-user"></i> <?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?></h3>
     <p><b>Subject:</b> <?= htmlspecialchars($c['subject']) ?></p>
     <p><b>Message:</b> <?= htmlspecialchars($c['message']) ?></p>
@@ -181,6 +192,11 @@ while ($row = $concernRes->fetch_assoc()) $concerns[] = $row;
   <?php endforeach; ?>
 <?php endif; ?>
 
+<div id="noResultsMsg" style="display:none; text-align:center; padding:2rem; color:var(--text-muted); width:100%;">
+      <i class="fa fa-search" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:0.75rem;"></i>
+      <p>No concerns match your filter.</p>
+    </div>
+
   </div>
 
 </main>
@@ -192,20 +208,34 @@ function toggleFilterBox() {
 }
 
 function applyConcernFilter() {
-  const date = document.getElementById("filterDate").value;
-  const items = document.querySelectorAll(".cConcerns-card");
+  const date   = document.getElementById("filterDate").value;
+  const status = document.getElementById("filterStatus")?.value || "all";
+  const items  = document.querySelectorAll(".cConcerns-card");
+  let   visible = 0;
 
   items.forEach(item => {
-    const matchDate = true; 
-    item.style.display = matchDate ? "block" : "none";
+    const itemDate   = item.dataset.date;
+    const itemStatus = item.dataset.status;
+
+    const matchDate   = !date   || itemDate   === date;
+    const matchStatus = status === "all" || itemStatus === status;
+    const show        = matchDate && matchStatus;
+
+    item.style.display = show ? "block" : "none";
+    if (show) visible++;
   });
+
+  document.getElementById("noResultsMsg").style.display = visible === 0 ? "block" : "none";
 }
 
 function clearConcernFilter() {
   document.getElementById("filterDate").value = "";
+  const statusEl = document.getElementById("filterStatus");
+  if (statusEl) statusEl.value = "all";
   document.querySelectorAll(".cConcerns-card").forEach(item => {
     item.style.display = "block";
   });
+  document.getElementById("noResultsMsg").style.display = "none";
 }
 
 function toggleSettingsMenu(e){
