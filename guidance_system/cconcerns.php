@@ -170,7 +170,11 @@ while ($row = $concernRes->fetch_assoc()) $concerns[] = $row;
     <p><b>Subject:</b> <?= htmlspecialchars($c['subject']) ?></p>
     <p><b>Message:</b> <?= htmlspecialchars($c['message']) ?></p>
     <p><b>Status:</b> <?= htmlspecialchars($c['status']) ?></p>
-    <textarea class="cConcerns-replyBox" placeholder="Write your reply..."></textarea>
+    <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+        <i class="fa fa-clock" style="margin-right:4px;"></i>
+        Submitted: <?= date('F d, Y \a\t g:i A', strtotime($c['created_at'])) ?>
+    </p>
+<textarea class="cConcerns-replyBox" placeholder="Write your reply..."></textarea>
     <button class="cConcerns-btn" onclick="sendReply(this)">Send Reply</button>
     <div class="cConcerns-result"></div>
   </div>
