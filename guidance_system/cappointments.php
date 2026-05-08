@@ -45,20 +45,71 @@ $pendingCount = (int)$conn->query(
     "SELECT COUNT(*) c FROM appointments WHERE counselor_id='$cid' AND status='Pending'"
 )->fetch_assoc()['c'];
 
-// Add to PHP header after $pendingCount:
+// ── HANDLE APPROVE / REJECT ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_status') {
+    header('Content-Type: application/json');
+    $apptId  = (int)($_POST['appointment_id'] ?? 0);
+    $status  = $_POST['status'] ?? '';
+    $allowed = ['Approved', 'Rejected'];
+    if (!$apptId || !in_array($status, $allowed)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid request.']); exit;
+    }
+    $ok = $conn->query(
+        "UPDATE appointments SET status='$status'
+         WHERE appointment_id=$apptId AND counselor_id='$cid'"
+    );
+    echo json_encode($ok && $conn->affected_rows > 0
+        ? ['success' => true]
+        : ['success' => false, 'message' => 'Could not update. Try again.']);
+    exit;
+}
+
+// ── LOAD PENDING APPOINTMENTS ──
 $apptRes = $conn->query("
     SELECT a.appointment_id, a.appointment_date, a.appointment_time,
-           a.status, a.priority, a.message,
+           a.priority, a.message,
            s.student_id, s.first_name, s.last_name, s.course, s.year_level
     FROM appointments a
     JOIN students s ON s.student_id = a.student_id
     WHERE a.counselor_id='$cid' AND a.status='Pending'
-    ORDER BY a.appointment_date ASC
+    ORDER BY a.appointment_date ASC, a.appointment_time ASC
 ");
 $appointments = [];
 while ($row = $apptRes->fetch_assoc()) $appointments[] = $row;
+// ── HANDLE GET: student profile for modal ──
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_student') {
+    header('Content-Type: application/json');
+    $apptId = (int)($_GET['appointment_id'] ?? 0);
+    if (!$apptId) {
+        echo json_encode(['success' => false, 'message' => 'Missing ID.']); exit;
+    }
+    $res = $conn->query("
+        SELECT s.first_name, s.last_name, s.email, s.course, s.year_level,
+               sp.emergency_contact_name             AS emergency_name,
+               sp.relationship_to_emergency_contact  AS emergency_relation,
+               sp.emergency_contact_number           AS emergency_number,
+               w.mood_label                          AS last_mood,
+               DATE_FORMAT(w.created_at, '%M %d, %Y') AS last_wellness
+        FROM appointments a
+        JOIN students s      ON s.student_id  = a.student_id
+        LEFT JOIN student_profiles sp ON sp.student_id = a.student_id
+        LEFT JOIN wellness_checks w ON w.wellness_id = (
+            SELECT wellness_id FROM wellness_checks
+            WHERE student_id = s.student_id
+            ORDER BY created_at DESC LIMIT 1
+        )
+        WHERE a.appointment_id = $apptId
+        AND   a.counselor_id   = '$cid'
+        LIMIT 1
+    ");
+    $student = $res ? $res->fetch_assoc() : null;
+    if (!$student) {
+        echo json_encode(['success' => false, 'message' => 'Not found.']); exit;
+    }
+    echo json_encode(['success' => true, 'student' => $student]);
+    exit;
+}
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -69,6 +120,7 @@ while ($row = $apptRes->fetch_assoc()) $appointments[] = $row;
 <title>Appointment Requests - UNITYCARE</title>
 
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -220,7 +272,22 @@ while ($row = $apptRes->fetch_assoc()) $appointments[] = $row;
 <?php endif; ?>
 
   </section>
-
+  
+<div id="noResultsMsg" style="display:none; text-align:center; padding:2rem; color:var(--text-muted);">
+    <i class="fa fa-search" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:0.75rem;"></i>
+    <p>No appointments match your filter.</p>
+  </div>
+<div class="logout-overlay" id="logoutOverlay">
+  <div class="logout-modal">
+    <div class="logout-icon"><i class="fa fa-right-from-bracket"></i></div>
+    <h3>Logout</h3>
+    <p>Are you sure you want to logout?</p>
+    <div class="logout-actions">
+      <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+      <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+    </div>
+  </div>
+</div>
 </main>
 
 <div class="cStudentModal" id="studentModal">
@@ -232,120 +299,174 @@ while ($row = $apptRes->fetch_assoc()) $appointments[] = $row;
       <button onclick="closeStudentModal()">✕</button>
     </div>
 
-    <div class="cStudentModal-body">
-
-      <div class="cStudentModal-profile">
-
-        <div class="cStudentModal-avatar">JS</div>
-
-        <div class="cStudentModal-profileText">
-
-          <div class="cStudentModal-nameRow">
-            <h3>Adolf</h3>
-
-            <span id="studentStatusTag" class="tag stable">
-              Stable
-            </span>
-          </div>
-
-          <p>BSIT • 2nd Year</p>
-
-        </div>
-
-      </div>
-
-      <div class="cStudentModal-box">
-        <h4>Wellness Progress: Good</h4>
-        <p><b>Overall Score:</b> 82%</p>
-        <p><b>Recent Check-in:</b> April 22</p>
-      </div>
-
-    </div>
+<div class="cStudentModal-body" id="studentModalBody">
+  <p style="text-align:center; padding:2rem; color:var(--text-muted);">Loading...</p>
+</div>
 
   </div>
 </div>
 
 <script>
-function toggleSettingsMenu(e){
+function toggleSettingsMenu(e) {
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
-  const btn = document.querySelector(".sidebar-settingsButton");
-
-  if (!menu.contains(e.target) && !btn.contains(e.target)) {
-    menu.classList.remove("show");
-  }
+  const btn  = document.querySelector(".sidebar-settingsButton");
+  if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("show");
 });
 
-function toggleTheme(){
+function toggleTheme() {
   const html = document.documentElement;
-  html.setAttribute("data-theme",
-    html.getAttribute("data-theme") === "light" ? "dark" : "light"
-  );
+  html.setAttribute("data-theme", html.getAttribute("data-theme") === "light" ? "dark" : "light");
 }
 
-function logout(){
-  localStorage.clear();
+// ── LOGOUT ──
+function logout() {
+  document.getElementById('logoutOverlay').classList.add('show');
+}
+function closeLogout() {
+  document.getElementById('logoutOverlay').classList.remove('show');
+}
+function confirmLogout() {
   window.location.href = 'logout.php?role=counselor';
 }
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeLogout();
+});
 
-function openStudentModal(){
-  document.getElementById("studentModal").classList.add("show");
+// ── NOTIFICATION DROPDOWN ──
+function toggleDropdown(id, e) {
+  e.stopPropagation();
+  document.getElementById(id).classList.toggle("show");
 }
+document.addEventListener("click", e => {
+  const notif = document.getElementById("notifDropdown");
+  if (notif && !notif.contains(e.target)) notif.classList.remove("show");
+});
 
-function closeStudentModal(){
-  document.getElementById("studentModal").classList.remove("show");
-}
-
-function toggleFilterBox(){
+// ── FILTER ──
+function toggleFilterBox() {
   document.getElementById("filterBox").classList.toggle("show");
 }
 
-function applyFilter(){
-  alert("Filter applied");
+function applyFilter() {
+  const priority = document.getElementById("filterPriority").value.toLowerCase();
+  const date     = document.getElementById("filterDate").value;
+  let   visible  = 0;
+
+  document.querySelectorAll(".cAppointment-card").forEach(card => {
+    const matchP = priority === "all" || card.dataset.priority === priority;
+    const matchD = !date || card.dataset.date === date;
+    const show   = matchP && matchD;
+    card.style.display = show ? "" : "none";
+    if (show) visible++;
+  });
+
+  document.getElementById("noResultsMsg").style.display = visible === 0 ? "block" : "none";
 }
 
-function clearFilter(){
-  alert("Filter cleared");
+function clearFilter() {
+  document.getElementById("filterPriority").value = "all";
+  document.getElementById("filterDate").value     = "";
+  document.querySelectorAll(".cAppointment-card").forEach(c => c.style.display = "");
+  document.getElementById("noResultsMsg").style.display = "none";
 }
 
-function exportAppointment(btn){
-  const card = btn.closest(".cAppointment-card");
-  const file = card.getAttribute("data-file");
+// ── SEARCH ──
+document.querySelector(".topbar-searchBox input").addEventListener("input", function() {
+  const q       = this.value.toLowerCase();
+  let   visible = 0;
 
-  if(!file){
-    alert("No file found");
-    return;
-  }
+  document.querySelectorAll(".cAppointment-card").forEach(card => {
+    const show = card.dataset.name.includes(q);
+    card.style.display = show ? "" : "none";
+    if (show) visible++;
+  });
 
-  const a = document.createElement("a");
-  a.href = file;
-  a.download = file.split("/").pop();
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
+  document.getElementById("noResultsMsg").style.display = visible === 0 ? "block" : "none";
+});
+
+// ── APPROVE / REJECT ──
 function updateStatus(apptId, status, btn) {
   if (!confirm(`${status === 'Approved' ? 'Approve' : 'Decline'} this appointment?`)) return;
+
   const fd = new FormData();
-  fd.append('action', 'update_status');
+  fd.append('action',         'update_status');
   fd.append('appointment_id', apptId);
-  fd.append('status', status);
+  fd.append('status',         status);
+
   fetch('cappointments.php', { method: 'POST', body: fd })
     .then(r => r.json())
     .then(json => {
       if (json.success) {
         const card = btn.closest('.cAppointment-card');
-        card.style.opacity = '0';
-        card.style.transition = '0.3s';
+        card.style.opacity    = '0';
+        card.style.transform  = 'scale(0.95)';
+        card.style.transition = '0.3s ease';
         setTimeout(() => card.remove(), 300);
       } else {
         alert(json.message || 'Failed to update.');
       }
+    })
+    .catch(() => alert('Something went wrong.'));
+}
+
+// ── STUDENT MODAL ──
+function openStudentModal(apptId) {
+  document.getElementById("studentModal").classList.add("show");
+  const body = document.getElementById("studentModalBody");
+  body.innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-muted);">Loading...</p>';
+
+  fetch('cappointments.php?action=get_student&appointment_id=' + apptId)
+    .then(r => r.json())
+    .then(json => {
+      if (!json.success) {
+        body.innerHTML = '<p style="padding:2rem;color:var(--text-muted);">Could not load profile.</p>';
+        return;
+      }
+      const s        = json.student;
+      const initials = (s.first_name[0] + s.last_name[0]).toUpperCase();
+      body.innerHTML = `
+        <div class="cStudentModal-profile">
+          <div class="cStudentModal-avatar">${initials}</div>
+          <div class="cStudentModal-profileText">
+            <div class="cStudentModal-nameRow">
+              <h3>${s.first_name} ${s.last_name}</h3>
+              <span class="tag stable">Active</span>
+            </div>
+            <p>${s.course} • ${s.year_level}</p>
+          </div>
+        </div>
+        <div class="cStudentModal-grid" style="margin-top:12px;">
+          <div class="cStudentModal-box">
+            <h4>Academic Information</h4>
+            <p><b>Program:</b> ${s.course}</p>
+            <p><b>Year Level:</b> ${s.year_level}</p>
+            <p><b>Email:</b> ${s.email}</p>
+          </div>
+          <div class="cStudentModal-box">
+            <h4>Emergency Contact</h4>
+            <p><b>Name:</b> ${s.emergency_name || 'N/A'}</p>
+            <p><b>Relation:</b> ${s.emergency_relation || 'N/A'}</p>
+            <p><b>Contact:</b> ${s.emergency_number || 'N/A'}</p>
+          </div>
+        </div>
+        <div class="cStudentModal-box" style="margin-top:12px;">
+          <h4>Last Wellness Check-in</h4>
+          <p><b>Mood:</b> ${s.last_mood || 'N/A'}</p>
+          <p><b>Date:</b> ${s.last_wellness || 'No check-in yet'}</p>
+        </div>`;
+    })
+    .catch(() => {
+      body.innerHTML = '<p style="padding:2rem;color:var(--text-muted);">Could not load profile.</p>';
     });
+}
+
+function closeStudentModal() {
+  document.getElementById("studentModal").classList.remove("show");
 }
 </script>
 
