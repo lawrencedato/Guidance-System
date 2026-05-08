@@ -17,13 +17,10 @@ $cid  = $conn->real_escape_string($_SESSION['user_id']);
 $counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
 $counselor    = $counselorRes->fetch_assoc();
 
-$profileRes = $conn->query("SELECT profile_image FROM counselor_profiles WHERE counselor_id='$cid' LIMIT 1");
-$profile    = $profileRes ? $profileRes->fetch_assoc() : null;
-
 $fullName   = htmlspecialchars(($counselor['first_name'] ?? '') . ' ' . ($counselor['last_name'] ?? ''));
 $email      = htmlspecialchars($counselor['email'] ?? '');
-$profileImg = !empty($profile['profile_image'])
-    ? htmlspecialchars($profile['profile_image'])
+$profileImg = !empty($counselor['profile_image'])
+    ? htmlspecialchars($counselor['profile_image'])
     : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
 
 
@@ -236,6 +233,20 @@ while ($row = $studentsRes->fetch_assoc()) $students[] = $row;
     </div>
   </div>
 </div>
+  <!-- LOGOUT MODAL -->
+  <div class="logout-overlay" id="logoutOverlay">
+    <div class="logout-modal">
+      <div class="logout-icon">
+        <i class="fa fa-right-from-bracket"></i>
+      </div>
+      <h3>Logout</h3>
+      <p>Are you sure you want to logout?</p>
+      <div class="logout-actions">
+        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
 
 </main>
 

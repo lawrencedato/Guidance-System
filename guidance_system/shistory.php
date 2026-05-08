@@ -159,34 +159,6 @@ while ($row = $historyRes->fetch_assoc()) $sessions[] = $row;
   <?php endforeach; ?>
 <?php endif; ?>
 
-<?php if (empty($sessions)): ?>
-  <p style="text-align:center; color:var(--text-muted); padding:3rem;">No past sessions found.</p>
-<?php else: ?>
-  <?php foreach ($sessions as $sess): ?>
-  <div class="sHistory-card" data-date="<?= htmlspecialchars($sess['appointment_date']) ?>">
-    <h3>Guidance Counselling</h3>
-    <span class="tag info"><?= htmlspecialchars($sess['status']) ?></span>
-    <p><b>Date:</b> <?= date('F d, Y', strtotime($sess['appointment_date'])) ?></p>
-    <p><b>Time:</b> <?= date('g:i A', strtotime($sess['appointment_time'])) ?></p>
-    <p><b>Counselor:</b> <?= htmlspecialchars($sess['counselor_name']) ?></p>
-  </div>
-  <?php endforeach; ?>
-<?php endif; ?>
-
-<?php if (empty($sessions)): ?>
-  <p style="text-align:center; color:var(--text-muted); padding:3rem;">No past sessions found.</p>
-<?php else: ?>
-  <?php foreach ($sessions as $sess): ?>
-  <div class="sHistory-card" data-date="<?= htmlspecialchars($sess['appointment_date']) ?>">
-    <h3>Guidance Counselling</h3>
-    <span class="tag info"><?= htmlspecialchars($sess['status']) ?></span>
-    <p><b>Date:</b> <?= date('F d, Y', strtotime($sess['appointment_date'])) ?></p>
-    <p><b>Time:</b> <?= date('g:i A', strtotime($sess['appointment_time'])) ?></p>
-    <p><b>Counselor:</b> <?= htmlspecialchars($sess['counselor_name']) ?></p>
-  </div>
-  <?php endforeach; ?>
-<?php endif; ?>
-
   </div>
 
 </main>

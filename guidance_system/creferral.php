@@ -17,15 +17,13 @@ $cid  = $conn->real_escape_string($_SESSION['user_id']);
 $counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
 $counselor    = $counselorRes->fetch_assoc();
 
-$profileRes = $conn->query("SELECT profile_image FROM counselor_profiles WHERE counselor_id='$cid' LIMIT 1");
-$profile    = $profileRes ? $profileRes->fetch_assoc() : null;
 
 $fullName   = htmlspecialchars(($counselor['first_name'] ?? '') . ' ' . ($counselor['last_name'] ?? ''));
 $email      = htmlspecialchars($counselor['email'] ?? '');
-$profileImg = !empty($profile['profile_image'])
-    ? htmlspecialchars($profile['profile_image'])
+$profileImg = !empty($counselor['profile_image'])
+    ? htmlspecialchars($counselor['profile_image'])
     : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
-$phone = htmlspecialchars($profile['contact_number'] ?? 'N/A');
+$phone = htmlspecialchars($counselor['contact_number'] ?? 'N/A');
 
 
 $pendingCount = (int)$conn->query(
@@ -43,10 +41,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
     if (!$date || !$name || !$year || !$course || !$reason) {
         echo json_encode(['success' => false, 'message' => 'Missing required fields.']); exit;
     }
-    $ok = $conn->query("
-        INSERT INTO referrals (counselor_id, student_name, year_level, course, reason, counselor_remarks, referral_date, created_at)
-        VALUES ('$cid', '$name', '$year', '$course', '$reason', '$remarks', '$date', NOW())
-    ");
+    // Match student by name to get student_id
+$nameParts = explode(' ', $name, 2);
+$firstName = $conn->real_escape_string($nameParts[0] ?? '');
+$lastName  = $conn->real_escape_string($nameParts[1] ?? '');
+$studentRow = $conn->query(
+    "SELECT student_id FROM students WHERE first_name='$firstName' AND last_name='$lastName' LIMIT 1"
+)->fetch_assoc();
+
+if (!$studentRow) {
+    echo json_encode(['success' => false, 'message' => "Student \"$name\" not found in the system."]);
+    exit;
+}
+$studentId = (int)$studentRow['student_id'];
+$ok = $conn->query("
+    INSERT INTO referrals (student_id, counselor_id, referral_date, reason, counselor_remarks, created_at)
+    VALUES ($studentId, '$cid', '$date', '$reason', '$remarks', NOW())
+");
     echo json_encode($ok
         ? ['success' => true]
         : ['success' => false, 'message' => 'Failed to save. Please try again.']);

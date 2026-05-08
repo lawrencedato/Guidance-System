@@ -1,16 +1,40 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
+mysqli_report(MYSQLI_REPORT_OFF);
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'counselor') {
+    header("Location: slogin.php");
+    exit;
+}
+
+$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$cid  = $conn->real_escape_string($_SESSION['user_id']);
+
+$counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
+$counselor    = $counselorRes->fetch_assoc();
+
+$fullName   = htmlspecialchars(($counselor['first_name'] ?? '') . ' ' . ($counselor['last_name'] ?? ''));
+$email      = htmlspecialchars($counselor['email'] ?? '');
+$profileImg = !empty($counselor['profile_image'])
+    ? htmlspecialchars($counselor['profile_image'])
+    : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
+
+$pendingCount = (int)$conn->query(
+    "SELECT COUNT(*) c FROM appointments WHERE counselor_id='$cid' AND status='Pending'"
+)->fetch_assoc()['c'];
+
+// ── POST HANDLER ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_notes') {
     header('Content-Type: application/json');
     $notes = $conn->real_escape_string(trim($_POST['notes'] ?? ''));
     if (!$notes) { echo json_encode(['success' => false, 'message' => 'Notes cannot be empty.']); exit; }
     $ok = $conn->query("INSERT INTO session_notes (counselor_id, notes, created_at) VALUES ('$cid', '$notes', NOW())");
-    echo json_encode($ok
-        ? ['success' => true]
-        : ['success' => false, 'message' => 'Failed to save. Please try again.']);
+    echo json_encode($ok ? ['success' => true] : ['success' => false, 'message' => 'Failed to save.']);
     exit;
 }
-
-
 
 ?>
 
@@ -83,19 +107,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
 
     <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
       <i class="fa fa-bell"></i>
-      <span class="badge">4</span>
-
-      <div class="icon-dropdown" id="notifDropdown">
-        <p>No new notifications</p>
-      </div>
-    </div>
-
-    <div class="topbar-user">
-      <img src="counselor.jpg" alt="user">
-      <div>
-        <strong>Dr. Lawrence Dato</strong>
-        <p>lawrencedato@gmail.com</p>
-      </div>
+<?php if ($pendingCount > 0): ?>
+  <span class="badge"><?= $pendingCount ?></span>
+<?php endif; ?>
+<div class="icon-dropdown" id="notifDropdown">
+  <?php if ($pendingCount > 0): ?>
+    <p><?= $pendingCount ?> pending appointment request(s)</p>
+  <?php else: ?>
+    <p>No new notifications</p>
+  <?php endif; ?>
+</div>
+...
+<img src="<?= $profileImg ?>" alt="user"
+     onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff'">
+<div>
+  <strong><?= $fullName ?></strong>
+  <p><?= $email ?></p>
+</div>
     </div>
 
   </div>
