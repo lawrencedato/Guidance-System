@@ -487,6 +487,8 @@ $profileImg = !empty($profile['profile_image'])
             <div class="sDashboard-card">
                 <h4>Mood</h4>
                 <div class="sDashboard-mood-display" id="moodDisplay">No mood recorded yet</div>
+                    <div id="moodDisplay"></div>
+                    <div id="moodNotif" style="display:none; font-size:12px; margin-top:6px;"></div>
                 <div class="sDashboard-mood">
                     <button onclick="setMood('😢','Very Sad')">😢</button>
                     <button onclick="setMood('😕','Sad')">😕</button>
@@ -571,6 +573,30 @@ function setMood(emoji, text) {
     localStorage.setItem("userMoodText", text);
     document.getElementById("moodDisplay").innerHTML =
         `<div style="font-size:40px">${emoji}</div><div>${text}</div>`;
+
+    const fd = new FormData();
+    fd.append('action',        'save_wellness');
+    fd.append('mood_label',    text);
+    fd.append('stress_level',  50);
+    fd.append('sleep_quality', 'Average');
+
+    fetch('swellness.php', { method: 'POST', body: fd })
+      .then(r => r.json())
+      .then(json => {
+        const notif = document.getElementById("moodNotif");
+        if (!notif) return;
+        if (json.success) {
+          notif.style.display  = 'block';
+          notif.style.color    = '#15803d';
+          notif.textContent    = `✔ Mood set to "${text}"`;
+        } else {
+          notif.style.display  = 'block';
+          notif.style.color    = '#e53e3e';
+          notif.textContent    = '❌ Could not save mood.';
+        }
+        setTimeout(() => notif.style.display = 'none', 3000);
+      })
+      .catch(() => {});
 }
 window.addEventListener("load", () => {
     const emoji = localStorage.getItem("userMoodEmoji");

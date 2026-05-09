@@ -5,7 +5,18 @@ mysqli_report(MYSQLI_REPORT_OFF);
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Unauthorized']);
+        exit;
+    }
+    header("Location: slogin.php");
+    exit;
+}
+
 $conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+
 /* =========================
    AJAX: PARTICIPATE TOGGLE
    ========================= */
@@ -48,12 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['announcement_id'])) {
     }
     
 }
-// ===== GUARD: must be logged in =====
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-    header("Location: slogin.php");
-    exit;
-}
-
 // ===== DB CONNECTION =====
 
 $sid  = $conn->real_escape_string($_SESSION['user_id']);
@@ -208,6 +213,13 @@ ORDER BY a.created_at DESC
 
 <?php endwhile; ?>
 
+<?php if ($announcements->num_rows === 0): ?>
+  <div style="text-align:center; padding:3rem; color:var(--text-muted); width:100%;">
+    <i class="fa fa-bullhorn" style="font-size:2.5rem; opacity:0.3; display:block; margin-bottom:1rem;"></i>
+    <p>No announcements yet. Check back later!</p>
+  </div>
+<?php endif; ?>
+
 </div>
 
 </main>
@@ -346,41 +358,43 @@ openModalFromCard(fakeCard);
   }
 
 });
-document.addEventListener("click", function (e) {
+document.getElementById("participateBtn").addEventListener("click", function(e) {
+  e.stopPropagation();
 
-  const btn = e.target.closest("#participateBtn");
-  if (!btn) return;
-
-  e.stopPropagation(); // IMPORTANT
-
+  const btn            = this;
   const announcementId = btn.dataset.id;
+
+  if (!announcementId) return;
+
+  btn.disabled = true;
 
   fetch("sannouncements.php", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: "announcement_id=" + announcementId
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: "announcement_id=" + encodeURIComponent(announcementId)
   })
   .then(res => res.json())
   .then(data => {
+    btn.disabled = false;
 
     const countEl = document.getElementById("modalCount");
-    let current = parseInt(countEl.dataset.count || countEl.innerText) || 0;
+    let current   = parseInt(countEl.dataset.count) || 0;
 
     if (data.action === "added") {
       current++;
       btn.innerText = "⭐ Participating";
     } else {
-      current--;
+      current = Math.max(0, current - 1);
       btn.innerText = "⭐ Participate";
     }
 
     countEl.dataset.count = current;
-    countEl.innerText = current + " interested";
-
+    countEl.innerText     = current + " interested";
   })
-  .catch(err => console.log("AJAX ERROR:", err));
+  .catch(err => {
+    btn.disabled = false;
+    console.log("AJAX ERROR:", err);
+  });
 });
 </script>
 

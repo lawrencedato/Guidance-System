@@ -13,7 +13,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 
 // ===== LOAD STUDENT DATA =====
 $conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
-$sid  = $conn->real_escape_string($_SESSION['user_id']);
+$sid = (int)$_SESSION['user_id'];
 
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
 $student    = $studentRes->fetch_assoc();
@@ -34,7 +34,7 @@ $stress = (int)($_POST['stress_level']                      ?? 0);
 $sleep  = $conn->real_escape_string($_POST['sleep_quality'] ?? '');
 $ok = $conn->query("
     INSERT INTO wellness_checks (student_id, mood_label, stress_level, sleep_quality, created_at)
-    VALUES ('$sid', '$mood', $stress, '$sleep', NOW())
+    VALUES ($sid, '$mood', $stress, '$sleep', NOW())
 ");
     echo json_encode($ok
         ? ['success' => true]
@@ -130,18 +130,18 @@ $ok = $conn->query("
 
     <h2>How are you feeling today?</h2>
 
-    <!-- MOOD SELECTOR -->
-    <div class="sWellness-mood-container">
-      <button class="sWellness-mood-btn" onclick="setMood('😢','Very Sad')">😢</button>
-      <button class="sWellness-mood-btn" onclick="setMood('😕','Sad')">😕</button>
-      <button class="sWellness-mood-btn" onclick="setMood('😐','Neutral')">😐</button>
-      <button class="sWellness-mood-btn" onclick="setMood('🙂','Happy')">🙂</button>
-      <button class="sWellness-mood-btn" onclick="setMood('😁','Very Happy')">😁</button>
-    </div>
+<!-- MOOD SELECTOR -->
+<div class="sWellness-mood-container">
+  <button class="sWellness-mood-btn" onclick="setMood(this, '😢', 'Very Sad')">😢</button>
+  <button class="sWellness-mood-btn" onclick="setMood(this, '😕', 'Sad')">😕</button>
+  <button class="sWellness-mood-btn" onclick="setMood(this, '😐', 'Neutral')">😐</button>
+  <button class="sWellness-mood-btn" onclick="setMood(this, '🙂', 'Happy')">🙂</button>
+  <button class="sWellness-mood-btn" onclick="setMood(this, '😁', 'Very Happy')">😁</button>
+</div>
 
     <!-- MOOD DISPLAY -->
     <div class="sWellness-mood-display">
-      Selected Mood: <strong id="moodValue">🙂 Neutral</strong>
+      Selected Mood: <strong id="moodValue">😐 Neutral</strong>
     </div>
 
     <!-- STRESS -->
@@ -216,38 +216,84 @@ document.addEventListener("click", e => {
   }
 });
 
-let selectedMood = '';
+let selectedMood = 'Neutral';
 
-function setMood(emoji, text) {
+// Pre-highlight Neutral as default on load
+window.addEventListener("load", () => {
+  document.querySelectorAll(".sWellness-mood-btn").forEach(btn => {
+    if (btn.getAttribute("onclick")?.includes("Neutral")) {
+      btn.classList.add("active");
+    }
+  });
+});
+
+function setMood(el, emoji, text) {
   selectedMood = text;
   document.getElementById("moodValue").innerText = `${emoji} ${text}`;
+
+  document.querySelectorAll(".sWellness-mood-btn").forEach(btn => {
+    btn.classList.remove("active");
+  });
+  el.classList.add("active");
 }
 
 function submitWellness() {
-  const stress = document.querySelector("input[type=range]").value;
-  const sleep  = document.querySelector(".sWellness-form-group select").value;
-  const result = document.getElementById("wellnessResult");
+  const stress  = document.querySelector("input[type=range]").value;
+  const sleep   = document.querySelector(".sWellness-form-group select").value;
+  const result  = document.getElementById("wellnessResult");
+  const saveBtn = document.querySelector(".sBooking-button");
 
   if (!selectedMood) {
     result.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please select a mood first.</span>";
     return;
   }
 
+  saveBtn.disabled   = true;
+  saveBtn.textContent = 'Saving...';
+  result.innerHTML   = "";
+
   const fd = new FormData();
   fd.append('action',        'save_wellness');
-  fd.append('mood_label', selectedMood);
+  fd.append('mood_label',    selectedMood);
   fd.append('stress_level',  stress);
   fd.append('sleep_quality', sleep);
 
   fetch('swellness.php', { method: 'POST', body: fd })
     .then(r => r.json())
     .then(json => {
-      result.innerHTML = json.success
-        ? "<span style='color:var(--success,#15803d);'>✔ Check-in saved!</span>"
-        : "<span style='color:var(--error,#e53e3e);'>❌ " + json.message + "</span>";
+      saveBtn.disabled    = false;
+      saveBtn.textContent = 'Save Check-in';
+
+      if (json.success) {
+        result.innerHTML = `
+          <div style="
+            background: var(--bg-soft, #f0fdf4);
+            border: 1px solid #86efac;
+            border-radius: 10px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #15803d;
+            margin-top: 8px;
+          ">
+            <i class="fa fa-circle-check" style="font-size:18px;"></i>
+            <div>
+              <b>Check-in saved!</b><br>
+              <span style="font-size:12px; opacity:0.8;">
+                Mood: ${selectedMood} &bull; Stress: ${stress}% &bull; Sleep: ${sleep}
+              </span>
+            </div>
+          </div>`;
+      } else {
+        result.innerHTML = "<span style='color:var(--error,#e53e3e);'>❌ " + (json.message || 'Failed to save.') + "</span>";
+      }
     })
     .catch(() => {
-      result.innerHTML = "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong.</span>";
+      saveBtn.disabled    = false;
+      saveBtn.textContent = 'Save Check-in';
+      result.innerHTML    = "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong. Please try again.</span>";
     });
 }
 

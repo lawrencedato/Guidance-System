@@ -159,13 +159,13 @@ $profileImg = !empty($profile['profile_image'])
 
         <div class="form-group">
           <label>Rating</label>
-          <select>
-            <option>⭐ Poor</option>
-            <option>⭐⭐ Fair</option>
-            <option>⭐⭐⭐ Good</option>
-            <option>⭐⭐⭐⭐ Very Good</option>
-            <option>⭐⭐⭐⭐⭐ Excellent</option>
-          </select>
+<select id="ratingSelect">
+  <option value="Poor">⭐ Poor</option>
+  <option value="Fair">⭐⭐ Fair</option>
+  <option value="Good">⭐⭐⭐ Good</option>
+  <option value="Very Good">⭐⭐⭐⭐ Very Good</option>
+  <option value="Excellent">⭐⭐⭐⭐⭐ Excellent</option>
+</select>
         </div>
 
         <div class="form-group">
@@ -228,7 +228,7 @@ document.addEventListener("click", function(e) {
 });
 
 function submitFeedback() {
-  const rating   = document.querySelector('.sFeedback-form select').value;
+  const rating = document.getElementById('ratingSelect').value;
   const message  = document.querySelector('.sFeedback-form textarea').value.trim();
   const result   = document.getElementById('feedbackResult');
 

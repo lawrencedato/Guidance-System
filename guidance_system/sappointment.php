@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book'
     $cRes = $conn->query("
         SELECT c.counselor_id
         FROM counselors c
-        WHERE c.status = 'active'
+        WHERE c.status = 'Active'
         ORDER BY (
             SELECT COUNT(*) FROM appointments a
             WHERE a.counselor_id = c.counselor_id
