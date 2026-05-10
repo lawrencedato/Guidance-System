@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 }
 
 // ===== LOAD STUDENT DATA =====
-$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $sid  = $conn->real_escape_string($_SESSION['user_id']);
 
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
@@ -34,32 +34,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book'
     $message  = $conn->real_escape_string($_POST['message']  ?? '');
     $priority = $conn->real_escape_string($_POST['priority'] ?? 'Normal');
 
-    // Get an available counselor (least appointments today)
-    $cRes = $conn->query("
-        SELECT c.counselor_id
-        FROM counselors c
-        WHERE c.status = 'Active'
-        ORDER BY (
-            SELECT COUNT(*) FROM appointments a
-            WHERE a.counselor_id = c.counselor_id
-            AND a.appointment_date = '$date'
-        ) ASC
-        LIMIT 1
-    ");
+    // Get any active counselor as a placeholder (real assignment happens when a counselor accepts)
+    $cRes = $conn->query("SELECT counselor_id FROM counselors WHERE status = 'Active' LIMIT 1");
     $counselorRow = $cRes ? $cRes->fetch_assoc() : null;
 
     if (!$counselorRow) {
-        echo json_encode(['success' => false, 'message' => 'No available counselors for this date.']); exit;
+        echo json_encode(['success' => false, 'message' => 'No available counselors at the moment.']); exit;
     }
 
-    $assignedCid = $counselorRow['counselor_id'];
-    $ok = $conn->query("
-        INSERT INTO appointments (student_id, counselor_id, appointment_date, appointment_time, message, priority, status, created_at)
-        VALUES ('$sid', '$assignedCid', '$date', '$time', '$message', '$priority', 'Pending', NOW())
-    ");
-    echo json_encode($ok
-        ? ['success' => true]
-        : ['success' => false, 'message' => 'Failed to book. Please try again.']);
+    $placeholderCid = $counselorRow['counselor_id'];
+
+    $conn->begin_transaction();
+    try {
+        $ok = $conn->query("
+            INSERT INTO appointments (student_id, counselor_id, appointment_date, appointment_time, message, priority, status, created_at)
+            VALUES ('$sid', '$placeholderCid', '$date', '$time', '$message', '$priority', 'Pending', NOW())
+        ");
+        if (!$ok) throw new Exception($conn->error);
+        $conn->commit();
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        $conn->rollback();
+        echo json_encode(['success' => false, 'message' => 'Failed to book. Please try again.']);
+    }
     exit;
 }
 ?>

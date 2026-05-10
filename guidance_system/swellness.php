@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 }
 
 // ===== LOAD STUDENT DATA =====
-$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $sid = (int)$_SESSION['user_id'];
 
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");

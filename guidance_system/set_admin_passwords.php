@@ -1,5 +1,5 @@
 <?php
-$conn = new mysqli("localhost", "root", "", "gcs_db");
+$conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 
 // ── SET YOUR PASSWORDS HERE ──
 $admins = [

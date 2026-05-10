@@ -15,7 +15,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset_password') {
     header('Content-Type: application/json');
 
-    $conn       = new mysqli("localhost", "root", "", "gcs_db");
+    $conn       = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
     $new_pw     = $_POST['new_password']     ?? '';
     $confirm_pw = $_POST['confirm_password'] ?? '';
     $sid = $conn->real_escape_string($_SESSION['user_id']);
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
 }
 
 // ===== LOAD DATA =====
-$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$conn = new mysqli("localhost", "App_User", "gcs_db2026", "gcs_db");
 $sid = $conn->real_escape_string($_SESSION['user_id']);
 
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");

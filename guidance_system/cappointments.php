@@ -10,29 +10,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'counselor') {
     exit;
 }
 
-$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $cid  = $conn->real_escape_string($_SESSION['user_id']);
 
 
 $counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
 $counselor    = $counselorRes->fetch_assoc();
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_status') {
-    header('Content-Type: application/json');
-    $apptId  = (int)($_POST['appointment_id'] ?? 0);
-    $status  = $_POST['status'] ?? '';
-    $allowed = ['Approved', 'Rejected'];
-    if (!$apptId || !in_array($status, $allowed)) {
-        echo json_encode(['success' => false, 'message' => 'Invalid request.']); exit;
-    }
-    $ok = $conn->query(
-        "UPDATE appointments SET status='$status' WHERE appointment_id=$apptId AND counselor_id='$cid'"
-    );
-    echo json_encode($ok && $conn->affected_rows > 0
-        ? ['success' => true]
-        : ['success' => false, 'message' => 'Could not update.']);
-    exit;
-}
 
 $fullName   = htmlspecialchars(($counselor['first_name'] ?? '') . ' ' . ($counselor['last_name'] ?? ''));
 $email      = htmlspecialchars($counselor['email'] ?? '');
@@ -42,7 +25,7 @@ $profileImg = !empty($counselor['profile_image'])
 
 
 $pendingCount = (int)$conn->query(
-    "SELECT COUNT(*) c FROM appointments WHERE counselor_id='$cid' AND status='Pending'"
+    "SELECT COUNT(*) c FROM appointments WHERE status='Pending'"
 )->fetch_assoc()['c'];
 
 // ── HANDLE APPROVE / REJECT ──
@@ -54,13 +37,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     if (!$apptId || !in_array($status, $allowed)) {
         echo json_encode(['success' => false, 'message' => 'Invalid request.']); exit;
     }
-    $ok = $conn->query(
-        "UPDATE appointments SET status='$status'
-         WHERE appointment_id=$apptId AND counselor_id='$cid'"
-    );
-    echo json_encode($ok && $conn->affected_rows > 0
-        ? ['success' => true]
-        : ['success' => false, 'message' => 'Could not update. Try again.']);
+    $conn->begin_transaction();
+    try {
+        // Row-level lock to prevent two counselors from accepting the same appointment simultaneously
+        $lock = $conn->query("SELECT appointment_id FROM appointments WHERE appointment_id=$apptId AND status='Pending' FOR UPDATE");
+        if (!$lock || $lock->num_rows === 0) throw new Exception("Appointment no longer available or already handled.");
+        // When approving: assign this counselor. When rejecting: keep record but mark rejected.
+        $ok = $conn->query(
+            "UPDATE appointments SET status='$status', counselor_id='$cid'
+             WHERE appointment_id=$apptId"
+        );
+        if (!$ok || $conn->affected_rows === 0) throw new Exception("Could not update. Try again.");
+        $conn->commit();
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        $conn->rollback();
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
     exit;
 }
 
@@ -71,7 +64,7 @@ $apptRes = $conn->query("
            s.student_id, s.first_name, s.last_name, s.course, s.year_level
     FROM appointments a
     JOIN students s ON s.student_id = a.student_id
-    WHERE a.counselor_id='$cid' AND a.status='Pending'
+    WHERE a.status='Pending'
     ORDER BY a.appointment_date ASC, a.appointment_time ASC
 ");
 $appointments = [];
@@ -99,7 +92,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_stu
             ORDER BY created_at DESC LIMIT 1
         )
         WHERE a.appointment_id = $apptId
-        AND   a.counselor_id   = '$cid'
         LIMIT 1
     ");
     $student = $res ? $res->fetch_assoc() : null;

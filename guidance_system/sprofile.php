@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     exit;
 }
 
-$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $sid  = $conn->real_escape_string($_SESSION['user_id']);
 
 // ===== HANDLE PROFILE UPDATE (AJAX) =====

@@ -6,7 +6,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
-$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 
 function generateCounselorId($conn) {
     $res = $conn->query("SELECT counselor_id FROM counselors ORDER BY CAST(counselor_id AS UNSIGNED) DESC LIMIT 1");
@@ -138,30 +138,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $counselor_id = $conn->real_escape_string($_POST['counselor_id'] ?? '');
         $newStatus    = ($_POST['new_status'] ?? '') === 'Active' ? 'Active' : 'Inactive';
 
-        $ok = $conn->query("UPDATE counselors SET status='$newStatus' WHERE counselor_id='$counselor_id'");
-        echo $ok
-            ? json_encode(["success" => true,  "message" => "Status updated.", "new_status" => $newStatus])
-            : json_encode(["success" => false, "message" => "Database error."]);
+        $conn->begin_transaction();
+        try {
+            $ok = $conn->query("UPDATE counselors SET status='$newStatus' WHERE counselor_id='$counselor_id'");
+            if (!$ok) throw new Exception($conn->error);
+            $conn->commit();
+            echo json_encode(["success" => true, "message" => "Status updated.", "new_status" => $newStatus]);
+        } catch (Exception $e) {
+            $conn->rollback();
+            echo json_encode(["success" => false, "message" => "Database error: " . $e->getMessage()]);
+        }
         exit;
     }
 
     // ── ARCHIVE ──
     if ($action === 'archive') {
         $counselor_id = $conn->real_escape_string($_POST['counselor_id'] ?? '');
-        $ok = $conn->query("UPDATE counselors SET archived = 1, status = 'Inactive' WHERE counselor_id='$counselor_id'");
-        echo $ok
-            ? json_encode(["success" => true,  "message" => "Counselor archived successfully."])
-            : json_encode(["success" => false, "message" => "Database error."]);
+        $conn->begin_transaction();
+        try {
+            $ok = $conn->query("UPDATE counselors SET archived = 1, status = 'Inactive' WHERE counselor_id='$counselor_id'");
+            if (!$ok) throw new Exception($conn->error);
+            $conn->commit();
+            echo json_encode(["success" => true, "message" => "Counselor archived successfully."]);
+        } catch (Exception $e) {
+            $conn->rollback();
+            echo json_encode(["success" => false, "message" => "Database error: " . $e->getMessage()]);
+        }
         exit;
     }
 
     // ── UNARCHIVE ──
     if ($action === 'unarchive') {
         $counselor_id = $conn->real_escape_string($_POST['counselor_id'] ?? '');
-        $ok = $conn->query("UPDATE counselors SET archived = 0, status = 'Active' WHERE counselor_id='$counselor_id'");
-        echo $ok
-            ? json_encode(["success" => true,  "message" => "Counselor restored successfully."])
-            : json_encode(["success" => false, "message" => "Database error."]);
+        $conn->begin_transaction();
+        try {
+            $ok = $conn->query("UPDATE counselors SET archived = 0, status = 'Active' WHERE counselor_id='$counselor_id'");
+            if (!$ok) throw new Exception($conn->error);
+            $conn->commit();
+            echo json_encode(["success" => true, "message" => "Counselor restored successfully."]);
+        } catch (Exception $e) {
+            $conn->rollback();
+            echo json_encode(["success" => false, "message" => "Database error: " . $e->getMessage()]);
+        }
         exit;
     }
 

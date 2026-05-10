@@ -1,9 +1,9 @@
 <?php
 
 $servername = "localhost";
-$username = "root";
-$password = "";
-$database = "gcs_db";
+$username   = "System_User";
+$password   = "gcs_db2026";
+$database   = "gcs_db";
 
 $conn = new mysqli($servername, $username, $password, $database);
 

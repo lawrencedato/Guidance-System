@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'counselor') {
     exit;
 }
 
-$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $cid  = $conn->real_escape_string($_SESSION['user_id']);
 
 
@@ -50,12 +50,19 @@ if(!empty($_FILES['image']['name'])){
     move_uploaded_file($_FILES['image']['tmp_name'],$filePath);
 }
 
-$conn->query("INSERT INTO announcements 
-(counselor_id,title,message,file_name,file_path)
-VALUES
-('$cid','$title','$message','$fileName','$filePath')");
-
-echo json_encode(["success"=>true]);
+$conn->begin_transaction();
+try {
+    $ok = $conn->query("INSERT INTO announcements
+    (counselor_id,title,message,file_name,file_path)
+    VALUES
+    ('$cid','$title','$message','$fileName','$filePath')");
+    if (!$ok) throw new Exception($conn->error);
+    $conn->commit();
+    echo json_encode(["success"=>true]);
+} catch (Exception $e) {
+    $conn->rollback();
+    echo json_encode(["success"=>false,"message"=>"Failed to post announcement: ".$e->getMessage()]);
+}
 exit;
 }
 ?>

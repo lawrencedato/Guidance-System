@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'counselor') {
     exit;
 }
 
-$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $cid  = $conn->real_escape_string($_SESSION['user_id']); // ✅ was $_SESSION['user_id'] but set wrong key before
 
 $counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
@@ -42,7 +42,7 @@ $pendingConcerns = $conn->query(
 )->fetch_assoc()['c'] ?? 0;
 
 $pendingAppointments = $conn->query(
-    "SELECT COUNT(*) c FROM appointments WHERE counselor_id='$cid' AND status='Pending'"
+    "SELECT COUNT(*) c FROM appointments WHERE status='Pending'"
 )->fetch_assoc()['c'] ?? 0;
 
 // ===== UPCOMING APPOINTMENTS =====

@@ -12,8 +12,8 @@ mysqli_report(MYSQLI_REPORT_OFF);
 
 $host = "localhost";
 $db   = "gcs_db";
-$user = "root";
-$pass = "";
+$user = "System_User";
+$pass = "gcs_db2026";
 
 
 $conn = new mysqli($host, $user, $pass, $db);
@@ -142,20 +142,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     $stmt->bind_param("sis", $activated_id, $student_id_int, $hashedPass);
-    $executed = $stmt->execute();
-    $stmt->close();
 
-    // ================= STEP 6: Return result =================
-    if ($executed) {
+    // ================= STEP 6: Execute within ACID transaction =================
+    $conn->begin_transaction();
+    try {
+        $executed = $stmt->execute();
+        if (!$executed) throw new Exception($stmt->error);
+        $conn->commit();
+        $stmt->close();
         echo json_encode([
             "success"       => true,
             "message"       => "Account activated successfully!",
             "temp_password" => $tempPassword
         ]);
-    } else {
+    } catch (Exception $e) {
+        $conn->rollback();
+        $stmt->close();
         echo json_encode([
             "success" => false,
-            "message" => "Failed to activate account: " . $conn->error
+            "message" => "Failed to activate account: " . $e->getMessage()
         ]);
     }
     exit;

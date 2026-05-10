@@ -5,7 +5,7 @@ mysqli_report(MYSQLI_REPORT_OFF);
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 if ($conn->connect_error) {
     echo json_encode(["success" => false, "message" => "DB error: " . $conn->connect_error]);
     exit;
