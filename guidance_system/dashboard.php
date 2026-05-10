@@ -11,15 +11,15 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     exit;
 }
 
+$conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
+$sid  = (int)$_SESSION['user_id'];
+
 // ===== HANDLE PASSWORD RESET AJAX =====
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset_password') {
     header('Content-Type: application/json');
 
-    $conn       = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
     $new_pw     = $_POST['new_password']     ?? '';
     $confirm_pw = $_POST['confirm_password'] ?? '';
-    $sid = $conn->real_escape_string($_SESSION['user_id']);
-
 
     if (!$new_pw || !$confirm_pw) {
         echo json_encode(["success" => false, "message" => "Please fill in all fields."]);
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
 
     $hashed = password_hash($new_pw, PASSWORD_BCRYPT);
     $ok     = $conn->query(
-        "UPDATE activated_students SET password='$hashed', is_temp_password=0 WHERE student_id='$sid'"
+        "UPDATE activated_students SET password='$hashed', is_temp_password=0 WHERE student_id=$sid"
     );
 
     if ($ok) {
@@ -54,38 +54,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
     exit;
 }
 
-// ===== LOAD DATA =====
-$conn = new mysqli("localhost", "App_User", "gcs_db2026", "gcs_db");
-$sid = $conn->real_escape_string($_SESSION['user_id']);
+// ===== HANDLE MOOD SAVE (save_wellness) =====
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_wellness') {
+    header('Content-Type: application/json');
 
-$studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
+    // Check if already submitted today
+    $check = $conn->query(
+        "SELECT wellness_id FROM wellness_checks
+         WHERE student_id = $sid AND DATE(created_at) = CURDATE()
+         LIMIT 1"
+    );
+    if ($check->num_rows > 0) {
+        echo json_encode(['success' => false, 'already_done' => true, 'message' => 'Already submitted today.']);
+        exit;
+    }
+
+    $mood   = $conn->real_escape_string($_POST['mood_label']    ?? 'Neutral');
+    $stress = (int)($_POST['stress_level']                      ?? 50);
+    $sleep  = $conn->real_escape_string($_POST['sleep_quality'] ?? 'Average');
+
+    $ok = $conn->query(
+        "INSERT INTO wellness_checks (student_id, mood_label, stress_level, sleep_quality, created_at)
+         VALUES ($sid, '$mood', $stress, '$sleep', NOW())"
+    );
+
+    echo json_encode($ok
+        ? ['success' => true]
+        : ['success' => false, 'message' => 'Failed to save. Please try again.']
+    );
+    exit;
+}
+
+// ===== HANDLE MOOD UPDATE (update_wellness) =====
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_wellness') {
+    header('Content-Type: application/json');
+
+    $checkRes = $conn->query(
+        "SELECT wellness_id FROM wellness_checks
+         WHERE student_id = $sid AND DATE(created_at) = CURDATE()
+         LIMIT 1"
+    );
+    $row = $checkRes->fetch_assoc();
+    if (!$row) {
+        echo json_encode(['success' => false, 'message' => 'No check-in found for today to update.']);
+        exit;
+    }
+
+    $wid    = (int)$row['wellness_id'];
+    $mood   = $conn->real_escape_string($_POST['mood_label']    ?? 'Neutral');
+    $stress = (int)($_POST['stress_level']                      ?? 50);
+    $sleep  = $conn->real_escape_string($_POST['sleep_quality'] ?? 'Average');
+
+    $ok = $conn->query(
+        "UPDATE wellness_checks
+         SET mood_label = '$mood', stress_level = $stress, sleep_quality = '$sleep'
+         WHERE wellness_id = $wid AND student_id = $sid"
+    );
+
+    echo json_encode($ok
+        ? ['success' => true]
+        : ['success' => false, 'message' => 'Failed to update. Please try again.']
+    );
+    exit;
+}
+
+// ===== LOAD PAGE DATA =====
+$studentRes = $conn->query("SELECT * FROM students WHERE student_id=$sid LIMIT 1");
 $student    = $studentRes->fetch_assoc();
 
-// Load profile image from student_profiles
-$profileRes = $conn->query("SELECT profile_image FROM student_profiles WHERE student_id='$sid' LIMIT 1");
+$profileRes = $conn->query("SELECT profile_image FROM student_profiles WHERE student_id=$sid LIMIT 1");
 $profile    = $profileRes->fetch_assoc();
 
-// Read is_temp_password from session (set during login)
-$isTempPassword = (int) ($_SESSION['is_temp_password'] ?? 0);
+$isTempPassword = (int)($_SESSION['is_temp_password'] ?? 0);
 
 // Stats
-$upcoming  = $conn->query("SELECT COUNT(*) c FROM appointments WHERE student_id='$sid' AND status='Approved' AND appointment_date >= CURDATE()")->fetch_assoc()['c'] ?? 0;
-$completed = $conn->query("SELECT COUNT(*) c FROM appointments WHERE student_id='$sid' AND status='Completed'")->fetch_assoc()['c'] ?? 0;
-$referrals = $conn->query("SELECT COUNT(*) c FROM referrals WHERE student_id='$sid'")->fetch_assoc()['c'] ?? 0;
-$concerns  = $conn->query("SELECT COUNT(*) c FROM concerns WHERE student_id='$sid' AND status='Pending'")->fetch_assoc()['c'] ?? 0;
+$upcoming  = $conn->query("SELECT COUNT(*) c FROM appointments WHERE student_id=$sid AND status='Approved' AND appointment_date >= CURDATE()")->fetch_assoc()['c'] ?? 0;
+$completed = $conn->query("SELECT COUNT(*) c FROM appointments WHERE student_id=$sid AND status='Completed'")->fetch_assoc()['c'] ?? 0;
+$referrals = $conn->query("SELECT COUNT(*) c FROM referrals WHERE student_id=$sid")->fetch_assoc()['c'] ?? 0;
+$concerns  = $conn->query("SELECT COUNT(*) c FROM concerns WHERE student_id=$sid AND status='Pending'")->fetch_assoc()['c'] ?? 0;
 
 $announce = $conn->query("SELECT * FROM announcements ORDER BY created_at DESC LIMIT 1")->fetch_assoc();
 
 $actRes = $conn->query(
-    "(SELECT 'Booked appointment' AS activity, created_at FROM appointments WHERE student_id='$sid' ORDER BY created_at DESC LIMIT 1)
+    "(SELECT 'Booked appointment' AS activity, created_at FROM appointments WHERE student_id=$sid ORDER BY created_at DESC LIMIT 1)
      UNION
-     (SELECT 'Submitted concern', created_at FROM concerns WHERE student_id='$sid' ORDER BY created_at DESC LIMIT 1)
+     (SELECT 'Submitted concern', created_at FROM concerns WHERE student_id=$sid ORDER BY created_at DESC LIMIT 1)
      UNION
-     (SELECT 'Wellness check', created_at FROM wellness_checks WHERE student_id='$sid' ORDER BY created_at DESC LIMIT 1)
+     (SELECT 'Wellness check', created_at FROM wellness_checks WHERE student_id=$sid ORDER BY created_at DESC LIMIT 1)
      ORDER BY created_at DESC LIMIT 5"
 );
 $activities = [];
 while ($row = $actRes->fetch_assoc()) $activities[] = $row;
+
+// Check if student already has a wellness entry today (used in JS to pick save vs update)
+$todayWellnessRes    = $conn->query(
+    "SELECT mood_label FROM wellness_checks
+     WHERE student_id=$sid AND DATE(created_at) = CURDATE()
+     ORDER BY created_at DESC LIMIT 1"
+);
+$todayWellness       = $todayWellnessRes->fetch_assoc();
+$wellnessExistsToday = !empty($todayWellness);
 
 $firstName  = htmlspecialchars($student['first_name'] ?? 'Student');
 $fullName   = htmlspecialchars(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? ''));
@@ -140,7 +208,6 @@ $profileImg = !empty($profile['profile_image'])
             from { opacity: 0; transform: scale(0.95); }
             to   { opacity: 1; transform: scale(1); }
         }
-
         .reset-box h2 {
             margin-bottom: var(--spacing-sm, 8px);
             color: var(--primary, #113f67);
@@ -160,7 +227,6 @@ $profileImg = !empty($profile['profile_image'])
             margin-bottom: 5px;
             color: var(--text, #222);
         }
-
         .pw-wrapper {
             position: relative;
             display: flex;
@@ -197,7 +263,6 @@ $profileImg = !empty($profile['profile_image'])
             margin-top: 0 !important;
         }
         .pw-toggle:hover { color: var(--primary, #113f67); background: none !important; }
-
         .strength-wrap {
             height: 5px;
             background: var(--border, #e2e8f0);
@@ -211,12 +276,7 @@ $profileImg = !empty($profile['profile_image'])
             width: 0%;
             transition: width 0.3s, background 0.3s;
         }
-        .strength-label {
-            font-size: 11px;
-            margin-bottom: 10px;
-            text-align: left;
-        }
-
+        .strength-label { font-size: 11px; margin-bottom: 10px; text-align: left; }
         .pw-reqs {
             list-style: none;
             padding: 0;
@@ -241,7 +301,6 @@ $profileImg = !empty($profile['profile_image'])
             transition: background 0.2s;
         }
         .pw-reqs li.met .dot-req { background: #15803d; }
-
         #resetError {
             font-size: 12px;
             min-height: 16px;
@@ -249,7 +308,6 @@ $profileImg = !empty($profile['profile_image'])
             margin: 6px 0 0;
             color: #e53e3e;
         }
-
         .reset-box .save-btn {
             margin-top: 14px;
             width: 100%;
@@ -263,7 +321,7 @@ $profileImg = !empty($profile['profile_image'])
             cursor: pointer;
             transition: 0.2s;
         }
-        .reset-box .save-btn:hover { background: #0e3558; }
+        .reset-box .save-btn:hover    { background: #0e3558; }
         .reset-box .save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
         /* ===== SUCCESS MODAL ===== */
@@ -296,31 +354,17 @@ $profileImg = !empty($profile['profile_image'])
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 16px;
         }
-        .success-box h2 {
-            color: var(--primary, #113f67);
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        .success-box p {
-            color: var(--text-muted, #666);
-            font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: 20px;
-        }
+        .success-box h2 { color: var(--primary, #113f67); font-weight: 700; margin-bottom: 8px; }
+        .success-box p  { color: var(--text-muted, #666); font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
         .success-box .login-btn {
             width: 100%; padding: 12px;
             border: none; border-radius: 10px;
             background: var(--primary, #113f67);
             color: #fff; font-weight: 600;
-            font-size: 14px; cursor: pointer;
-            transition: 0.2s;
+            font-size: 14px; cursor: pointer; transition: 0.2s;
         }
         .success-box .login-btn:hover { background: #0e3558; }
-        .redirect-note {
-            font-size: 12px;
-            color: var(--text-muted, #888);
-            margin-top: 10px;
-        }
+        .redirect-note { font-size: 12px; color: var(--text-muted, #888); margin-top: 10px; }
 
         @media (max-width: 500px) {
             .reset-box, .success-box { width: 90% !important; padding: 20px !important; }
@@ -329,13 +373,12 @@ $profileImg = !empty($profile['profile_image'])
 </head>
 <body class="body">
 
-<!-- ===== FULL PAGE BLOCK (only active when temp password) ===== -->
+<!-- ===== FULL PAGE BLOCK ===== -->
 <div class="page-block-overlay <?= $isTempPassword ? 'active' : '' ?>" id="pageBlockOverlay"></div>
 
 <!-- ===== FORCED RESET PASSWORD MODAL ===== -->
 <div class="reset-modal <?= $isTempPassword ? 'active' : '' ?>" id="resetModal">
     <div class="reset-box">
-
         <h2>Set Your Password</h2>
         <p>You logged in with a temporary password. Please set your own permanent password to continue using the system.</p>
 
@@ -372,7 +415,6 @@ $profileImg = !empty($profile['profile_image'])
 
         <div id="resetError"></div>
         <button class="save-btn" id="saveBtn" onclick="saveNewPassword()">Save Password</button>
-
     </div>
 </div>
 
@@ -484,11 +526,12 @@ $profileImg = !empty($profile['profile_image'])
         </div>
 
         <div class="sDashboard-side">
+
+            <!-- ===== MOOD CARD ===== -->
             <div class="sDashboard-card">
                 <h4>Mood</h4>
                 <div class="sDashboard-mood-display" id="moodDisplay">No mood recorded yet</div>
-                    <div id="moodDisplay"></div>
-                    <div id="moodNotif" style="display:none; font-size:12px; margin-top:6px;"></div>
+                <div id="moodNotif" style="display:none; font-size:12px; margin-top:6px; text-align:center;"></div>
                 <div class="sDashboard-mood">
                     <button onclick="setMood('😢','Very Sad')">😢</button>
                     <button onclick="setMood('😕','Sad')">😕</button>
@@ -497,6 +540,8 @@ $profileImg = !empty($profile['profile_image'])
                     <button onclick="setMood('😁','Very Happy')">😁</button>
                 </div>
             </div>
+
+            <!-- ===== RECENT ACTIVITY CARD ===== -->
             <div class="sDashboard-card">
                 <h4>Recent Activity</h4>
                 <?php if (count($activities) > 0): ?>
@@ -510,31 +555,33 @@ $profileImg = !empty($profile['profile_image'])
                     <p style="color:var(--text-muted);font-size:13px;">No recent activity.</p>
                 <?php endif; ?>
             </div>
+
         </div>
     </section>
 
     <!-- LOGOUT MODAL -->
-  <div class="logout-overlay" id="logoutOverlay">
-    <div class="logout-modal">
-      <div class="logout-icon">
-        <i class="fa fa-right-from-bracket"></i>
-      </div>
-      <h3>Logout</h3>
-      <p>Are you sure you want to logout?</p>
-      <div class="logout-actions">
-        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
-        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
-      </div>
+    <div class="logout-overlay" id="logoutOverlay">
+        <div class="logout-modal">
+            <div class="logout-icon">
+                <i class="fa fa-right-from-bracket"></i>
+            </div>
+            <h3>Logout</h3>
+            <p>Are you sure you want to logout?</p>
+            <div class="logout-actions">
+                <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+                <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+            </div>
+        </div>
     </div>
-  </div>
 </main>
 
 <script>
-
-(function() {
+// ===== THEME =====
+(function () {
     const saved = localStorage.getItem("theme") || "light";
     document.documentElement.setAttribute("data-theme", saved);
 })();
+
 // ===== SIDEBAR =====
 function toggleSettingsMenu(e) {
     e.stopPropagation();
@@ -542,23 +589,16 @@ function toggleSettingsMenu(e) {
 }
 function toggleTheme() {
     const html = document.documentElement;
-    const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
-    html.setAttribute("data-theme", newTheme);
-    localStorage.setItem("theme", newTheme);
+    const t    = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+    html.setAttribute("data-theme", t);
+    localStorage.setItem("theme", t);
 }
-function logout() {
-  document.getElementById('logoutOverlay').classList.add('show');
-}
-function closeLogout() {
-  document.getElementById('logoutOverlay').classList.remove('show');
-}
-function confirmLogout() {
-    window.location.href = 'logout.php?role=student';
-}
+function logout()        { document.getElementById('logoutOverlay').classList.add('show'); }
+function closeLogout()   { document.getElementById('logoutOverlay').classList.remove('show'); }
+function confirmLogout() { window.location.href = 'logout.php?role=student'; }
 
-// Close when clicking outside
-document.getElementById('logoutOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeLogout();
+document.getElementById('logoutOverlay').addEventListener('click', function (e) {
+    if (e.target === this) closeLogout();
 });
 document.addEventListener("click", e => {
     const menu = document.getElementById("settingsDropdown");
@@ -568,42 +608,90 @@ document.addEventListener("click", e => {
 });
 
 // ===== MOOD =====
+let wellnessExistsToday = <?= json_encode($wellnessExistsToday) ?>;
+
+function showMoodNotif(msg, color) {
+    const notif         = document.getElementById("moodNotif");
+    notif.textContent   = msg;
+    notif.style.color   = color;
+    notif.style.display = 'block';
+    setTimeout(() => { notif.style.display = 'none'; }, 3000);
+}
+
 function setMood(emoji, text) {
-    localStorage.setItem("userMoodEmoji", emoji);
-    localStorage.setItem("userMoodText", text);
     document.getElementById("moodDisplay").innerHTML =
         `<div style="font-size:40px">${emoji}</div><div>${text}</div>`;
 
+    const today = new Date().toDateString();
+    localStorage.setItem("userMoodEmoji", emoji);
+    localStorage.setItem("userMoodText",  text);
+    localStorage.setItem("moodDate",      today);
+
+    const savedDate   = localStorage.getItem("moodSavedDate");
+    const alreadyDone = wellnessExistsToday || (savedDate === today);
+    const action      = alreadyDone ? 'update_wellness' : 'save_wellness';
+
     const fd = new FormData();
-    fd.append('action',        'save_wellness');
+    fd.append('action',        action);
     fd.append('mood_label',    text);
     fd.append('stress_level',  50);
     fd.append('sleep_quality', 'Average');
 
-    fetch('swellness.php', { method: 'POST', body: fd })
-      .then(r => r.json())
-      .then(json => {
-        const notif = document.getElementById("moodNotif");
-        if (!notif) return;
-        if (json.success) {
-          notif.style.display  = 'block';
-          notif.style.color    = '#15803d';
-          notif.textContent    = `✔ Mood set to "${text}"`;
-        } else {
-          notif.style.display  = 'block';
-          notif.style.color    = '#e53e3e';
-          notif.textContent    = '❌ Could not save mood.';
-        }
-        setTimeout(() => notif.style.display = 'none', 3000);
-      })
-      .catch(() => {});
+    fetch('dashboard.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(json => {
+            if (json.success) {
+                localStorage.setItem("moodSavedDate", today);
+                wellnessExistsToday = true; // update in-memory flag too
+                showMoodNotif(
+                    action === 'update_wellness'
+                        ? `✔ Mood updated to "${text}"`
+                        : `✔ Mood set to "${text}"`,
+                    '#15803d'
+                );
+            } else if (json.already_done) {
+                const fd2 = new FormData();
+                fd2.append('action',        'update_wellness');
+                fd2.append('mood_label',    text);
+                fd2.append('stress_level',  50);
+                fd2.append('sleep_quality', 'Average');
+
+                fetch('dashboard.php', { method: 'POST', body: fd2 })
+                    .then(r2 => r2.json())
+                    .then(json2 => {
+                        if (json2.success) {
+                            localStorage.setItem("moodSavedDate", today);
+                            wellnessExistsToday = true;
+                            showMoodNotif(`✔ Mood updated to "${text}"`, '#15803d');
+                        } else {
+                            showMoodNotif('❌ Could not update mood.', '#e53e3e');
+                        }
+                    })
+                    .catch(() => showMoodNotif('❌ Network error.', '#e53e3e'));
+            } else {
+                showMoodNotif('❌ ' + (json.message || 'Could not save mood.'), '#e53e3e');
+            }
+        })
+        .catch(() => showMoodNotif('❌ Network error. Please try again.', '#e53e3e'));
 }
+
+// Restore mood display on load — only if saved today
 window.addEventListener("load", () => {
-    const emoji = localStorage.getItem("userMoodEmoji");
-    const text  = localStorage.getItem("userMoodText");
-    if (emoji && text)
+    const emoji    = localStorage.getItem("userMoodEmoji");
+    const text     = localStorage.getItem("userMoodText");
+    const moodDate = localStorage.getItem("moodDate");
+    const today    = new Date().toDateString();
+
+    if (emoji && text && moodDate === today) {
         document.getElementById("moodDisplay").innerHTML =
             `<div style="font-size:40px">${emoji}</div><div>${text}</div>`;
+    } else if (moodDate && moodDate !== today) {
+        // New day — clear stale entries
+        localStorage.removeItem("userMoodEmoji");
+        localStorage.removeItem("userMoodText");
+        localStorage.removeItem("moodDate");
+        localStorage.removeItem("moodSavedDate");
+    }
 });
 
 // ===== PW TOGGLE =====
@@ -682,7 +770,6 @@ function saveNewPassword() {
         .then(json => {
             btn.disabled    = false;
             btn.textContent = 'Save Password';
-
             if (json.success) {
                 document.getElementById('resetModal').classList.remove('active');
                 document.getElementById('pageBlockOverlay').classList.remove('active');
@@ -693,16 +780,16 @@ function saveNewPassword() {
             }
         })
         .catch(() => {
-            btn.disabled    = false;
-            btn.textContent = 'Save Password';
+            btn.disabled      = false;
+            btn.textContent   = 'Save Password';
             errEl.textContent = 'Something went wrong. Please try again.';
         });
 }
 
 // ===== REDIRECT COUNTDOWN =====
 function startRedirectCountdown() {
-    let secs = 5;
-    const note = document.getElementById('redirectNote');
+    let secs     = 5;
+    const note   = document.getElementById('redirectNote');
     const interval = setInterval(() => {
         secs--;
         note.textContent = `Redirecting in ${secs} second${secs !== 1 ? 's' : ''}...`;

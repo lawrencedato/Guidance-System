@@ -11,14 +11,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     exit;
 }
 
-// ===== LOAD STUDENT DATA =====
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
-$sid = (int)$_SESSION['user_id'];
+$sid  = (int)$_SESSION['user_id'];
 
-$studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
+// ===== LOAD STUDENT DATA =====
+$studentRes = $conn->query("SELECT * FROM students WHERE student_id = $sid LIMIT 1");
 $student    = $studentRes->fetch_assoc();
 
-$profileRes = $conn->query("SELECT profile_image FROM student_profiles WHERE student_id='$sid' LIMIT 1");
+$profileRes = $conn->query("SELECT profile_image FROM student_profiles WHERE student_id = $sid LIMIT 1");
 $profile    = $profileRes->fetch_assoc();
 
 $fullName   = htmlspecialchars(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? ''));
@@ -27,19 +27,93 @@ $profileImg = !empty($profile['profile_image'])
               ? htmlspecialchars($profile['profile_image'])
               : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
 
+// ===== HANDLE AJAX SAVE =====
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_wellness') {
     header('Content-Type: application/json');
+
+    // Double-check server side: already submitted today?
+    $check = $conn->query("
+        SELECT wellness_id FROM wellness_checks
+        WHERE student_id = $sid AND DATE(created_at) = CURDATE()
+        LIMIT 1
+    ");
+    if ($check->num_rows > 0) {
+        echo json_encode(['success' => false, 'already_done' => true, 'message' => 'You have already submitted your wellness check today.']);
+        exit;
+    }
+
     $mood   = $conn->real_escape_string($_POST['mood_label']    ?? '');
-$stress = (int)($_POST['stress_level']                      ?? 0);
-$sleep  = $conn->real_escape_string($_POST['sleep_quality'] ?? '');
-$ok = $conn->query("
-    INSERT INTO wellness_checks (student_id, mood_label, stress_level, sleep_quality, created_at)
-    VALUES ($sid, '$mood', $stress, '$sleep', NOW())
-");
+    $stress = (int)($_POST['stress_level']                      ?? 0);
+    $sleep  = $conn->real_escape_string($_POST['sleep_quality'] ?? '');
+
+    $ok = $conn->query("
+        INSERT INTO wellness_checks (student_id, mood_label, stress_level, sleep_quality, created_at)
+        VALUES ($sid, '$mood', $stress, '$sleep', NOW())
+    ");
+
     echo json_encode($ok
         ? ['success' => true]
         : ['success' => false, 'message' => 'Failed to save. Please try again.']);
     exit;
+}
+
+// ===== HANDLE AJAX UPDATE =====
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_wellness') {
+    header('Content-Type: application/json');
+
+    // Must have a record today to update
+    $checkRes = $conn->query("
+        SELECT wellness_id FROM wellness_checks
+        WHERE student_id = $sid AND DATE(created_at) = CURDATE()
+        LIMIT 1
+    ");
+    $row = $checkRes->fetch_assoc();
+    if (!$row) {
+        echo json_encode(['success' => false, 'message' => 'No check-in found for today to update.']);
+        exit;
+    }
+
+    $wid    = (int)$row['wellness_id'];
+    $mood   = $conn->real_escape_string($_POST['mood_label']    ?? '');
+    $stress = (int)($_POST['stress_level']                      ?? 0);
+    $sleep  = $conn->real_escape_string($_POST['sleep_quality'] ?? '');
+
+    $ok = $conn->query("
+        UPDATE wellness_checks
+        SET mood_label = '$mood', stress_level = $stress, sleep_quality = '$sleep'
+        WHERE wellness_id = $wid AND student_id = $sid
+    ");
+
+    echo json_encode($ok
+        ? ['success' => true]
+        : ['success' => false, 'message' => 'Failed to update. Please try again.']);
+    exit;
+}
+
+// ===== CHECK IF ALREADY SUBMITTED TODAY =====
+$todayRes = $conn->query("
+    SELECT mood_label, stress_level, sleep_quality, created_at
+    FROM wellness_checks
+    WHERE student_id = $sid AND DATE(created_at) = CURDATE()
+    ORDER BY created_at DESC
+    LIMIT 1
+");
+$todayEntry  = $todayRes->fetch_assoc();
+$alreadyDone = !empty($todayEntry);
+
+// Mood emoji map
+$moodEmoji = [
+    'Very Sad'   => '😢',
+    'Sad'        => '😕',
+    'Neutral'    => '😐',
+    'Happy'      => '🙂',
+    'Very Happy' => '😁',
+];
+
+function stressLabel($v) {
+    if ($v < 30) return "Low 😌";
+    if ($v < 70) return "Moderate 😐";
+    return "High 😰";
 }
 ?>
 <!DOCTYPE html>
@@ -48,29 +122,285 @@ $ok = $conn->query("
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UNITYCARE | Wellness Check</title>
-
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+/* =============================================
+   DONE BANNER — LIGHT
+============================================= */
+.sWellness-done-banner {
+  background: linear-gradient(135deg, rgba(240,253,244,0.9), rgba(220,252,231,0.9));
+  border: 1.5px solid #86efac;
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  margin-bottom: 8px;
+  transition: var(--transition);
+}
+.sWellness-done-banner .done-emoji {
+  font-size: 56px;
+  display: block;
+  margin-bottom: 10px;
+}
+.sWellness-done-banner h3 {
+  color: #15803d;
+  font-size: 20px;
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+.sWellness-done-banner p {
+  color: #166534;
+  font-size: 13px;
+  margin: 0;
+}
+
+/* DONE SUMMARY CHIPS */
+.sWellness-done-summary {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.sWellness-done-chip {
+  background: rgba(255,255,255,0.8);
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-size: 13px;
+  color: #166534;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(6px);
+  transition: var(--transition);
+}
+.sWellness-done-time {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 14px;
+}
+.sWellness-done-note {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+/* =============================================
+   DONE BANNER — DARK MODE (FIXED: visible, glowing, distinct)
+============================================= */
+[data-theme="dark"] .sWellness-done-banner {
+  background: linear-gradient(135deg, rgba(5, 46, 22, 0.95), rgba(2, 44, 34, 0.9));
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(74, 222, 128, 0.12),
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(74, 222, 128, 0.1);
+}
+[data-theme="dark"] .sWellness-done-banner h3 {
+  color: #4ade80;
+  text-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
+}
+[data-theme="dark"] .sWellness-done-banner > p {
+  color: #a7f3d0;
+}
+[data-theme="dark"] .sWellness-done-chip {
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  color: #6ee7b7;
+}
+[data-theme="dark"] .sWellness-done-chip i {
+  color: #4ade80;
+}
+[data-theme="dark"] .sWellness-done-time {
+  color: #94a3b8;
+}
+[data-theme="dark"] .sWellness-done-note {
+  color: #64748b;
+}
+
+/* =============================================
+   EDIT BUTTON — LIGHT
+============================================= */
+.sWellness-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 10px 22px;
+  border-radius: 20px;
+  border: 1.5px solid #4988C4;
+  background: transparent;
+  color: #4988C4;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.15s, border-color 0.2s;
+}
+.sWellness-edit-btn:hover {
+  background: #4988C4;
+  color: #fff;
+  transform: scale(1.04);
+}
+
+/* EDIT BUTTON — DARK MODE */
+[data-theme="dark"] .sWellness-edit-btn {
+  border-color: rgba(99, 179, 237, 0.6);
+  color: #93c5fd;
+  background: rgba(99, 179, 237, 0.06);
+}
+[data-theme="dark"] .sWellness-edit-btn:hover {
+  background: rgba(99, 179, 237, 0.15);
+  color: #bfdbfe;
+  border-color: rgba(99, 179, 237, 0.8);
+  transform: scale(1.04);
+}
+
+/* =============================================
+   FORM HIDDEN
+============================================= */
+.sWellness-form-section.hidden {
+  display: none;
+}
+
+/* =============================================
+   EDIT MODE LABEL — LIGHT
+============================================= */
+.sWellness-edit-label {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #4988C4;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding: 8px 14px;
+  background: rgba(73,136,196,0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(73,136,196,0.2);
+  transition: var(--transition);
+}
+.sWellness-edit-label.show { display: flex; }
+
+/* EDIT MODE LABEL — DARK */
+[data-theme="dark"] .sWellness-edit-label {
+  color: #93c5fd;
+  background: rgba(99, 179, 237, 0.08);
+  border-color: rgba(99, 179, 237, 0.2);
+}
+
+/* =============================================
+   BUTTON ROW
+============================================= */
+.sWellness-btn-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* =============================================
+   CANCEL BUTTON — LIGHT + DARK
+============================================= */
+.sWellness-cancel-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.sWellness-cancel-btn:hover {
+  background: var(--bg-soft);
+}
+[data-theme="dark"] .sWellness-cancel-btn:hover {
+  background: var(--hover);
+}
+
+/* =============================================
+   CARD — DARK MODE
+============================================= */
+[data-theme="dark"] .sWellness-card {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* =============================================
+   MOOD BUTTONS — DARK MODE
+============================================= */
+[data-theme="dark"] .sWellness-mood-btn {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--border);
+  color: var(--text);
+}
+[data-theme="dark"] .sWellness-mood-btn:hover {
+  background: rgba(99, 179, 237, 0.15);
+  color: #fff;
+}
+[data-theme="dark"] .sWellness-mood-btn.active {
+  background: linear-gradient(135deg, #113F67, #4988C4);
+  color: #fff;
+  border-color: #4988C4;
+  box-shadow: 0 4px 14px rgba(73,136,196,0.35);
+}
+
+/* =============================================
+   FORM INPUTS — DARK MODE
+============================================= */
+[data-theme="dark"] .sWellness-form-group input,
+[data-theme="dark"] .sWellness-form-group select {
+  background: rgba(255,255,255,0.05);
+  border-color: var(--border);
+  color: var(--text);
+}
+[data-theme="dark"] .sWellness-form-group input:focus,
+[data-theme="dark"] .sWellness-form-group select:focus {
+  border-color: #4988C4;
+  box-shadow: 0 0 0 4px rgba(73,136,196,0.2);
+}
+[data-theme="dark"] .sWellness-form-group select option {
+  background: #0f172a;
+  color: var(--text);
+}
+
+/* =============================================
+   RANGE SLIDER — DARK
+============================================= */
+[data-theme="dark"] input[type="range"] {
+  accent-color: #4988C4;
+}
+
+/* =============================================
+   TEXT — DARK
+============================================= */
+[data-theme="dark"] .sWellness-mood-display,
+[data-theme="dark"] .sWellness-stress-display,
+[data-theme="dark"] .sWellness-card h2,
+[data-theme="dark"] .sWellness-form-group label {
+  color: var(--text);
+}
+</style>
 </head>
 
 <body class="body">
 
 <!-- ========================= SIDEBAR ========================= -->
 <aside class="sidebar">
-
   <div class="sidebar-logoBar">
-
     <div class="sidebar-logo">
       <img src="logo.png" alt="logo">
       <span class="sidebar-logoText">UNITYCARE</span>
     </div>
-
     <div class="sidebar-settings">
       <button class="sidebar-settingsButton" onclick="toggleSettingsMenu(event)">
         <i class="fa fa-gear"></i>
       </button>
-
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
         <a href="sprofile.php"><i class="fa fa-user"></i> Profile</a>
         <a href="shistory.php"><i class="fa fa-clock"></i> Session History</a>
@@ -78,37 +408,29 @@ $ok = $conn->query("
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
     </div>
-
   </div>
 
   <nav class="sidebar-menu">
     <a href="dashboard.php"><i class="fa fa-th-large"></i> Dashboard</a>
-
     <p class="sidebar-title">SERVICES</p>
     <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
     <a href="sconcerns.php"><i class="fa fa-headset"></i> Submit Concern</a>
     <a href="swellness.php" class="active"><i class="fa fa-heart"></i> Wellness Check</a>
     <a href="sreferral.php"><i class="fa fa-route"></i> Referral</a>
-
     <p class="sidebar-title">UPDATES</p>
     <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
-
     <p class="sidebar-title">RECORDS</p>
     <a href="sreports.php"><i class="fa fa-ticket"></i> Reports</a>
-
     <p class="sidebar-title">SYSTEM</p>
     <a href="sfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
   </nav>
-
 </aside>
 
 <!-- ========================= TOPBAR ========================= -->
 <header class="topbar">
-
   <div class="topbar-left">
     <h2>Wellness Check</h2>
   </div>
-
   <div class="topbar-right">
     <div class="topbar-user">
       <img src="<?= $profileImg ?>" alt="user"
@@ -119,141 +441,236 @@ $ok = $conn->query("
       </div>
     </div>
   </div>
-
 </header>
 
 <!-- ========================= MAIN ========================= -->
 <main class="sWellness-main">
-
-  <!-- WELLNESS CARD -->
   <section class="sWellness-card">
 
     <h2>How are you feeling today?</h2>
 
-<!-- MOOD SELECTOR -->
-<div class="sWellness-mood-container">
-  <button class="sWellness-mood-btn" onclick="setMood(this, '😢', 'Very Sad')">😢</button>
-  <button class="sWellness-mood-btn" onclick="setMood(this, '😕', 'Sad')">😕</button>
-  <button class="sWellness-mood-btn" onclick="setMood(this, '😐', 'Neutral')">😐</button>
-  <button class="sWellness-mood-btn" onclick="setMood(this, '🙂', 'Happy')">🙂</button>
-  <button class="sWellness-mood-btn" onclick="setMood(this, '😁', 'Very Happy')">😁</button>
-</div>
-
-    <!-- MOOD DISPLAY -->
-    <div class="sWellness-mood-display">
-      Selected Mood: <strong id="moodValue">😐 Neutral</strong>
-    </div>
-
-    <!-- STRESS -->
-    <div class="sWellness-form-group">
-      <label>Stress Level</label>
-      <input type="range" min="0" max="100" value="50"
-        oninput="updateStress(this.value)">
-      <p class="sWellness-stress-display">
-        <strong id="stressValue">Moderate (50%)</strong>
+    <!-- ===== ALREADY SUBMITTED BANNER ===== -->
+    <?php if ($alreadyDone): ?>
+    <div class="sWellness-done-banner" id="doneBanner">
+      <span class="done-emoji"><?= $moodEmoji[$todayEntry['mood_label']] ?? '😐' ?></span>
+      <h3>You've already checked in today!</h3>
+      <p>Your wellness check has been recorded. Come back tomorrow.</p>
+      <div class="sWellness-done-summary">
+        <div class="sWellness-done-chip">
+          <i class="fa fa-face-smile"></i> Mood: <?= htmlspecialchars($todayEntry['mood_label']) ?>
+        </div>
+        <div class="sWellness-done-chip">
+          <i class="fa fa-gauge"></i> Stress: <?= stressLabel($todayEntry['stress_level']) ?> (<?= $todayEntry['stress_level'] ?>%)
+        </div>
+        <div class="sWellness-done-chip">
+          <i class="fa fa-moon"></i> Sleep: <?= htmlspecialchars($todayEntry['sleep_quality']) ?>
+        </div>
+      </div>
+      <p class="sWellness-done-time">
+        Submitted at <?= date('h:i A', strtotime($todayEntry['created_at'])) ?>
+        &bull; <?= date('F j, Y', strtotime($todayEntry['created_at'])) ?>
       </p>
+      <p class="sWellness-done-note">
+        <i class="fa fa-rotate-right"></i> Resets every day at midnight
+      </p>
+      <button class="sWellness-edit-btn" onclick="openEdit()">
+        <i class="fa fa-pen"></i> Edit Today's Check-in
+      </button>
     </div>
+    <?php endif; ?>
 
-    <!-- SLEEP -->
-    <div class="sWellness-form-group">
-      <label>Sleep Quality</label>
-      <select>
-        <option>Good</option>
-        <option>Average</option>
-        <option>Poor</option>
-      </select>
-    </div>
+    <!-- ===== FORM (hidden if already done today) ===== -->
+    <div class="sWellness-form-section <?= $alreadyDone ? 'hidden' : '' ?>" id="wellnessForm">
 
-  <button class="sBooking-button" onclick="submitWellness()" style="margin-top: 16px;">
-    Save Check-in
-  </button>
+      <!-- Edit mode indicator -->
+      <div class="sWellness-edit-label" id="editLabel">
+        <i class="fa fa-pen"></i> You are editing today's check-in
+      </div>
 
-  <div id="wellnessResult" style="margin-top: 10px; font-size: 14px;"></div>
+      <!-- MOOD SELECTOR -->
+      <div class="sWellness-mood-container">
+        <button class="sWellness-mood-btn" onclick="setMood(this,'😢','Very Sad')" title="Very Sad">😢</button>
+        <button class="sWellness-mood-btn" onclick="setMood(this,'😕','Sad')" title="Sad">😕</button>
+        <button class="sWellness-mood-btn" onclick="setMood(this,'😐','Neutral')" title="Neutral">😐</button>
+        <button class="sWellness-mood-btn" onclick="setMood(this,'🙂','Happy')" title="Happy">🙂</button>
+        <button class="sWellness-mood-btn" onclick="setMood(this,'😁','Very Happy')" title="Very Happy">😁</button>
+      </div>
 
-</section>
+      <!-- MOOD DISPLAY -->
+      <div class="sWellness-mood-display">
+        Selected Mood: <strong id="moodValue">😐 Neutral</strong>
+      </div>
 
+      <!-- STRESS -->
+      <div class="sWellness-form-group">
+        <label>Stress Level</label>
+        <input type="range" id="stressRange" min="0" max="100" value="50"
+               oninput="updateStress(this.value)">
+        <p class="sWellness-stress-display">
+          <strong id="stressValue">Moderate 😐 (50%)</strong>
+        </p>
+      </div>
+
+      <!-- SLEEP -->
+      <div class="sWellness-form-group">
+        <label>Sleep Quality</label>
+        <select id="sleepSelect">
+          <option>Good</option>
+          <option>Average</option>
+          <option>Poor</option>
+        </select>
+      </div>
+
+      <div class="sWellness-btn-row">
+        <button class="sBooking-button" id="saveBtn" onclick="submitWellness()" style="flex:2;">
+          Save Check-in
+        </button>
+        <button class="sWellness-cancel-btn" id="cancelEditBtn" onclick="cancelEdit()" style="display:none;">
+          Cancel
+        </button>
+      </div>
+
+      <div id="wellnessResult" style="margin-top:10px; font-size:14px;"></div>
+
+    </div><!-- end form section -->
+
+  </section>
 </main>
+
+<!-- ========================= LOGOUT MODAL ========================= -->
+<div class="logout-overlay" id="logoutOverlay">
+  <div class="logout-modal">
+    <div class="logout-icon"><i class="fa fa-right-from-bracket"></i></div>
+    <h3>Logout</h3>
+    <p>Are you sure you want to logout?</p>
+    <div class="logout-actions">
+      <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+      <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+    </div>
+  </div>
+</div>
 
 <!-- ========================= SCRIPT ========================= -->
 <script>
 (function() {
-    const saved = localStorage.getItem("theme") || "light";
-    document.documentElement.setAttribute("data-theme", saved);
+  const saved = localStorage.getItem("theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
 })();
 
-function toggleSettingsMenu(e){
+function toggleSettingsMenu(e) {
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
 }
-
+document.addEventListener("click", e => {
+  const menu = document.getElementById("settingsDropdown");
+  const btn  = document.querySelector(".sidebar-settingsButton");
+  if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("show");
+});
 function toggleTheme() {
-    const html = document.documentElement;
-    const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
-    html.setAttribute("data-theme", newTheme);
-    localStorage.setItem("theme", newTheme);
+  const html = document.documentElement;
+  const t    = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+  html.setAttribute("data-theme", t);
+  localStorage.setItem("theme", t);
 }
-
-function logout() {
-  document.getElementById('logoutOverlay').classList.add('show');
-}
-function closeLogout() {
-  document.getElementById('logoutOverlay').classList.remove('show');
-}
-function confirmLogout() {
-    window.location.href = 'logout.php?role=student';
-}
-// Close when clicking outside
+function logout()        { document.getElementById('logoutOverlay').classList.add('show'); }
+function closeLogout()   { document.getElementById('logoutOverlay').classList.remove('show'); }
+function confirmLogout() { window.location.href = 'logout.php?role=student'; }
 document.getElementById('logoutOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeLogout();
 });
 
-document.addEventListener("click", e => {
-  const menu = document.getElementById("settingsDropdown");
-  const btn = document.querySelector(".sidebar-settingsButton");
-
-  if (!menu.contains(e.target) && !btn.contains(e.target)) {
-    menu.classList.remove("show");
-  }
-});
-
+// ===== STATE =====
 let selectedMood = 'Neutral';
+let isEditMode   = false;
 
-// Pre-highlight Neutral as default on load
+// Existing today's values passed from PHP (empty strings if no entry yet)
+const todayMood   = <?= json_encode($todayEntry['mood_label']    ?? '') ?>;
+const todayStress = <?= json_encode((string)($todayEntry['stress_level'] ?? '50')) ?>;
+const todaySleep  = <?= json_encode($todayEntry['sleep_quality'] ?? 'Good') ?>;
+
+const moodEmojis = {
+  'Very Sad':'😢', 'Sad':'😕', 'Neutral':'😐', 'Happy':'🙂', 'Very Happy':'😁'
+};
+
 window.addEventListener("load", () => {
-  document.querySelectorAll(".sWellness-mood-btn").forEach(btn => {
-    if (btn.getAttribute("onclick")?.includes("Neutral")) {
-      btn.classList.add("active");
-    }
-  });
+  const defaultMood = todayMood || 'Neutral';
+  preSelectMood(defaultMood);
+  updateStress(todayStress || 50);
+  document.getElementById("stressRange").value = todayStress || 50;
+  const sleepSel = document.getElementById("sleepSelect");
+  [...sleepSel.options].forEach(o => { o.selected = o.value === todaySleep; });
 });
+
+function preSelectMood(mood) {
+  selectedMood = mood;
+  const emoji  = moodEmojis[mood] || '😐';
+  document.getElementById("moodValue").innerText = `${emoji} ${mood}`;
+  document.querySelectorAll(".sWellness-mood-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.title === mood);
+  });
+}
 
 function setMood(el, emoji, text) {
   selectedMood = text;
   document.getElementById("moodValue").innerText = `${emoji} ${text}`;
-
-  document.querySelectorAll(".sWellness-mood-btn").forEach(btn => {
-    btn.classList.remove("active");
-  });
+  document.querySelectorAll(".sWellness-mood-btn").forEach(b => b.classList.remove("active"));
   el.classList.add("active");
 }
 
+function updateStress(v) {
+  const label = v < 30 ? "Low 😌" : v < 70 ? "Moderate 😐" : "High 😰";
+  document.getElementById("stressValue").innerText = `${label} (${v}%)`;
+}
+
+// ===== EDIT MODE =====
+function openEdit() {
+  isEditMode = true;
+
+  // Hide banner, show form pre-filled
+  const banner = document.getElementById("doneBanner");
+  if (banner) banner.style.display = "none";
+
+  document.getElementById("wellnessForm").classList.remove("hidden");
+  document.getElementById("editLabel").classList.add("show");
+  document.getElementById("cancelEditBtn").style.display = "block";
+  document.getElementById("saveBtn").textContent = "Update Check-in";
+
+  // Pre-fill with today's saved values
+  preSelectMood(todayMood || 'Neutral');
+  document.getElementById("stressRange").value = todayStress || 50;
+  updateStress(todayStress || 50);
+  const sleepSel = document.getElementById("sleepSelect");
+  [...sleepSel.options].forEach(o => { o.selected = o.value === todaySleep; });
+
+  document.getElementById("wellnessResult").innerHTML = "";
+}
+
+function cancelEdit() {
+  isEditMode = false;
+  document.getElementById("wellnessForm").classList.add("hidden");
+  document.getElementById("editLabel").classList.remove("show");
+  document.getElementById("cancelEditBtn").style.display = "none";
+  document.getElementById("saveBtn").textContent = "Save Check-in";
+
+  const banner = document.getElementById("doneBanner");
+  if (banner) banner.style.display = "";
+
+  document.getElementById("wellnessResult").innerHTML = "";
+}
+
+// ===== SUBMIT / UPDATE =====
 function submitWellness() {
-  const stress  = document.querySelector("input[type=range]").value;
-  const sleep   = document.querySelector(".sWellness-form-group select").value;
+  const stress  = document.getElementById("stressRange").value;
+  const sleep   = document.getElementById("sleepSelect").value;
   const result  = document.getElementById("wellnessResult");
-  const saveBtn = document.querySelector(".sBooking-button");
+  const saveBtn = document.getElementById("saveBtn");
 
-  if (!selectedMood) {
-    result.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please select a mood first.</span>";
-    return;
-  }
-
-  saveBtn.disabled   = true;
-  saveBtn.textContent = 'Saving...';
-  result.innerHTML   = "";
+  result.innerHTML    = "";
+  saveBtn.disabled    = true;
+  saveBtn.textContent = isEditMode ? 'Updating...' : 'Saving...';
 
   const fd = new FormData();
-  fd.append('action',        'save_wellness');
+  fd.append('action',        isEditMode ? 'update_wellness' : 'save_wellness');
   fd.append('mood_label',    selectedMood);
   fd.append('stress_level',  stress);
   fd.append('sleep_quality', sleep);
@@ -262,60 +679,67 @@ function submitWellness() {
     .then(r => r.json())
     .then(json => {
       saveBtn.disabled    = false;
-      saveBtn.textContent = 'Save Check-in';
+      saveBtn.textContent = isEditMode ? 'Update Check-in' : 'Save Check-in';
 
       if (json.success) {
-        result.innerHTML = `
-          <div style="
-            background: var(--bg-soft, #f0fdf4);
-            border: 1px solid #86efac;
-            border-radius: 10px;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            color: #15803d;
-            margin-top: 8px;
-          ">
-            <i class="fa fa-circle-check" style="font-size:18px;"></i>
-            <div>
-              <b>Check-in saved!</b><br>
-              <span style="font-size:12px; opacity:0.8;">
-                Mood: ${selectedMood} &bull; Stress: ${stress}% &bull; Sleep: ${sleep}
-              </span>
-            </div>
-          </div>`;
+        const emoji     = moodEmojis[selectedMood] || '😐';
+        const stressNum = parseInt(stress);
+        const stressLbl = stressNum < 30 ? "Low 😌" : stressNum < 70 ? "Moderate 😐" : "High 😰";
+        const now       = new Date();
+        const timeStr   = now.toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit' });
+        const dateStr   = now.toLocaleDateString('en-PH', { month:'long', day:'numeric', year:'numeric' });
+        const heading   = isEditMode ? 'Check-in updated! ✅' : 'Check-in saved! 🎉';
+        const subtext   = isEditMode
+          ? 'Your wellness check has been updated for today.'
+          : 'Your wellness check has been recorded. Come back tomorrow.';
+
+        // Hide form
+        document.getElementById("wellnessForm").classList.add("hidden");
+        document.getElementById("editLabel").classList.remove("show");
+        document.getElementById("cancelEditBtn").style.display = "none";
+        saveBtn.textContent = "Save Check-in";
+        isEditMode = false;
+
+        // Remove old banner if exists
+        const oldBanner = document.getElementById("doneBanner");
+        if (oldBanner) oldBanner.remove();
+
+        // Build fresh banner
+        const banner = document.createElement('div');
+        banner.className = 'sWellness-done-banner';
+        banner.id        = 'doneBanner';
+        banner.innerHTML = `
+          <span class="done-emoji">${emoji}</span>
+          <h3>${heading}</h3>
+          <p>${subtext}</p>
+          <div class="sWellness-done-summary">
+            <div class="sWellness-done-chip"><i class="fa fa-face-smile"></i> Mood: ${selectedMood}</div>
+            <div class="sWellness-done-chip"><i class="fa fa-gauge"></i> Stress: ${stressLbl} (${stress}%)</div>
+            <div class="sWellness-done-chip"><i class="fa fa-moon"></i> Sleep: ${sleep}</div>
+          </div>
+          <p class="sWellness-done-time">Last saved at ${timeStr} &bull; ${dateStr}</p>
+          <p class="sWellness-done-note"><i class="fa fa-rotate-right"></i> Resets every day at midnight</p>
+          <button class="sWellness-edit-btn" onclick="openEdit()">
+            <i class="fa fa-pen"></i> Edit Today's Check-in
+          </button>
+        `;
+
+        const card = document.querySelector('.sWellness-card');
+        card.insertBefore(banner, document.getElementById('wellnessForm'));
+
+      } else if (json.already_done) {
+        result.innerHTML = "<span style='color:#e53e3e;'>⚠ You have already submitted today.</span>";
       } else {
-        result.innerHTML = "<span style='color:var(--error,#e53e3e);'>❌ " + (json.message || 'Failed to save.') + "</span>";
+        result.innerHTML = `<span style='color:#e53e3e;'>❌ ${json.message || 'Failed to save.'}</span>`;
       }
     })
     .catch(() => {
       saveBtn.disabled    = false;
-      saveBtn.textContent = 'Save Check-in';
-      result.innerHTML    = "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong. Please try again.</span>";
+      saveBtn.textContent = isEditMode ? 'Update Check-in' : 'Save Check-in';
+      result.innerHTML    = "<span style='color:#e53e3e;'>❌ Something went wrong. Please try again.</span>";
     });
 }
-
-function updateStress(v){
-  let t = v < 30 ? "Low 😌" : v < 70 ? "Moderate 😐" : "High 😰";
-  document.getElementById("stressValue").innerText = `${t} (${v}%)`;
-}
 </script>
-<!-- LOGOUT MODAL -->
-  <div class="logout-overlay" id="logoutOverlay">
-    <div class="logout-modal">
-      <div class="logout-icon">
-        <i class="fa fa-right-from-bracket"></i>
-      </div>
-      <h3>Logout</h3>
-      <p>Are you sure you want to logout?</p>
-      <div class="logout-actions">
-        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
-        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
-      </div>
-    </div>
-  </div>
 
 </body>
 </html>
