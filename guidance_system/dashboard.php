@@ -18,8 +18,24 @@ $sid  = (int)$_SESSION['user_id'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset_password') {
     header('Content-Type: application/json');
 
+    $is_forced  = ($_POST['is_forced']  ?? '0') === '1';
+    $current_pw = $_POST['current_password'] ?? '';
     $new_pw     = $_POST['new_password']     ?? '';
     $confirm_pw = $_POST['confirm_password'] ?? '';
+
+    // For voluntary change, verify current password
+    if (!$is_forced) {
+        if (!$current_pw) {
+            echo json_encode(["success" => false, "message" => "Please enter your current password."]);
+            exit;
+        }
+        $pwRes = $conn->query("SELECT password FROM activated_students WHERE student_id=$sid LIMIT 1");
+        $pwRow = $pwRes ? $pwRes->fetch_assoc() : null;
+        if (!$pwRow || !password_verify($current_pw, $pwRow['password'])) {
+            echo json_encode(["success" => false, "message" => "Current password is incorrect."]);
+            exit;
+        }
+    }
 
     if (!$new_pw || !$confirm_pw) {
         echo json_encode(["success" => false, "message" => "Please fill in all fields."]);
@@ -45,9 +61,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
     );
 
     if ($ok) {
-        session_unset();
-        session_destroy();
-        echo json_encode(["success" => true]);
+        if ($is_forced) {
+            session_unset();
+            session_destroy();
+            echo json_encode(["success" => true, "forced" => true]);
+        } else {
+            echo json_encode(["success" => true, "forced" => false]);
+        }
     } else {
         echo json_encode(["success" => false, "message" => "Failed to save password. Please try again."]);
     }
@@ -58,7 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_wellness') {
     header('Content-Type: application/json');
 
-    // Check if already submitted today
     $check = $conn->query(
         "SELECT wellness_id FROM wellness_checks
          WHERE student_id = $sid AND DATE(created_at) = CURDATE()
@@ -146,7 +165,6 @@ $actRes = $conn->query(
 $activities = [];
 while ($row = $actRes->fetch_assoc()) $activities[] = $row;
 
-// Check if student already has a wellness entry today (used in JS to pick save vs update)
 $todayWellnessRes    = $conn->query(
     "SELECT mood_label FROM wellness_checks
      WHERE student_id=$sid AND DATE(created_at) = CURDATE()
@@ -172,160 +190,270 @@ $profileImg = !empty($profile['profile_image'])
     <link rel="stylesheet" href="logout.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* ===== FULL PAGE BLOCK OVERLAY ===== */
+        /* ===== PAGE BLOCK OVERLAY ===== */
         .page-block-overlay {
             display: none;
             position: fixed;
             inset: 0;
             background: rgba(17, 63, 103, 0.35);
             backdrop-filter: blur(5px);
-            z-index: 9998;
+            z-index: 9997;
         }
         .page-block-overlay.active { display: block; }
 
-        /* ===== RESET MODAL ===== */
-        .reset-modal {
+        /* ===== SHARED MODAL BACKDROP ===== */
+        .modal-backdrop {
             position: fixed;
             inset: 0;
+            background: rgba(17, 63, 103, 0.35);
+            backdrop-filter: blur(5px);
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
+            z-index: 9998;
         }
-        .reset-modal.active { display: flex; }
+        .modal-backdrop.active { display: flex; }
 
+        /* ===== PASSWORD MODAL BOX ===== */
         .reset-box {
             width: 440px;
-            padding: var(--spacing-xxl, 32px);
-            background: var(--card, #fff);
-            border: 1px solid var(--border, #e2e8f0);
-            border-radius: var(--radius-lg, 16px);
-            box-shadow: var(--shadow, 0 8px 40px rgba(0,0,0,0.15));
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 32px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg, 20px);
+            box-shadow: var(--shadow-lg);
             text-align: center;
             animation: modalPop 0.25s ease;
+            position: relative;
         }
+
+        /* dark mode box */
+        [data-theme="dark"] .reset-box {
+            background: #0f172a;
+            border-color: rgba(255,255,255,0.10);
+            box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+        }
+
         @keyframes modalPop {
             from { opacity: 0; transform: scale(0.95); }
             to   { opacity: 1; transform: scale(1); }
         }
+
+        /* close button */
+        .reset-box .modal-close-btn {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--text-muted);
+            transition: 0.2s;
+        }
+        [data-theme="dark"] .reset-box .modal-close-btn {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.10);
+        }
+        .reset-box .modal-close-btn:hover { background: var(--hover); color: var(--primary); }
+        .reset-box .modal-close-btn.visible { display: flex; }
+
+        /* heading */
         .reset-box h2 {
-            margin-bottom: var(--spacing-sm, 8px);
-            color: var(--primary, #113f67);
+            margin-bottom: 8px;
+            color: var(--primary);
             font-weight: 700;
+            font-size: 20px;
         }
-        .reset-box > p {
-            color: var(--text-muted, #666);
-            font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: var(--spacing-lg, 20px);
+        [data-theme="dark"] .reset-box h2 { color: #60a5fa; }
+
+        .reset-box .reset-sub {
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.55;
+            margin-bottom: 20px;
         }
+
+        /* divider between current pw and new pw */
+        .pw-divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 16px 0;
+        }
+        [data-theme="dark"] .pw-divider { border-color: rgba(255,255,255,0.08); }
+
+        /* field labels */
         .reset-box .field-label {
             display: block;
             text-align: left;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             margin-bottom: 5px;
-            color: var(--text, #222);
+            color: var(--text);
+            opacity: 0.85;
+            letter-spacing: 0.3px;
         }
-        .pw-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-        .pw-wrapper input {
-            width: 100%;
-            padding: 12px !important;
-            padding-right: 42px !important;
-            border-radius: 10px;
-            border: 2px solid var(--border, #e2e8f0);
-            outline: none;
-            font-size: 14px;
-            transition: 0.2s;
-            box-sizing: border-box;
-        }
-        .pw-wrapper input:focus {
-            border-color: var(--primary, #113f67);
-            box-shadow: 0 0 0 3px rgba(17,63,103,0.12);
-        }
-        .pw-toggle {
-            position: absolute;
-            right: 10px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--text-muted, #888);
-            padding: 0;
-            display: flex;
-            align-items: center;
-            transition: color 0.2s;
-            width: auto !important;
-            margin-top: 0 !important;
-        }
-        .pw-toggle:hover { color: var(--primary, #113f67); background: none !important; }
+
+        /* input wrappers */
+        /* input wrappers */
+.pw-wrapper {
+    position: relative;
+    margin-bottom: 12px;
+    height: 42px;
+}
+
+.pw-wrapper input {
+    width: 100%;
+    height: 100%;
+    padding: 11px 40px 11px 13px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    outline: none;
+    font-size: 14px;
+    font-family: inherit;
+    transition: 0.2s;
+    box-sizing: border-box;
+    background: var(--bg);
+    color: var(--text);
+    display: block;
+}
+
+[data-theme="dark"] .pw-wrapper input {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.10);
+    color: #f1f5f9;
+}
+
+.pw-wrapper input::placeholder { color: var(--text-faint); }
+
+.pw-wrapper input:focus {
+    border-color: #4988C4;
+    box-shadow: 0 0 0 3px rgba(73,136,196,0.18);
+}
+
+[data-theme="dark"] .pw-wrapper input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96,165,250,0.2);
+}
+
+/* eye toggle */
+.pw-toggle {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    cursor: pointer !important;
+    color: var(--text-faint) !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    transition: color 0.2s !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+.pw-toggle:hover {
+    color: var(--primary) !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    transform: translateY(-50%) !important;
+}
+
+        /* strength bar */
         .strength-wrap {
-            height: 5px;
-            background: var(--border, #e2e8f0);
+            height: 4px;
+            background: var(--border);
             border-radius: 10px;
-            margin: 8px 0 3px;
+            margin: 2px 0 4px;
             overflow: hidden;
         }
+        [data-theme="dark"] .strength-wrap { background: rgba(255,255,255,0.08); }
         .strength-bar {
             height: 100%;
             border-radius: 10px;
             width: 0%;
             transition: width 0.3s, background 0.3s;
         }
-        .strength-label { font-size: 11px; margin-bottom: 10px; text-align: left; }
+        .strength-label {
+            font-size: 11px;
+            margin-bottom: 10px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        /* requirements list */
         .pw-reqs {
             list-style: none;
             padding: 0;
-            margin: 0 0 16px;
+            margin: 0 0 14px;
             text-align: left;
         }
         .pw-reqs li {
             font-size: 12px;
-            color: var(--text-muted, #888);
+            color: var(--text-muted);
             display: flex;
             align-items: center;
             gap: 7px;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
             transition: color 0.2s;
         }
-        .pw-reqs li.met { color: #15803d; }
+        .pw-reqs li.met { color: #22c55e; }
+        [data-theme="dark"] .pw-reqs li.met { color: #4ade80; }
         .dot-req {
             width: 7px; height: 7px;
             border-radius: 50%;
-            background: var(--border, #e2e8f0);
+            background: var(--border);
             flex-shrink: 0;
             transition: background 0.2s;
         }
-        .pw-reqs li.met .dot-req { background: #15803d; }
+        [data-theme="dark"] .dot-req { background: rgba(255,255,255,0.12); }
+        .pw-reqs li.met .dot-req { background: #22c55e; }
+        [data-theme="dark"] .pw-reqs li.met .dot-req { background: #4ade80; }
+
+        /* error text */
         #resetError {
             font-size: 12px;
             min-height: 16px;
             text-align: center;
-            margin: 6px 0 0;
+            margin: 4px 0 0;
             color: #e53e3e;
         }
+        [data-theme="dark"] #resetError { color: #f87171; }
+
+        /* save button */
         .reset-box .save-btn {
             margin-top: 14px;
             width: 100%;
             padding: 12px;
             border: none;
             border-radius: 10px;
-            background: var(--primary, #113f67);
+            background: linear-gradient(135deg, #113F67, #4988C4);
             color: #fff;
             font-weight: 600;
             font-size: 14px;
+            font-family: inherit;
             cursor: pointer;
             transition: 0.2s;
+            box-shadow: 0 10px 20px rgba(17,63,103,0.25);
         }
-        .reset-box .save-btn:hover    { background: #0e3558; }
-        .reset-box .save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .reset-box .save-btn:hover  { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(17,63,103,0.35); }
+        .reset-box .save-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         /* ===== SUCCESS MODAL ===== */
-        .success-modal {
+        .success-modal-wrap {
             position: fixed;
             inset: 0;
             display: none;
@@ -335,52 +463,102 @@ $profileImg = !empty($profile['profile_image'])
             background: rgba(17, 63, 103, 0.35);
             backdrop-filter: blur(5px);
         }
-        .success-modal.active { display: flex; }
+        .success-modal-wrap.active { display: flex; }
+
         .success-box {
             width: 400px;
-            padding: var(--spacing-xxl, 32px);
-            background: var(--card, #fff);
-            border: 1px solid var(--border, #e2e8f0);
-            border-radius: var(--radius-lg, 16px);
-            box-shadow: var(--shadow, 0 8px 40px rgba(0,0,0,0.15));
+            padding: 36px 32px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg, 20px);
+            box-shadow: var(--shadow-lg);
             text-align: center;
             animation: modalPop 0.25s ease;
         }
+        [data-theme="dark"] .success-box {
+            background: #0f172a;
+            border-color: rgba(255,255,255,0.10);
+            box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+        }
+
         .success-icon {
             width: 64px; height: 64px;
             border-radius: 50%;
-            background: rgba(21,128,61,0.1);
-            border: 2px solid rgba(21,128,61,0.25);
+            background: rgba(34,197,94,0.12);
+            border: 2px solid rgba(34,197,94,0.3);
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 16px;
         }
-        .success-box h2 { color: var(--primary, #113f67); font-weight: 700; margin-bottom: 8px; }
-        .success-box p  { color: var(--text-muted, #666); font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
+        .success-box h2 { color: var(--primary); font-weight: 700; margin-bottom: 8px; }
+        [data-theme="dark"] .success-box h2 { color: #60a5fa; }
+        .success-box p  { color: var(--text-muted); font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
         .success-box .login-btn {
             width: 100%; padding: 12px;
             border: none; border-radius: 10px;
-            background: var(--primary, #113f67);
+            background: linear-gradient(135deg, #113F67, #4988C4);
             color: #fff; font-weight: 600;
             font-size: 14px; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 10px 20px rgba(17,63,103,0.25);
         }
-        .success-box .login-btn:hover { background: #0e3558; }
-        .redirect-note { font-size: 12px; color: var(--text-muted, #888); margin-top: 10px; }
+        .success-box .login-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(17,63,103,0.35); }
+        .redirect-note { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+
+        /* ===== TOAST ===== */
+        .pw-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #113F67, #4988C4);
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(17,63,103,0.35);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 99999;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+        .pw-toast.show { opacity: 1; transform: translateY(0); }
 
         @media (max-width: 500px) {
-            .reset-box, .success-box { width: 90% !important; padding: 20px !important; }
+            .reset-box, .success-box { width: 92% !important; padding: 22px !important; }
         }
     </style>
 </head>
 <body class="body">
 
-<!-- ===== FULL PAGE BLOCK ===== -->
+<!-- ===== FULL PAGE BLOCK (forced reset only) ===== -->
 <div class="page-block-overlay <?= $isTempPassword ? 'active' : '' ?>" id="pageBlockOverlay"></div>
 
-<!-- ===== FORCED RESET PASSWORD MODAL ===== -->
-<div class="reset-modal <?= $isTempPassword ? 'active' : '' ?>" id="resetModal">
+<!-- ===== PASSWORD MODAL BACKDROP ===== -->
+<div class="modal-backdrop <?= $isTempPassword ? 'active' : '' ?>" id="pwModalBackdrop">
     <div class="reset-box">
-        <h2>Set Your Password</h2>
-        <p>You logged in with a temporary password. Please set your own permanent password to continue using the system.</p>
+
+        <!-- X button — only shown for voluntary change -->
+        <button class="modal-close-btn" id="pwModalCloseBtn" onclick="closeChangePassword()">&#x2715;</button>
+
+        <h2 id="pwModalTitle">Set Your Password</h2>
+        <p class="reset-sub" id="pwModalSubtitle">You logged in with a temporary password. Please set your own permanent password to continue using the system.</p>
+
+        <!-- Current password — hidden for forced reset, shown for voluntary -->
+        <div id="currentPwGroup" style="display:none;">
+            <label class="field-label">Current Password</label>
+            <div class="pw-wrapper">
+                <input type="password" id="currentPassword" placeholder="Enter your current password">
+                <button type="button" class="pw-toggle" onclick="togglePw('currentPassword', this)">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+            </div>
+            <hr class="pw-divider">
+        </div>
 
         <label class="field-label">New Password</label>
         <div class="pw-wrapper">
@@ -403,7 +581,7 @@ $profileImg = !empty($profile['profile_image'])
             <li id="req-special"><span class="dot-req"></span> One special character (!@#$%^&*)</li>
         </ul>
 
-        <label class="field-label">Confirm Password</label>
+        <label class="field-label">Confirm New Password</label>
         <div class="pw-wrapper">
             <input type="password" id="confirmPassword" placeholder="Re-enter new password">
             <button type="button" class="pw-toggle" onclick="togglePw('confirmPassword', this)">
@@ -418,8 +596,8 @@ $profileImg = !empty($profile['profile_image'])
     </div>
 </div>
 
-<!-- ===== SUCCESS MODAL ===== -->
-<div class="success-modal" id="successModal">
+<!-- ===== SUCCESS MODAL (forced reset only — redirect to login) ===== -->
+<div class="success-modal-wrap" id="successModal">
     <div class="success-box">
         <div class="success-icon">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -431,6 +609,11 @@ $profileImg = !empty($profile['profile_image'])
         <button class="login-btn" onclick="window.location.href='slogin.php'">Go to Login</button>
         <div class="redirect-note" id="redirectNote">Redirecting in 5 seconds...</div>
     </div>
+</div>
+
+<!-- ===== VOLUNTARY SUCCESS TOAST ===== -->
+<div class="pw-toast" id="pwToast">
+    <i class="fa fa-check-circle"></i> Password changed successfully!
 </div>
 
 <!-- ================= SIDEBAR ================= -->
@@ -448,6 +631,7 @@ $profileImg = !empty($profile['profile_image'])
                 <a href="sprofile.php"><i class="fa fa-user"></i> Profile</a>
                 <a href="shistory.php"><i class="fa fa-clock"></i> Session History</a>
                 <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
+                <button onclick="openChangePassword()"><i class="fa fa-lock"></i> Change Password</button>
                 <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
             </div>
         </div>
@@ -527,7 +711,7 @@ $profileImg = !empty($profile['profile_image'])
 
         <div class="sDashboard-side">
 
-            <!-- ===== MOOD CARD ===== -->
+            <!-- MOOD CARD -->
             <div class="sDashboard-card">
                 <h4>Mood</h4>
                 <div class="sDashboard-mood-display" id="moodDisplay">No mood recorded yet</div>
@@ -541,7 +725,7 @@ $profileImg = !empty($profile['profile_image'])
                 </div>
             </div>
 
-            <!-- ===== RECENT ACTIVITY CARD ===== -->
+            <!-- RECENT ACTIVITY CARD -->
             <div class="sDashboard-card">
                 <h4>Recent Activity</h4>
                 <?php if (count($activities) > 0): ?>
@@ -642,7 +826,7 @@ function setMood(emoji, text) {
         .then(json => {
             if (json.success) {
                 localStorage.setItem("moodSavedDate", today);
-                wellnessExistsToday = true; // update in-memory flag too
+                wellnessExistsToday = true;
                 showMoodNotif(
                     action === 'update_wellness'
                         ? `✔ Mood updated to "${text}"`
@@ -675,7 +859,6 @@ function setMood(emoji, text) {
         .catch(() => showMoodNotif('❌ Network error. Please try again.', '#e53e3e'));
 }
 
-// Restore mood display on load — only if saved today
 window.addEventListener("load", () => {
     const emoji    = localStorage.getItem("userMoodEmoji");
     const text     = localStorage.getItem("userMoodText");
@@ -686,12 +869,67 @@ window.addEventListener("load", () => {
         document.getElementById("moodDisplay").innerHTML =
             `<div style="font-size:40px">${emoji}</div><div>${text}</div>`;
     } else if (moodDate && moodDate !== today) {
-        // New day — clear stale entries
         localStorage.removeItem("userMoodEmoji");
         localStorage.removeItem("userMoodText");
         localStorage.removeItem("moodDate");
         localStorage.removeItem("moodSavedDate");
     }
+});
+
+// ===== PASSWORD MODAL STATE =====
+let isForcedReset = <?= json_encode((bool)$isTempPassword) ?>;
+
+// Open modal voluntarily from settings dropdown
+function openChangePassword() {
+    document.getElementById('settingsDropdown').classList.remove('show');
+
+    // Switch to voluntary mode
+    isForcedReset = false;
+
+    // Show current password field
+    document.getElementById('currentPwGroup').style.display = 'block';
+
+    // Update modal text
+    document.getElementById('pwModalTitle').textContent    = 'Change Password';
+    document.getElementById('pwModalSubtitle').textContent = 'Enter your current password, then choose a new one.';
+
+    // Show close button
+    document.getElementById('pwModalCloseBtn').classList.add('visible');
+
+    // Clear fields and errors
+    resetModalFields();
+
+    // Show backdrop
+    document.getElementById('pwModalBackdrop').classList.add('active');
+}
+
+// Close modal (voluntary only)
+function closeChangePassword() {
+    if (isForcedReset) return;
+    document.getElementById('pwModalBackdrop').classList.remove('active');
+    resetModalFields();
+}
+
+// Helper: clear all fields/errors
+function resetModalFields() {
+    document.getElementById('currentPassword').value  = '';
+    document.getElementById('newPassword').value      = '';
+    document.getElementById('confirmPassword').value  = '';
+    document.getElementById('resetError').textContent = '';
+    document.getElementById('strengthBar').style.width      = '0%';
+    document.getElementById('strengthBar').style.background = '';
+    document.getElementById('strengthLabel').textContent    = '';
+    ['len','upper','lower','num','special'].forEach(k => {
+        document.getElementById('req-' + k)?.classList.remove('met');
+    });
+    const btn = document.getElementById('saveBtn');
+    btn.disabled    = false;
+    btn.textContent = 'Save Password';
+}
+
+// Click outside backdrop to close (voluntary only)
+document.getElementById('pwModalBackdrop').addEventListener('click', function(e) {
+    if (e.target === this && !isForcedReset) closeChangePassword();
 });
 
 // ===== PW TOGGLE =====
@@ -742,13 +980,18 @@ function checkStrength() {
 
 // ===== SAVE PASSWORD =====
 function saveNewPassword() {
-    const newPw  = document.getElementById('newPassword').value;
-    const confPw = document.getElementById('confirmPassword').value;
-    const errEl  = document.getElementById('resetError');
-    const btn    = document.getElementById('saveBtn');
+    const currentPw = document.getElementById('currentPassword').value;
+    const newPw     = document.getElementById('newPassword').value;
+    const confPw    = document.getElementById('confirmPassword').value;
+    const errEl     = document.getElementById('resetError');
+    const btn       = document.getElementById('saveBtn');
 
     errEl.textContent = '';
 
+    // Validate current password for voluntary change
+    if (!isForcedReset && !currentPw) {
+        errEl.textContent = 'Please enter your current password.'; return;
+    }
     if (!newPw || !confPw)   { errEl.textContent = 'Please fill in all fields.'; return; }
     if (newPw.length < 8)    { errEl.textContent = 'Password must be at least 8 characters.'; return; }
     if (newPw !== confPw)    { errEl.textContent = 'Passwords do not match.'; return; }
@@ -762,19 +1005,27 @@ function saveNewPassword() {
 
     const fd = new FormData();
     fd.append('action',           'reset_password');
+    fd.append('current_password', currentPw);
     fd.append('new_password',     newPw);
     fd.append('confirm_password', confPw);
+    fd.append('is_forced',        isForcedReset ? '1' : '0');
 
     fetch('dashboard.php', { method: 'POST', body: fd })
         .then(r => r.json())
         .then(json => {
             btn.disabled    = false;
             btn.textContent = 'Save Password';
+
             if (json.success) {
-                document.getElementById('resetModal').classList.remove('active');
-                document.getElementById('pageBlockOverlay').classList.remove('active');
-                document.getElementById('successModal').classList.add('active');
-                startRedirectCountdown();
+                if (isForcedReset) {
+                    document.getElementById('pwModalBackdrop').classList.remove('active');
+                    document.getElementById('pageBlockOverlay').classList.remove('active');
+                    document.getElementById('successModal').classList.add('active');
+                    startRedirectCountdown();
+                } else {
+                    closeChangePassword();
+                    showPwToast();
+                }
             } else {
                 errEl.textContent = json.message;
             }
@@ -786,7 +1037,7 @@ function saveNewPassword() {
         });
 }
 
-// ===== REDIRECT COUNTDOWN =====
+// ===== REDIRECT COUNTDOWN (forced reset only) =====
 function startRedirectCountdown() {
     let secs     = 5;
     const note   = document.getElementById('redirectNote');
@@ -798,6 +1049,13 @@ function startRedirectCountdown() {
             window.location.href = 'slogin.php';
         }
     }, 1000);
+}
+
+// ===== TOAST (voluntary change) =====
+function showPwToast() {
+    const toast = document.getElementById('pwToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
 }
 </script>
 
