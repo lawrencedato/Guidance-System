@@ -2,26 +2,26 @@
 error_reporting(0);
 ini_set('display_errors', 0);
 mysqli_report(MYSQLI_REPORT_OFF);
-
+ 
 if (session_status() === PHP_SESSION_NONE) session_start();
-
-// ===== GUARD: must be logged in =====
+ 
+// ===== GUARD =====
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     header("Location: slogin.php");
     exit;
 }
-
+ 
 // ===== DB CONNECTION =====
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $sid  = $conn->real_escape_string($_SESSION['user_id']);
-
+ 
 // ===== LOAD STUDENT DATA =====
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
 $student    = $studentRes->fetch_assoc();
-
+ 
 $profileRes = $conn->query("SELECT contact_details, profile_image FROM student_profiles WHERE student_id='$sid' LIMIT 1");
 $profile    = $profileRes->fetch_assoc();
-
+ 
 $fullName   = htmlspecialchars(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? ''));
 $email      = htmlspecialchars($student['email'] ?? '');
 $yearLevel  = htmlspecialchars($student['year_level'] ?? '');
@@ -30,12 +30,14 @@ $contact    = htmlspecialchars($profile['contact_details'] ?? 'N/A');
 $profileImg = !empty($profile['profile_image'])
               ? htmlspecialchars($profile['profile_image'])
               : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
-
-// ===== LOAD LATEST REFERRAL =====
+ 
+// ===== LOAD LATEST REFERRAL (include counselor signature) =====
 $referralRes = $conn->query("
     SELECT r.referral_date, r.reason, r.counselor_remarks,
            CONCAT(c.first_name, ' ', c.last_name) AS counselor_name,
-           c.department
+           c.department,
+           c.contact_number,
+           c.signature
     FROM referrals r
     JOIN counselors c ON r.counselor_id = c.counselor_id
     WHERE r.student_id='$sid'
@@ -43,10 +45,18 @@ $referralRes = $conn->query("
     LIMIT 1
 ");
 $referral = $referralRes ? $referralRes->fetch_assoc() : null;
-
+ 
 // ===== REFERRAL COUNT (badge) =====
 $countRes      = $conn->query("SELECT COUNT(*) AS total FROM referrals WHERE student_id='$sid'");
 $referralCount = $countRes ? (int)$countRes->fetch_assoc()['total'] : 0;
+ 
+// ===== SIGNATURE PATH =====
+$signaturePath = '';
+if (!empty($referral['signature']) && file_exists($referral['signature'])) {
+    $signaturePath = htmlspecialchars($referral['signature']) . '?v=' . filemtime($referral['signature']);
+} elseif (file_exists('images/signature.png')) {
+    $signaturePath = 'images/signature.png';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -59,7 +69,58 @@ $referralCount = $countRes ? (int)$countRes->fetch_assoc()['total'] : 0;
 <link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
-
+<style>
+  /* ── Referral badge in sidebar ── */
+  .referral-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #4988c4;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    margin-left: auto;
+  }
+ 
+  /* ── Signature container ── */
+  .sReferral-sig-wrap {
+    margin: 14px 0 6px;
+  }
+ 
+  .sReferral-sig-wrap img {
+    width: 180px;
+    max-height: 85px;
+    object-fit: contain;
+    display: block;
+  }
+ 
+  .sReferral-sig-placeholder {
+    width: 180px;
+    height: 60px;
+    border-bottom: 1px solid #0f172a;
+    margin-bottom: 6px;
+  }
+ 
+  /* ── Info rows inside card ── */
+  .sReferral-info-row {
+    display: flex;
+    gap: 6px;
+    margin: 5px 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+ 
+  .sReferral-info-row b {
+    min-width: 120px;
+    color: #113f67;
+    flex-shrink: 0;
+  }
+ 
+</style>
 <body class="body">
 
 <!-- ========================= SIDEBAR ========================= -->
@@ -171,17 +232,34 @@ $referralCount = $countRes ? (int)$countRes->fetch_assoc()['total'] : 0;
 
     <hr>
 
-    <!-- REFERRED BY -->
+        <!-- REFERRED BY -->
     <h3>Referred By</h3>
-    <img src="images/signature.png" class="sReferral-signature" alt="Counselor Signature">
-
-    <p><b>Counselor:</b> <?= htmlspecialchars($referral['counselor_name']) ?></p>
-    <p><b>Office:</b> <?= htmlspecialchars($referral['department']) ?></p>
-
-    <!-- EXPORT BUTTON -->
-    <button class="sReferral-btn" onclick="exportPDF()">
-      Export as PDF
-    </button>
+ 
+    <!-- Dynamic counselor signature -->
+    <div class="sReferral-sig-wrap">
+      <?php if ($signaturePath): ?>
+        <img src="<?= $signaturePath ?>" alt="Counselor Signature">
+      <?php else: ?>
+        <div class="sReferral-sig-placeholder"></div>
+      <?php endif; ?>
+    </div>
+ 
+    <div class="sReferral-info-row">
+      <b>Counselor</b>
+      <span>: <?= htmlspecialchars($referral['counselor_name']) ?></span>
+    </div>
+    <div class="sReferral-info-row">
+      <b>Office</b>
+      <span>: <?= htmlspecialchars($referral['department']) ?></span>
+    </div>
+    <?php if (!empty($referral['contact_number'])): ?>
+    <div class="sReferral-info-row">
+      <b>Contact</b>
+      <span>: <?= htmlspecialchars($referral['contact_number']) ?></span>
+    </div>
+    <?php endif; ?>
+ 
+    <hr>
 
   </section>
 
@@ -201,7 +279,6 @@ $referralCount = $countRes ? (int)$countRes->fetch_assoc()['total'] : 0;
 </main>
 
 <!-- ========================= SCRIPT ========================= -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 
 (function() {
