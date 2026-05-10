@@ -260,8 +260,13 @@ if (!empty($referral['signature']) && file_exists($referral['signature'])) {
     <?php endif; ?>
  
     <hr>
+      <a href="sreferral_export.php" class="sReferral-btn" style="display:block; text-align:center; text-decoration:none; margin-top:20px;">
+        <i class="fa fa-file-pdf"></i> Export PDF
+      </a>
+  
 
   </section>
+
 
   <?php else: ?>
 
