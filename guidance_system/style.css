@@ -2316,7 +2316,8 @@ i, svg {
   align-items: center;
 }
 
-#interestBtn {
+#interestBtn,
+#participateBtn {
   background: var(--primary);
   color: white;
 
@@ -2332,12 +2333,25 @@ i, svg {
   box-shadow: var(--shadow);
 }
 
-#interestBtn:hover {
+#interestBtn:hover,
+#participateBtn:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
 }
 
-#interestBtn:active {
+#interestBtn:disabled,
+#participateBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+#participateBtn.participating {
+  background: var(--success, #2e7d32);
+}
+
+#interestBtn:active,
+#participateBtn:active {
   transform: scale(0.98);
 }
 

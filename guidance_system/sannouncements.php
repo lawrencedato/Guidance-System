@@ -99,7 +99,8 @@ SELECT
     a.*,
     c.first_name,
     c.last_name,
-    COALESCE(r.interested_count, 0) AS interested_count
+    COALESCE(r.interested_count, 0) AS interested_count,
+    IF(my.student_id IS NOT NULL, 1, 0) AS already_participated
 FROM announcements a
 JOIN counselors c 
     ON a.counselor_id = c.counselor_id
@@ -112,6 +113,12 @@ LEFT JOIN (
     GROUP BY announcement_id
 ) r 
 ON a.announcement_id = r.announcement_id
+LEFT JOIN (
+    SELECT announcement_id, student_id
+    FROM announcement_responses
+    WHERE student_id = $sid_int AND response = 'interested'
+) my
+ON a.announcement_id = my.announcement_id
 ORDER BY a.created_at DESC
 ");
 ?>
@@ -272,7 +279,8 @@ ORDER BY a.created_at DESC
              data-author="<?= htmlspecialchars($a['first_name']." ".$a['last_name']) ?>"
              data-date="<?= date("F j, Y g:i A", strtotime($a['created_at'])) ?>"
              data-file="<?= !empty($a['file_path']) ? htmlspecialchars($a['file_path']) : "" ?>"
-             data-count="<?= $a['interested_count'] ?>">
+             data-count="<?= $a['interested_count'] ?>"
+             data-participated="<?= $a['already_participated'] ?>">
 
             <h3><?= htmlspecialchars($a['title']) ?></h3>
             <h6 class="announcement-author">
@@ -396,10 +404,19 @@ function openModalFromCard(card) {
     countEl.innerText     = count + " interested";
     countEl.dataset.count = count;
 
+    participateInFlight = false;
     const btn = document.getElementById("participateBtn");
     btn.dataset.id = card.dataset.id;
-    btn.innerText  = "⭐ Participate";
-    btn.disabled   = false;
+    btn.classList.remove("participating");
+
+    if (card.dataset.participated === "1") {
+        btn.innerText = "✅ Participating";
+        btn.disabled  = true;
+        btn.classList.add("participating");
+    } else {
+        btn.innerText = "⭐ Participate";
+        btn.disabled  = false;
+    }
 
     document.getElementById("announcementModal").style.display = "flex";
 }
@@ -439,9 +456,10 @@ document.getElementById("participateBtn").addEventListener("click", function(e) 
     e.stopPropagation();
     const btn            = this;
     const announcementId = btn.dataset.id;
-    if (!announcementId) return;
+    if (!announcementId || btn.disabled) return;
 
-    btn.disabled = true;
+    btn.disabled  = true;
+    btn.innerText = "⭐ Sending...";
 
     fetch("sannouncements.php", {
         method: "POST",
@@ -450,22 +468,25 @@ document.getElementById("participateBtn").addEventListener("click", function(e) 
     })
     .then(res => res.json())
     .then(data => {
-        btn.disabled = false;
         const countEl = document.getElementById("modalCount");
         let current   = parseInt(countEl.dataset.count) || 0;
 
-        if (data.action === "added") {
-            current++;
-            btn.innerText = "⭐ Participating";
-        } else {
-            current = Math.max(0, current - 1);
-            btn.innerText = "⭐ Participate";
-        }
+        // Mark the source card as participated so re-opening it stays locked
+        const sourceCard = document.querySelector(`.sAnnouncements-card[data-id="${announcementId}"]`);
+        if (sourceCard) sourceCard.dataset.participated = "1";
+
+        current++;
+        btn.innerText = "✅ Participating";
+        btn.classList.add("participating");
+        // Keep disabled — participation confirmed, no toggling back
+
         countEl.dataset.count = current;
         countEl.innerText     = current + " interested";
     })
     .catch(err => {
-        btn.disabled = false;
+        // Only re-enable on network failure so the user can retry
+        btn.disabled  = false;
+        btn.innerText = "⭐ Participate";
         console.log("AJAX ERROR:", err);
     });
 });
