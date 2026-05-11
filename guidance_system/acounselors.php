@@ -550,6 +550,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed !important; transform: none 
       </div>
     </div>
   </div>
+
   <nav class="sidebar-menu">
     <a href="admin.php"><i class="fa fa-gauge"></i> Dashboard</a>
     <p class="sidebar-title">MANAGEMENT</p>
@@ -559,6 +560,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed !important; transform: none 
     <a href="aappointments.php"><i class="fa fa-calendar"></i> Appointments</a>
     <p class="sidebar-title">SYSTEM</p>
     <a href="areports.php"><i class="fa fa-chart-line"></i> Reports</a>
+    <a href="aauditlogs.php"><i class="fa fa-clipboard-list"></i> Audit Logs</a>
   </nav>
 </aside>
 

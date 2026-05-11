@@ -48,49 +48,33 @@ $conn->close();
 
 <!-- ================= SIDEBAR ================= -->
 <aside class="sidebar">
-
   <div class="sidebar-logoBar">
-
     <div class="sidebar-logo">
       <img src="logo.png" alt="logo">
       <span class="sidebar-logoText">UNITYCARE</span>
     </div>
-
     <div class="sidebar-settings">
       <button class="sidebar-settingsButton" onclick="toggleSettingsMenu(event)">
         <i class="fa fa-gear"></i>
       </button>
-
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
-        <button onclick="toggleTheme()">
-          <i class="fa fa-moon"></i> Theme
-        </button>
-
-        <button onclick="logout()">
-          <i class="fa fa-right-from-bracket"></i> Logout
-        </button>
+        <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
+        <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
     </div>
-
   </div>
 
   <nav class="sidebar-menu">
-
     <a href="admin.php" class="active"><i class="fa fa-gauge"></i> Dashboard</a>
-
     <p class="sidebar-title">MANAGEMENT</p>
-
     <a href="ausers.php"><i class="fa fa-users"></i> Users</a>
     <a href="astudents.php"><i class="fa fa-user-graduate"></i> Students</a>
     <a href="acounselors.php"><i class="fa fa-user-doctor"></i> Counselors</a>
     <a href="aappointments.php"><i class="fa fa-calendar"></i> Appointments</a>
-
     <p class="sidebar-title">SYSTEM</p>
-
     <a href="areports.php"><i class="fa fa-chart-line"></i> Reports</a>
-
+    <a href="aauditlogs.php"><i class="fa fa-clipboard-list"></i> Audit Logs</a>
   </nav>
-
 </aside>
 
 
