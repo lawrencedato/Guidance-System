@@ -11,20 +11,18 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'counselor') {
 }
 
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
-$cid  = $conn->real_escape_string($_SESSION['user_id']); // ✅ was $_SESSION['user_id'] but set wrong key before
+$cid  = $conn->real_escape_string($_SESSION['user_id']);
 
 $counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
 $counselor    = $counselorRes->fetch_assoc();
 
-
-$firstName = htmlspecialchars($counselor['first_name'] ?? 'Counselor');
-$lastName = htmlspecialchars($counselor['last_name'] ?? 'Counselor');
-$fullName  = htmlspecialchars(($counselor['first_name'] ?? '') . ' ' . ($counselor['last_name'] ?? ''));
-$email     = htmlspecialchars($counselor['email'] ?? '');
+$firstName  = htmlspecialchars($counselor['first_name'] ?? 'Counselor');
+$lastName   = htmlspecialchars($counselor['last_name'] ?? 'Counselor');
+$fullName   = htmlspecialchars(($counselor['first_name'] ?? '') . ' ' . ($counselor['last_name'] ?? ''));
+$email      = htmlspecialchars($counselor['email'] ?? '');
 $profileImg = !empty($counselor['profile_image'])
     ? htmlspecialchars($counselor['profile_image'])
     : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
-
 
 $todaySessions = $conn->query(
     "SELECT COUNT(*) c FROM appointments 
@@ -47,7 +45,7 @@ $pendingAppointments = $conn->query(
 
 // ===== UPCOMING APPOINTMENTS =====
 $upcomingRes = $conn->query(
-    "SELECT a.appointment_date, a.appointment_time, a.status,
+    "SELECT a.appointment_id, a.appointment_date, a.appointment_time, a.status,
             s.first_name, s.last_name
      FROM appointments a
      JOIN students s ON s.student_id = a.student_id
@@ -81,6 +79,48 @@ while ($row = $concernsRes->fetch_assoc()) $recentConcerns[] = $row;
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="logout.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ── Upcoming Appointments: action buttons ── */
+        .appt-row.done td,
+        .appt-row.cancelled td {
+            text-decoration: line-through;
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+        .appt-row.done .actions,
+        .appt-row.cancelled .actions {
+            opacity: 0.45;
+            pointer-events: none;
+        }
+        .btn-appt-done,
+        .btn-appt-cancel {
+            border: none;
+            cursor: pointer;
+            padding: 4px 13px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: opacity 0.15s, transform 0.1s;
+        }
+        .btn-appt-done   { background: #d1fae5; color: #065f46; margin-right: 6px; }
+        .btn-appt-cancel { background: #fee2e2; color: #991b1b; }
+        .btn-appt-done:hover,
+        .btn-appt-cancel:hover  { opacity: 0.75; }
+        .btn-appt-done:active,
+        .btn-appt-cancel:active { transform: scale(0.96); }
+
+        .appt-status-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .appt-status-badge.badge-done      { background: #d1fae5; color: #065f46; }
+        .appt-status-badge.badge-cancelled { background: #fee2e2; color: #991b1b; }
+    </style>
 </head>
 <body class="body">
 
@@ -189,11 +229,12 @@ while ($row = $concernsRes->fetch_assoc()) $recentConcerns[] = $row;
                         <th style="padding:8px 0;">Student</th>
                         <th style="padding:8px 0;">Date</th>
                         <th style="padding:8px 0;">Time</th>
+                        <th style="padding:8px 0;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($upcoming as $appt): ?>
-                        <tr style="border-bottom:1px solid var(--border);">
+                        <tr class="appt-row" data-id="<?= htmlspecialchars($appt['appointment_id']) ?>">
                             <td style="padding:10px 0;">
                                 <?= htmlspecialchars($appt['first_name'] . ' ' . $appt['last_name']) ?>
                             </td>
@@ -202,6 +243,10 @@ while ($row = $concernsRes->fetch_assoc()) $recentConcerns[] = $row;
                             </td>
                             <td style="padding:10px 0;">
                                 <?= date('h:i A', strtotime($appt['appointment_time'])) ?>
+                            </td>
+                            <td style="padding:10px 0;" class="actions">
+                                <button class="btn-appt-done"   onclick="markApptRow(this, 'done')">Done</button>
+                                <button class="btn-appt-cancel" onclick="markApptRow(this, 'cancelled')">Cancel</button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -222,97 +267,125 @@ while ($row = $concernsRes->fetch_assoc()) $recentConcerns[] = $row;
                         <th style="padding:8px 0;">Student</th>
                         <th style="padding:8px 0;">Subject</th>
                         <th style="padding:8px 0;">Status</th>
+                        <th style="padding:8px 0;">Reply</th>
                         <th style="padding:8px 0;">Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($recentConcerns as $c): ?>
-                      <tr style="border-bottom:1px solid var(--border);">
-                          <td style="padding:10px 0;">
-                              <?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?>
-                          </td>
-                          <td style="padding:10px 0;">
-                              <?= htmlspecialchars($c['subject']) ?>
-                          </td>
-                          <td style="padding:10px 0;">
-                              <span style="
-                                  padding:2px 10px; border-radius:20px; font-size:12px;
-                                  background:<?= $c['status']==='Pending' ? '#fef3c7' : ($c['status']==='Resolved' ? '#d1fae5' : '#e0e7ff') ?>;
-                                  color:<?= $c['status']==='Pending' ? '#92400e' : ($c['status']==='Resolved' ? '#065f46' : '#3730a3') ?>;">
-                                  <?= htmlspecialchars($c['status']) ?>
-                              </span>
-                          </td>
-                          <td style="padding:10px 0; color:var(--text-muted); font-size:12px;">
-                              <?php if ($c['replied_by']): ?>
-                                  <?= $c['replied_by'] === $cid ? '✅ You replied' : '💬 Replied by another counselor' ?>
-                              <?php else: ?>
-                                  ⏳ Awaiting reply
-                              <?php endif; ?>
-                          </td>
-                          <td style="padding:10px 0; color:var(--text-muted);">
-                              <?= date('M d, Y', strtotime($c['created_at'])) ?>
-                          </td>
-                      </tr>
-                  <?php endforeach; ?>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:10px 0;">
+                                <?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?>
+                            </td>
+                            <td style="padding:10px 0;">
+                                <?= htmlspecialchars($c['subject']) ?>
+                            </td>
+                            <td style="padding:10px 0;">
+                                <span style="
+                                    padding:2px 10px; border-radius:20px; font-size:12px;
+                                    background:<?= $c['status']==='Pending' ? '#fef3c7' : ($c['status']==='Resolved' ? '#d1fae5' : '#e0e7ff') ?>;
+                                    color:<?= $c['status']==='Pending' ? '#92400e' : ($c['status']==='Resolved' ? '#065f46' : '#3730a3') ?>;">
+                                    <?= htmlspecialchars($c['status']) ?>
+                                </span>
+                            </td>
+                            <td style="padding:10px 0; color:var(--text-muted); font-size:12px;">
+                                <?php if ($c['replied_by']): ?>
+                                    <?= $c['replied_by'] === $cid ? '✅ You replied' : '💬 Replied by another counselor' ?>
+                                <?php else: ?>
+                                    ⏳ Awaiting reply
+                                <?php endif; ?>
+                            </td>
+                            <td style="padding:10px 0; color:var(--text-muted);">
+                                <?= date('M d, Y', strtotime($c['created_at'])) ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         <?php else: ?>
             <p style="color:var(--text-muted); font-size:13px;">No concerns yet.</p>
         <?php endif; ?>
     </section>
-    
+
     <!-- LOGOUT MODAL -->
-  <div class="logout-overlay" id="logoutOverlay">
-    <div class="logout-modal">
-      <div class="logout-icon">
-        <i class="fa fa-right-from-bracket"></i>
-      </div>
-      <h3>Logout</h3>
-      <p>Are you sure you want to logout?</p>
-      <div class="logout-actions">
-        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
-        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
-      </div>
+    <div class="logout-overlay" id="logoutOverlay">
+        <div class="logout-modal">
+            <div class="logout-icon">
+                <i class="fa fa-right-from-bracket"></i>
+            </div>
+            <h3>Logout</h3>
+            <p>Are you sure you want to logout?</p>
+            <div class="logout-actions">
+                <button class="logout-btn logout-btn--cancel"  onclick="closeLogout()">Cancel</button>
+                <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+            </div>
+        </div>
     </div>
-  </div>
 
 </main>
 
 <script>
+/* ── Settings dropdown ── */
 function toggleSettingsMenu(e) {
     e.stopPropagation();
     document.getElementById("settingsDropdown").classList.toggle("show");
 }
+
+/* ── Theme toggle ── */
 function toggleTheme() {
     const html = document.documentElement;
     html.setAttribute("data-theme", html.getAttribute("data-theme") === "light" ? "dark" : "light");
 }
 
+/* ── Logout modal ── */
 function logout() {
-  document.getElementById('logoutOverlay').classList.add('show');
+    document.getElementById('logoutOverlay').classList.add('show');
 }
 function closeLogout() {
-  document.getElementById('logoutOverlay').classList.remove('show');
+    document.getElementById('logoutOverlay').classList.remove('show');
 }
 function confirmLogout() {
     window.location.href = 'logout.php?role=counselor';
 }
-
-// Close when clicking outside
 document.getElementById('logoutOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeLogout();
+    if (e.target === this) closeLogout();
 });
 
+/* ── Notification dropdown ── */
 function toggleDropdown(id, e) {
     e.stopPropagation();
     document.getElementById(id).classList.toggle("show");
 }
+
+/* ── Close dropdowns on outside click ── */
 document.addEventListener("click", e => {
     const menu = document.getElementById("settingsDropdown");
     const btn  = document.querySelector(".sidebar-settingsButton");
     if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target))
         menu.classList.remove("show");
 });
+
+/* ── Upcoming Appointments: Done / Cancel ── */
+function markApptRow(btn, action) {
+    const row = btn.closest('.appt-row');
+
+    // Remove any previous state
+    row.classList.remove('done', 'cancelled');
+
+    // Apply new state
+    row.classList.add(action);
+
+    // Remove existing badge if any
+    const actCell = row.querySelector('.actions');
+    const existing = actCell.querySelector('.appt-status-badge');
+    if (existing) existing.remove();
+
+    // Insert status badge
+    const badge = document.createElement('span');
+    badge.className = 'appt-status-badge ' + (action === 'done' ? 'badge-done' : 'badge-cancelled');
+    badge.textContent = action === 'done' ? '✓ Done' : '✗ Cancelled';
+    actCell.appendChild(badge);
+}
 </script>
 
 </body>
