@@ -501,6 +501,7 @@ while ($row = $res->fetch_assoc()) $concerns[] = $row;
 </head>
 <body class="body">
 
+<!-- ══════════════════ SIDEBAR ══════════════════ -->
 <aside class="sidebar">
   <div class="sidebar-logoBar">
     <div class="sidebar-logo">
@@ -523,6 +524,7 @@ while ($row = $res->fetch_assoc()) $concerns[] = $row;
     <a href="counselor.php"><i class="fa fa-gauge"></i> Dashboard</a>
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
+    <a href="cavailability.php"><i class="fa fa-clock"></i> My Availability</a>
     <a href="cconcerns.php" class="active"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
     <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
     <p class="sidebar-title">STUDENTS</p>
