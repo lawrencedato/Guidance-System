@@ -11,31 +11,15 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     exit;
 }
 
-$conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
-$sid  = (int)$_SESSION['user_id'];
-
 // ===== HANDLE PASSWORD RESET AJAX =====
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset_password') {
     header('Content-Type: application/json');
 
-    $is_forced  = ($_POST['is_forced']  ?? '0') === '1';
-    $current_pw = $_POST['current_password'] ?? '';
+    $conn       = new mysqli("localhost", "root", "", "gcs_db");
     $new_pw     = $_POST['new_password']     ?? '';
     $confirm_pw = $_POST['confirm_password'] ?? '';
+    $sid = $conn->real_escape_string($_SESSION['user_id']);
 
-    // For voluntary change, verify current password
-    if (!$is_forced) {
-        if (!$current_pw) {
-            echo json_encode(["success" => false, "message" => "Please enter your current password."]);
-            exit;
-        }
-        $pwRes = $conn->query("SELECT password FROM activated_students WHERE student_id=$sid LIMIT 1");
-        $pwRow = $pwRes ? $pwRes->fetch_assoc() : null;
-        if (!$pwRow || !password_verify($current_pw, $pwRow['password'])) {
-            echo json_encode(["success" => false, "message" => "Current password is incorrect."]);
-            exit;
-        }
-    }
 
     if (!$new_pw || !$confirm_pw) {
         echo json_encode(["success" => false, "message" => "Please fill in all fields."]);
@@ -57,121 +41,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
 
     $hashed = password_hash($new_pw, PASSWORD_BCRYPT);
     $ok     = $conn->query(
-        "UPDATE activated_students SET password='$hashed', is_temp_password=0 WHERE student_id=$sid"
+        "UPDATE activated_students SET password='$hashed', is_temp_password=0 WHERE student_id='$sid'"
     );
 
     if ($ok) {
-        if ($is_forced) {
-            session_unset();
-            session_destroy();
-            echo json_encode(["success" => true, "forced" => true]);
-        } else {
-            echo json_encode(["success" => true, "forced" => false]);
-        }
+        session_unset();
+        session_destroy();
+        echo json_encode(["success" => true]);
     } else {
         echo json_encode(["success" => false, "message" => "Failed to save password. Please try again."]);
     }
     exit;
 }
 
-// ===== HANDLE MOOD SAVE (save_wellness) =====
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_wellness') {
-    header('Content-Type: application/json');
+// ===== LOAD DATA =====
+$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$sid = $conn->real_escape_string($_SESSION['user_id']);
 
-    $check = $conn->query(
-        "SELECT wellness_id FROM wellness_checks
-         WHERE student_id = $sid AND DATE(created_at) = CURDATE()
-         LIMIT 1"
-    );
-    if ($check->num_rows > 0) {
-        echo json_encode(['success' => false, 'already_done' => true, 'message' => 'Already submitted today.']);
-        exit;
-    }
-
-    $mood   = $conn->real_escape_string($_POST['mood_label']    ?? 'Neutral');
-    $stress = (int)($_POST['stress_level']                      ?? 50);
-    $sleep  = $conn->real_escape_string($_POST['sleep_quality'] ?? 'Average');
-
-    $ok = $conn->query(
-        "INSERT INTO wellness_checks (student_id, mood_label, stress_level, sleep_quality, created_at)
-         VALUES ($sid, '$mood', $stress, '$sleep', NOW())"
-    );
-
-    echo json_encode($ok
-        ? ['success' => true]
-        : ['success' => false, 'message' => 'Failed to save. Please try again.']
-    );
-    exit;
-}
-
-// ===== HANDLE MOOD UPDATE (update_wellness) =====
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_wellness') {
-    header('Content-Type: application/json');
-
-    $checkRes = $conn->query(
-        "SELECT wellness_id FROM wellness_checks
-         WHERE student_id = $sid AND DATE(created_at) = CURDATE()
-         LIMIT 1"
-    );
-    $row = $checkRes->fetch_assoc();
-    if (!$row) {
-        echo json_encode(['success' => false, 'message' => 'No check-in found for today to update.']);
-        exit;
-    }
-
-    $wid    = (int)$row['wellness_id'];
-    $mood   = $conn->real_escape_string($_POST['mood_label']    ?? 'Neutral');
-    $stress = (int)($_POST['stress_level']                      ?? 50);
-    $sleep  = $conn->real_escape_string($_POST['sleep_quality'] ?? 'Average');
-
-    $ok = $conn->query(
-        "UPDATE wellness_checks
-         SET mood_label = '$mood', stress_level = $stress, sleep_quality = '$sleep'
-         WHERE wellness_id = $wid AND student_id = $sid"
-    );
-
-    echo json_encode($ok
-        ? ['success' => true]
-        : ['success' => false, 'message' => 'Failed to update. Please try again.']
-    );
-    exit;
-}
-
-// ===== LOAD PAGE DATA =====
-$studentRes = $conn->query("SELECT * FROM students WHERE student_id=$sid LIMIT 1");
+$studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
 $student    = $studentRes->fetch_assoc();
 
-$profileRes = $conn->query("SELECT profile_image FROM student_profiles WHERE student_id=$sid LIMIT 1");
+// Load profile image from student_profiles
+$profileRes = $conn->query("SELECT profile_image FROM student_profiles WHERE student_id='$sid' LIMIT 1");
 $profile    = $profileRes->fetch_assoc();
 
-$isTempPassword = (int)($_SESSION['is_temp_password'] ?? 0);
+// Read is_temp_password from session (set during login)
+$isTempPassword = (int) ($_SESSION['is_temp_password'] ?? 0);
 
 // Stats
-$upcoming  = $conn->query("SELECT COUNT(*) c FROM appointments WHERE student_id=$sid AND status='Approved' AND appointment_date >= CURDATE()")->fetch_assoc()['c'] ?? 0;
-$completed = $conn->query("SELECT COUNT(*) c FROM appointments WHERE student_id=$sid AND status='Completed'")->fetch_assoc()['c'] ?? 0;
-$referrals = $conn->query("SELECT COUNT(*) c FROM referrals WHERE student_id=$sid")->fetch_assoc()['c'] ?? 0;
-$concerns  = $conn->query("SELECT COUNT(*) c FROM concerns WHERE student_id=$sid AND status='Pending'")->fetch_assoc()['c'] ?? 0;
+$upcoming  = $conn->query("SELECT COUNT(*) c FROM appointments WHERE student_id='$sid' AND status='Approved' AND appointment_date >= CURDATE()")->fetch_assoc()['c'] ?? 0;
+$completed = $conn->query("SELECT COUNT(*) c FROM appointments WHERE student_id='$sid' AND status='Completed'")->fetch_assoc()['c'] ?? 0;
+$referrals = $conn->query("SELECT COUNT(*) c FROM referrals WHERE student_id='$sid'")->fetch_assoc()['c'] ?? 0;
+$concerns  = $conn->query("SELECT COUNT(*) c FROM concerns WHERE student_id='$sid' AND status='Pending'")->fetch_assoc()['c'] ?? 0;
 
 $announce = $conn->query("SELECT * FROM announcements ORDER BY created_at DESC LIMIT 1")->fetch_assoc();
 
 $actRes = $conn->query(
-    "(SELECT 'Booked appointment' AS activity, created_at FROM appointments WHERE student_id=$sid ORDER BY created_at DESC LIMIT 1)
+    "(SELECT 'Booked appointment' AS activity, created_at FROM appointments WHERE student_id='$sid' ORDER BY created_at DESC LIMIT 1)
      UNION
-     (SELECT 'Submitted concern', created_at FROM concerns WHERE student_id=$sid ORDER BY created_at DESC LIMIT 1)
+     (SELECT 'Submitted concern', created_at FROM concerns WHERE student_id='$sid' ORDER BY created_at DESC LIMIT 1)
      UNION
-     (SELECT 'Wellness check', created_at FROM wellness_checks WHERE student_id=$sid ORDER BY created_at DESC LIMIT 1)
+     (SELECT 'Wellness check', created_at FROM wellness_checks WHERE student_id='$sid' ORDER BY created_at DESC LIMIT 1)
      ORDER BY created_at DESC LIMIT 5"
 );
 $activities = [];
 while ($row = $actRes->fetch_assoc()) $activities[] = $row;
-
-$todayWellnessRes    = $conn->query(
-    "SELECT mood_label FROM wellness_checks
-     WHERE student_id=$sid AND DATE(created_at) = CURDATE()
-     ORDER BY created_at DESC LIMIT 1"
-);
-$todayWellness       = $todayWellnessRes->fetch_assoc();
-$wellnessExistsToday = !empty($todayWellness);
 
 $firstName  = htmlspecialchars($student['first_name'] ?? 'Student');
 $fullName   = htmlspecialchars(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? ''));
@@ -188,47 +102,242 @@ $profileImg = !empty($profile['profile_image'])
     <title>UNITYCARE | Student Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="logout.css">
-    <link rel="stylesheet" href="changepass.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* ===== PAGE BLOCK OVERLAY ===== */
+        /* ===== FULL PAGE BLOCK OVERLAY ===== */
         .page-block-overlay {
             display: none;
             position: fixed;
             inset: 0;
             background: rgba(17, 63, 103, 0.35);
             backdrop-filter: blur(5px);
-            z-index: 9997;
+            z-index: 9998;
         }
         .page-block-overlay.active { display: block; }
+
+        /* ===== RESET MODAL ===== */
+        .reset-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .reset-modal.active { display: flex; }
+
+        .reset-box {
+            width: 440px;
+            padding: var(--spacing-xxl, 32px);
+            background: var(--card, #fff);
+            border: 1px solid var(--border, #e2e8f0);
+            border-radius: var(--radius-lg, 16px);
+            box-shadow: var(--shadow, 0 8px 40px rgba(0,0,0,0.15));
+            text-align: center;
+            animation: modalPop 0.25s ease;
+        }
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.95); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .reset-box h2 {
+            margin-bottom: var(--spacing-sm, 8px);
+            color: var(--primary, #113f67);
+            font-weight: 700;
+        }
+        .reset-box > p {
+            color: var(--text-muted, #666);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: var(--spacing-lg, 20px);
+        }
+        .reset-box .field-label {
+            display: block;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text, #222);
+        }
+
+        .pw-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        .pw-wrapper input {
+            width: 100%;
+            padding: 12px !important;
+            padding-right: 42px !important;
+            border-radius: 10px;
+            border: 2px solid var(--border, #e2e8f0);
+            outline: none;
+            font-size: 14px;
+            transition: 0.2s;
+            box-sizing: border-box;
+        }
+        .pw-wrapper input:focus {
+            border-color: var(--primary, #113f67);
+            box-shadow: 0 0 0 3px rgba(17,63,103,0.12);
+        }
+        .pw-toggle {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted, #888);
+            padding: 0;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+            width: auto !important;
+            margin-top: 0 !important;
+        }
+        .pw-toggle:hover { color: var(--primary, #113f67); background: none !important; }
+
+        .strength-wrap {
+            height: 5px;
+            background: var(--border, #e2e8f0);
+            border-radius: 10px;
+            margin: 8px 0 3px;
+            overflow: hidden;
+        }
+        .strength-bar {
+            height: 100%;
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s, background 0.3s;
+        }
+        .strength-label {
+            font-size: 11px;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .pw-reqs {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 16px;
+            text-align: left;
+        }
+        .pw-reqs li {
+            font-size: 12px;
+            color: var(--text-muted, #888);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 4px;
+            transition: color 0.2s;
+        }
+        .pw-reqs li.met { color: #15803d; }
+        .dot-req {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--border, #e2e8f0);
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .pw-reqs li.met .dot-req { background: #15803d; }
+
+        #resetError {
+            font-size: 12px;
+            min-height: 16px;
+            text-align: center;
+            margin: 6px 0 0;
+            color: #e53e3e;
+        }
+
+        .reset-box .save-btn {
+            margin-top: 14px;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary, #113f67);
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .reset-box .save-btn:hover { background: #0e3558; }
+        .reset-box .save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* ===== SUCCESS MODAL ===== */
+        .success-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            background: rgba(17, 63, 103, 0.35);
+            backdrop-filter: blur(5px);
+        }
+        .success-modal.active { display: flex; }
+        .success-box {
+            width: 400px;
+            padding: var(--spacing-xxl, 32px);
+            background: var(--card, #fff);
+            border: 1px solid var(--border, #e2e8f0);
+            border-radius: var(--radius-lg, 16px);
+            box-shadow: var(--shadow, 0 8px 40px rgba(0,0,0,0.15));
+            text-align: center;
+            animation: modalPop 0.25s ease;
+        }
+        .success-icon {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: rgba(21,128,61,0.1);
+            border: 2px solid rgba(21,128,61,0.25);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 16px;
+        }
+        .success-box h2 {
+            color: var(--primary, #113f67);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .success-box p {
+            color: var(--text-muted, #666);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        .success-box .login-btn {
+            width: 100%; padding: 12px;
+            border: none; border-radius: 10px;
+            background: var(--primary, #113f67);
+            color: #fff; font-weight: 600;
+            font-size: 14px; cursor: pointer;
+            transition: 0.2s;
+        }
+        .success-box .login-btn:hover { background: #0e3558; }
+        .redirect-note {
+            font-size: 12px;
+            color: var(--text-muted, #888);
+            margin-top: 10px;
+        }
+
+        @media (max-width: 500px) {
+            .reset-box, .success-box { width: 90% !important; padding: 20px !important; }
+        }
     </style>
 </head>
 <body class="body">
 
-<!-- ===== FULL PAGE BLOCK (forced reset only) ===== -->
+<!-- ===== FULL PAGE BLOCK (only active when temp password) ===== -->
 <div class="page-block-overlay <?= $isTempPassword ? 'active' : '' ?>" id="pageBlockOverlay"></div>
 
-<!-- ===== PASSWORD MODAL BACKDROP ===== -->
-<div class="modal-backdrop <?= $isTempPassword ? 'active' : '' ?>" id="pwModalBackdrop">
+<!-- ===== FORCED RESET PASSWORD MODAL ===== -->
+<div class="reset-modal <?= $isTempPassword ? 'active' : '' ?>" id="resetModal">
     <div class="reset-box">
 
-        <button class="modal-close-btn" id="pwModalCloseBtn" onclick="closeChangePassword()">&#x2715;</button>
-
-        <h2 id="pwModalTitle">Set Your Password</h2>
-        <p class="reset-sub" id="pwModalSubtitle">You logged in with a temporary password. Please set your own permanent password to continue using the system.</p>
-
-        <div id="currentPwGroup" style="display:none;">
-            <label class="field-label">Current Password</label>
-            <div class="pw-wrapper">
-                <input type="password" id="currentPassword" placeholder="Enter your current password">
-                <button type="button" class="pw-toggle" onclick="togglePw('currentPassword', this)">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                    </svg>
-                </button>
-            </div>
-            <hr class="pw-divider">
-        </div>
+        <h2>Set Your Password</h2>
+        <p>You logged in with a temporary password. Please set your own permanent password to continue using the system.</p>
 
         <label class="field-label">New Password</label>
         <div class="pw-wrapper">
@@ -251,7 +360,7 @@ $profileImg = !empty($profile['profile_image'])
             <li id="req-special"><span class="dot-req"></span> One special character (!@#$%^&*)</li>
         </ul>
 
-        <label class="field-label">Confirm New Password</label>
+        <label class="field-label">Confirm Password</label>
         <div class="pw-wrapper">
             <input type="password" id="confirmPassword" placeholder="Re-enter new password">
             <button type="button" class="pw-toggle" onclick="togglePw('confirmPassword', this)">
@@ -263,11 +372,12 @@ $profileImg = !empty($profile['profile_image'])
 
         <div id="resetError"></div>
         <button class="save-btn" id="saveBtn" onclick="saveNewPassword()">Save Password</button>
+
     </div>
 </div>
 
-<!-- ===== SUCCESS MODAL (forced reset only — redirect to login) ===== -->
-<div class="success-modal-wrap" id="successModal">
+<!-- ===== SUCCESS MODAL ===== -->
+<div class="success-modal" id="successModal">
     <div class="success-box">
         <div class="success-icon">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -279,11 +389,6 @@ $profileImg = !empty($profile['profile_image'])
         <button class="login-btn" onclick="window.location.href='slogin.php'">Go to Login</button>
         <div class="redirect-note" id="redirectNote">Redirecting in 5 seconds...</div>
     </div>
-</div>
-
-<!-- ===== VOLUNTARY SUCCESS TOAST ===== -->
-<div class="pw-toast" id="pwToast">
-    <i class="fa fa-check-circle"></i> Password changed successfully!
 </div>
 
 <!-- ================= SIDEBAR ================= -->
@@ -301,7 +406,6 @@ $profileImg = !empty($profile['profile_image'])
                 <a href="sprofile.php"><i class="fa fa-user"></i> Profile</a>
                 <a href="shistory.php"><i class="fa fa-clock"></i> Session History</a>
                 <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
-                <button onclick="openChangePassword()"><i class="fa fa-lock"></i> Change Password</button>
                 <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
             </div>
         </div>
@@ -366,36 +470,92 @@ $profileImg = !empty($profile['profile_image'])
     </section>
 
     <section class="sDashboard-content">
-        <div class="sDashboard-announcement">
-            <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d"
-                 class="sDashboard-announcement-img" alt="Announcement">
-            <h4>Latest Announcement</h4>
-            <?php if ($announce): ?>
-                <h4><?= htmlspecialchars($announce['title']) ?></h4>
-                <p><?= htmlspecialchars(substr($announce['message'], 0, 100)) ?>...</p>
-                <a class="btn" href="sannouncements.php">View Details</a>
-            <?php else: ?>
-                <p>No announcements yet.</p>
-            <?php endif; ?>
+<div class="sDashboard-announcement">
+    <?php if ($announce): ?>
+        <?php if (!empty($announce['file_path'])): ?>
+            <img src="<?= htmlspecialchars($announce['file_path']) ?>"
+                 class="sDashboard-announcement-img" alt="Announcement Image"
+                 onerror="this.style.display='none'">
+        <?php else: ?>
+            <div class="sDashboard-announcement-img"
+                 style="background:linear-gradient(135deg,#113f67,#34699a);
+                        display:flex;align-items:center;justify-content:center;
+                        border-radius:12px;">
+                <i class="fa fa-bullhorn" style="font-size:2.5rem;color:rgba(255,255,255,0.4);"></i>
+            </div>
+        <?php endif; ?>
+        <h4>Latest Announcement</h4>
+        <h4><?= htmlspecialchars($announce['title']) ?></h4>
+        <p><?= htmlspecialchars(substr($announce['message'], 0, 100)) ?>...</p>
+        <a class="btn" href="sannouncements.php">View Details</a>
+    <?php else: ?>
+        <div class="sDashboard-announcement-img"
+             style="background:linear-gradient(135deg,#113f67,#34699a);
+                    display:flex;align-items:center;justify-content:center;
+                    border-radius:12px;">
+            <i class="fa fa-bullhorn" style="font-size:2.5rem;color:rgba(255,255,255,0.4);"></i>
         </div>
+        <h4>Latest Announcement</h4>
+        <p style="color:var(--text-muted);">No announcements yet.</p>
+    <?php endif; ?>
+</div>
 
         <div class="sDashboard-side">
+<!-- MOOD CARD — VIEW ONLY -->
+<div class="sDashboard-card">
+    <h4>Today's Wellness</h4>
 
-            <!-- MOOD CARD -->
-            <div class="sDashboard-card">
-                <h4>Mood</h4>
-                <div class="sDashboard-mood-display" id="moodDisplay">No mood recorded yet</div>
-                <div id="moodNotif" style="display:none; font-size:12px; margin-top:6px; text-align:center;"></div>
-                <div class="sDashboard-mood">
-                    <button onclick="setMood('😢','Very Sad')">😢</button>
-                    <button onclick="setMood('😕','Sad')">😕</button>
-                    <button onclick="setMood('😐','Neutral')">😐</button>
-                    <button onclick="setMood('🙂','Happy')">🙂</button>
-                    <button onclick="setMood('😁','Very Happy')">😁</button>
-                </div>
-            </div>
+    <?php
+    // Load full today's wellness record (not just mood)
+    $fullWellnessRes = $conn->query("
+        SELECT mood_label, stress_level, sleep_quality, created_at
+        FROM wellness_checks
+        WHERE student_id = $sid AND DATE(created_at) = CURDATE()
+        ORDER BY created_at DESC LIMIT 1
+    ");
+    $fullWellness = $fullWellnessRes->fetch_assoc();
+    ?>
 
-            <!-- RECENT ACTIVITY CARD -->
+    <?php if ($fullWellness): ?>
+        <?php
+        $moodMap = [
+            'Very Sad'   => '😢',
+            'Sad'        => '😕',
+            'Neutral'    => '😐',
+            'Happy'      => '🙂',
+            'Very Happy' => '😁',
+        ];
+        $moodEmoji = $moodMap[$fullWellness['mood_label']] ?? '😐';
+        $stress    = (int)$fullWellness['stress_level'];
+        $stressLabel = $stress < 30 ? 'Low 😌' : ($stress < 70 ? 'Moderate 😐' : 'High 😰');
+        ?>
+        <div style="text-align:center; padding: 8px 0;">
+            <div style="font-size:44px; line-height:1;"><?= $moodEmoji ?></div>
+            <div style="font-weight:600; margin-top:4px;"><?= htmlspecialchars($fullWellness['mood_label']) ?></div>
+        </div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:10px; display:flex; flex-direction:column; gap:4px;">
+            <span><b>Stress:</b> <?= $stressLabel ?> (<?= $stress ?>%)</span>
+            <span><b>Sleep:</b> <?= htmlspecialchars($fullWellness['sleep_quality']) ?></span>
+            <span style="opacity:0.6;">Logged <?= date('g:i A', strtotime($fullWellness['created_at'])) ?></span>
+        </div>
+        <a href="swellness.php"
+           style="display:block; text-align:center; margin-top:12px; font-size:12px;
+                  color:var(--primary); text-decoration:none; opacity:0.8;">
+            ✏️ Edit in Wellness Check
+        </a>
+    <?php else: ?>
+        <div style="text-align:center; padding:12px 0; color:var(--text-muted); font-size:13px;">
+            <div style="font-size:36px; margin-bottom:6px;">📋</div>
+            <p style="margin:0;">No check-in yet today.</p>
+        </div>
+        <a href="swellness.php"
+           style="display:block; text-align:center; margin-top:12px; font-size:13px; font-weight:600;
+                  padding:8px; border-radius:10px; background:var(--primary);
+                  color:#fff; text-decoration:none;">
+            Start Wellness Check
+        </a>
+    <?php endif; ?>
+</div>
             <div class="sDashboard-card">
                 <h4>Recent Activity</h4>
                 <?php if (count($activities) > 0): ?>
@@ -409,33 +569,31 @@ $profileImg = !empty($profile['profile_image'])
                     <p style="color:var(--text-muted);font-size:13px;">No recent activity.</p>
                 <?php endif; ?>
             </div>
-
         </div>
     </section>
 
     <!-- LOGOUT MODAL -->
-    <div class="logout-overlay" id="logoutOverlay">
-        <div class="logout-modal">
-            <div class="logout-icon">
-                <i class="fa fa-right-from-bracket"></i>
-            </div>
-            <h3>Logout</h3>
-            <p>Are you sure you want to logout?</p>
-            <div class="logout-actions">
-                <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
-                <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
-            </div>
-        </div>
+  <div class="logout-overlay" id="logoutOverlay">
+    <div class="logout-modal">
+      <div class="logout-icon">
+        <i class="fa fa-right-from-bracket"></i>
+      </div>
+      <h3>Logout</h3>
+      <p>Are you sure you want to logout?</p>
+      <div class="logout-actions">
+        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+      </div>
     </div>
+  </div>
 </main>
 
 <script>
-// ===== THEME =====
-(function () {
+
+(function() {
     const saved = localStorage.getItem("theme") || "light";
     document.documentElement.setAttribute("data-theme", saved);
 })();
-
 // ===== SIDEBAR =====
 function toggleSettingsMenu(e) {
     e.stopPropagation();
@@ -443,16 +601,23 @@ function toggleSettingsMenu(e) {
 }
 function toggleTheme() {
     const html = document.documentElement;
-    const t    = html.getAttribute("data-theme") === "light" ? "dark" : "light";
-    html.setAttribute("data-theme", t);
-    localStorage.setItem("theme", t);
+    const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+    html.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
 }
-function logout()        { document.getElementById('logoutOverlay').classList.add('show'); }
-function closeLogout()   { document.getElementById('logoutOverlay').classList.remove('show'); }
-function confirmLogout() { window.location.href = 'logout.php?role=student'; }
+function logout() {
+  document.getElementById('logoutOverlay').classList.add('show');
+}
+function closeLogout() {
+  document.getElementById('logoutOverlay').classList.remove('show');
+}
+function confirmLogout() {
+    window.location.href = 'logout.php?role=student';
+}
 
-document.getElementById('logoutOverlay').addEventListener('click', function (e) {
-    if (e.target === this) closeLogout();
+// Close when clicking outside
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeLogout();
 });
 document.addEventListener("click", e => {
     const menu = document.getElementById("settingsDropdown");
@@ -461,138 +626,13 @@ document.addEventListener("click", e => {
         menu.classList.remove("show");
 });
 
-// ===== MOOD =====
-let wellnessExistsToday = <?= json_encode($wellnessExistsToday) ?>;
-
-function showMoodNotif(msg, color) {
-    const notif         = document.getElementById("moodNotif");
-    notif.textContent   = msg;
-    notif.style.color   = color;
-    notif.style.display = 'block';
-    setTimeout(() => { notif.style.display = 'none'; }, 3000);
 }
-
-function setMood(emoji, text) {
-    document.getElementById("moodDisplay").innerHTML =
-        `<div style="font-size:40px">${emoji}</div><div>${text}</div>`;
-
-    const today = new Date().toDateString();
-    localStorage.setItem("userMoodEmoji", emoji);
-    localStorage.setItem("userMoodText",  text);
-    localStorage.setItem("moodDate",      today);
-
-    const savedDate   = localStorage.getItem("moodSavedDate");
-    const alreadyDone = wellnessExistsToday || (savedDate === today);
-    const action      = alreadyDone ? 'update_wellness' : 'save_wellness';
-
-    const fd = new FormData();
-    fd.append('action',        action);
-    fd.append('mood_label',    text);
-    fd.append('stress_level',  50);
-    fd.append('sleep_quality', 'Average');
-
-    fetch('dashboard.php', { method: 'POST', body: fd })
-        .then(r => r.json())
-        .then(json => {
-            if (json.success) {
-                localStorage.setItem("moodSavedDate", today);
-                wellnessExistsToday = true;
-                showMoodNotif(
-                    action === 'update_wellness'
-                        ? `✔ Mood updated to "${text}"`
-                        : `✔ Mood set to "${text}"`,
-                    '#15803d'
-                );
-            } else if (json.already_done) {
-                const fd2 = new FormData();
-                fd2.append('action',        'update_wellness');
-                fd2.append('mood_label',    text);
-                fd2.append('stress_level',  50);
-                fd2.append('sleep_quality', 'Average');
-
-                fetch('dashboard.php', { method: 'POST', body: fd2 })
-                    .then(r2 => r2.json())
-                    .then(json2 => {
-                        if (json2.success) {
-                            localStorage.setItem("moodSavedDate", today);
-                            wellnessExistsToday = true;
-                            showMoodNotif(`✔ Mood updated to "${text}"`, '#15803d');
-                        } else {
-                            showMoodNotif('❌ Could not update mood.', '#e53e3e');
-                        }
-                    })
-                    .catch(() => showMoodNotif('❌ Network error.', '#e53e3e'));
-            } else {
-                showMoodNotif('❌ ' + (json.message || 'Could not save mood.'), '#e53e3e');
-            }
-        })
-        .catch(() => showMoodNotif('❌ Network error. Please try again.', '#e53e3e'));
-}
-
 window.addEventListener("load", () => {
-    const emoji    = localStorage.getItem("userMoodEmoji");
-    const text     = localStorage.getItem("userMoodText");
-    const moodDate = localStorage.getItem("moodDate");
-    const today    = new Date().toDateString();
-
-    if (emoji && text && moodDate === today) {
+    const emoji = localStorage.getItem("userMoodEmoji");
+    const text  = localStorage.getItem("userMoodText");
+    if (emoji && text)
         document.getElementById("moodDisplay").innerHTML =
             `<div style="font-size:40px">${emoji}</div><div>${text}</div>`;
-    } else if (moodDate && moodDate !== today) {
-        localStorage.removeItem("userMoodEmoji");
-        localStorage.removeItem("userMoodText");
-        localStorage.removeItem("moodDate");
-        localStorage.removeItem("moodSavedDate");
-    }
-});
-
-// ===== PASSWORD MODAL STATE =====
-let isForcedReset = <?= json_encode((bool)$isTempPassword) ?>;
-
-// Open modal voluntarily from settings dropdown
-function openChangePassword() {
-    document.getElementById('settingsDropdown').classList.remove('show');
-
-    isForcedReset = false;
-
-    document.getElementById('currentPwGroup').style.display = 'block';
-
-    document.getElementById('pwModalTitle').textContent    = 'Change Password';
-    document.getElementById('pwModalSubtitle').textContent = 'Enter your current password, then choose a new one.';
-
-    document.getElementById('pwModalCloseBtn').classList.add('visible');
-
-    resetModalFields();
-
-    document.getElementById('pwModalBackdrop').classList.add('active');
-}
-
-// Close modal (voluntary only)
-function closeChangePassword() {
-    if (isForcedReset) return;
-    document.getElementById('pwModalBackdrop').classList.remove('active');
-    resetModalFields();
-}
-
-function resetModalFields() {
-    document.getElementById('currentPassword').value  = '';
-    document.getElementById('newPassword').value      = '';
-    document.getElementById('confirmPassword').value  = '';
-    document.getElementById('resetError').textContent = '';
-    document.getElementById('strengthBar').style.width      = '0%';
-    document.getElementById('strengthBar').style.background = '';
-    document.getElementById('strengthLabel').textContent    = '';
-    ['len','upper','lower','num','special'].forEach(k => {
-        document.getElementById('req-' + k)?.classList.remove('met');
-    });
-    const btn = document.getElementById('saveBtn');
-    btn.disabled    = false;
-    btn.textContent = 'Save Password';
-}
-
-// Click outside backdrop to close (voluntary only)
-document.getElementById('pwModalBackdrop').addEventListener('click', function(e) {
-    if (e.target === this && !isForcedReset) closeChangePassword();
 });
 
 // ===== PW TOGGLE =====
@@ -643,18 +683,13 @@ function checkStrength() {
 
 // ===== SAVE PASSWORD =====
 function saveNewPassword() {
-    const currentPw = document.getElementById('currentPassword').value;
-    const newPw     = document.getElementById('newPassword').value;
-    const confPw    = document.getElementById('confirmPassword').value;
-    const errEl     = document.getElementById('resetError');
-    const btn       = document.getElementById('saveBtn');
+    const newPw  = document.getElementById('newPassword').value;
+    const confPw = document.getElementById('confirmPassword').value;
+    const errEl  = document.getElementById('resetError');
+    const btn    = document.getElementById('saveBtn');
 
     errEl.textContent = '';
 
-    // Validate current password for voluntary change
-    if (!isForcedReset && !currentPw) {
-        errEl.textContent = 'Please enter your current password.'; return;
-    }
     if (!newPw || !confPw)   { errEl.textContent = 'Please fill in all fields.'; return; }
     if (newPw.length < 8)    { errEl.textContent = 'Password must be at least 8 characters.'; return; }
     if (newPw !== confPw)    { errEl.textContent = 'Passwords do not match.'; return; }
@@ -668,10 +703,8 @@ function saveNewPassword() {
 
     const fd = new FormData();
     fd.append('action',           'reset_password');
-    fd.append('current_password', currentPw);
     fd.append('new_password',     newPw);
     fd.append('confirm_password', confPw);
-    fd.append('is_forced',        isForcedReset ? '1' : '0');
 
     fetch('dashboard.php', { method: 'POST', body: fd })
         .then(r => r.json())
@@ -680,30 +713,25 @@ function saveNewPassword() {
             btn.textContent = 'Save Password';
 
             if (json.success) {
-                if (isForcedReset) {
-                    document.getElementById('pwModalBackdrop').classList.remove('active');
-                    document.getElementById('pageBlockOverlay').classList.remove('active');
-                    document.getElementById('successModal').classList.add('active');
-                    startRedirectCountdown();
-                } else {
-                    closeChangePassword();
-                    showPwToast();
-                }
+                document.getElementById('resetModal').classList.remove('active');
+                document.getElementById('pageBlockOverlay').classList.remove('active');
+                document.getElementById('successModal').classList.add('active');
+                startRedirectCountdown();
             } else {
                 errEl.textContent = json.message;
             }
         })
         .catch(() => {
-            btn.disabled      = false;
-            btn.textContent   = 'Save Password';
+            btn.disabled    = false;
+            btn.textContent = 'Save Password';
             errEl.textContent = 'Something went wrong. Please try again.';
         });
 }
 
-// ===== REDIRECT COUNTDOWN (forced reset only) =====
+// ===== REDIRECT COUNTDOWN =====
 function startRedirectCountdown() {
-    let secs     = 5;
-    const note   = document.getElementById('redirectNote');
+    let secs = 5;
+    const note = document.getElementById('redirectNote');
     const interval = setInterval(() => {
         secs--;
         note.textContent = `Redirecting in ${secs} second${secs !== 1 ? 's' : ''}...`;
@@ -712,13 +740,6 @@ function startRedirectCountdown() {
             window.location.href = 'slogin.php';
         }
     }, 1000);
-}
-
-// ===== TOAST (voluntary change) =====
-function showPwToast() {
-    const toast = document.getElementById('pwToast');
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3500);
 }
 </script>
 
