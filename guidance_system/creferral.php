@@ -117,6 +117,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
         INSERT INTO referrals (student_id, counselor_id, referral_date, reason, counselor_remarks, created_at)
         VALUES ($studentId, '$cid', '$date', '$reason', '$remarks', NOW())
     ");
+    
+    $_SESSION['new_referral_' . $student_id] = true;
 
     echo json_encode($ok
         ? ['success' => true]

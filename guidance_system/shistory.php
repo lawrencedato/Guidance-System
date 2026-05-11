@@ -142,14 +142,24 @@ function stressBar($level) {
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
 <style>
-/* ══════════════════════════════════════════
-   HISTORY PAGE — SCOPED STYLES
-   All selectors prefixed with .sHistory-
-   to avoid bleed from global style.css rules
-══════════════════════════════════════════ */
+.sidebar-menu a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-/* ── LAYOUT: topbar is NOT fixed in style.css,
-   so main just needs left offset + top padding ── */
+.referral-badge {
+  width: 9px;
+  height: 9px;
+  background: rgba(147, 197, 253, 0.35);
+  border: 1.5px solid rgba(147, 197, 253, 0.75);
+  border-radius: 50%;
+  margin-left: auto;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(147, 197, 253, 0.5);
+  backdrop-filter: blur(4px);
+}
+
 .sHistory-main {
   margin-left: 280px;
   padding: 28px 28px 40px;
@@ -511,7 +521,10 @@ function stressBar($level) {
     <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
     <a href="sconcerns.php"><i class="fa fa-headset"></i> Submit Concern</a>
     <a href="swellness.php"><i class="fa fa-heart"></i> Wellness Check</a>
-    <a href="sreferral.php"><i class="fa fa-route"></i> Referral</a>
+    <a href="sreferral.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sreferral.php' ? 'active' : '' ?>">
+            <i class="fa fa-route"></i> Referral
+            <span class="referral-badge" id="referralBadge" style="display:none;"></span>
+        </a>
 
     <p class="sidebar-title">UPDATES</p>
     <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
@@ -842,6 +855,16 @@ function stressBar($level) {
   <div class="sh-modal">
     <button class="sh-modal-close" onclick="closeModal('referralModal')"><i class="fa fa-xmark"></i></button>
     <h3><i class="fa fa-route" style="margin-right:.4rem;"></i>Referral Details</h3>
+
+    <div style="margin-bottom:1rem;">
+      <a id="referralExportBtn" href="sreferral_export.php" target="_blank"
+         style="display:inline-flex;align-items:center;gap:6px;background:#113F67;color:#fff;
+                padding:7px 16px;border-radius:9px;font-size:.82rem;font-weight:600;
+                text-decoration:none;transition:background .15s;">
+        <i class="fa fa-file-arrow-down"></i> Export as PDF
+      </a>
+    </div>
+
     <div class="sh-detail-grid" id="referralModalBody"></div>
   </div>
 </div>
@@ -1002,6 +1025,8 @@ function openConcernModal(d) {
 
 /* ── Referral Modal ── */
 function openReferralModal(d) {
+  document.getElementById('referralExportBtn').href = 'sreferral_export.php?id=' + (d.referral_id || '');
+
   document.getElementById('referralModalBody').innerHTML =
     row('Counselor',         d.counselor_name) +
     row('Department',        d.department || '—') +
@@ -1066,6 +1091,19 @@ document.addEventListener('click', e => {
   if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target))
     menu.classList.remove('show');
 });
+
+async function checkReferralBadge() {
+  try {
+    const res = await fetch('scheck_referral.php');
+    const data = await res.json();
+    const badge = document.getElementById('referralBadge');
+    if (badge) {
+      badge.style.display = data.unseen > 0 ? 'inline-block' : 'none';
+    }
+  } catch (e) {}
+}
+
+checkReferralBadge();
 </script>
 
 </body>

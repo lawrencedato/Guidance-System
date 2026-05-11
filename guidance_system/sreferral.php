@@ -14,6 +14,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 // ===== DB CONNECTION =====
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $sid  = $conn->real_escape_string($_SESSION['user_id']);
+
+$conn->query("UPDATE referrals SET is_seen=1 WHERE student_id='$sid'");
  
 // ===== LOAD STUDENT DATA =====
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
@@ -70,20 +72,17 @@ if (!empty($referral['signature']) && file_exists($referral['signature'])) {
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <style>
-  /* ── Referral badge in sidebar ── */
   .referral-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #4988c4;
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    border-radius: 999px;
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    background: rgba(147, 197, 253, 0.35);
+    border: 1.5px solid rgba(147, 197, 253, 0.75);
+    border-radius: 50%;
     margin-left: auto;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(147, 197, 253, 0.5);
+    backdrop-filter: blur(4px);
   }
  
   /* ── Signature container ── */
@@ -156,12 +155,10 @@ if (!empty($referral['signature']) && file_exists($referral['signature'])) {
     <a href="sconcerns.php"><i class="fa fa-headset"></i> Submit Concern</a>
     <a href="swellness.php"><i class="fa fa-heart"></i> Wellness Check</a>
 
-    <a href="sreferral.php" class="active">
-      <i class="fa fa-route"></i> Referral
-      <?php if ($referralCount > 0): ?>
-        <span class="referral-badge" id="referralBadge"><?= $referralCount ?></span>
-      <?php endif; ?>
-    </a>
+    <a href="sreferral.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sreferral.php' ? 'active' : '' ?>">
+            <i class="fa fa-route"></i> Referral
+            <span class="referral-badge" id="referralBadge" style="display:none;"></span>
+        </a>
 
     <p class="sidebar-title">UPDATES</p>
     <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
@@ -282,7 +279,20 @@ if (!empty($referral['signature']) && file_exists($referral['signature'])) {
   <?php endif; ?>
 
 </main>
-
+<!-- LOGOUT MODAL -->
+  <div class="logout-overlay" id="logoutOverlay">
+    <div class="logout-modal">
+      <div class="logout-icon">
+        <i class="fa fa-right-from-bracket"></i>
+      </div>
+      <h3>Logout</h3>
+      <p>Are you sure you want to logout?</p>
+      <div class="logout-actions">
+        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
 <!-- ========================= SCRIPT ========================= -->
 <script>
 
@@ -339,20 +349,6 @@ function exportPDF() {
   }).from(element).save();
 }
 </script>
-<!-- LOGOUT MODAL -->
-  <div class="logout-overlay" id="logoutOverlay">
-    <div class="logout-modal">
-      <div class="logout-icon">
-        <i class="fa fa-right-from-bracket"></i>
-      </div>
-      <h3>Logout</h3>
-      <p>Are you sure you want to logout?</p>
-      <div class="logout-actions">
-        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
-        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
-      </div>
-    </div>
-  </div>
 
 </body>
 </html>

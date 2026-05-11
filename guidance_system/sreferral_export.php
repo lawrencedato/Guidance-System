@@ -33,24 +33,42 @@ $yearLevel = $student['year_level'] ?? '';
 $course    = $student['course'] ?? '';
 $contact   = $profile['contact_details'] ?? 'N/A';
 
-// ===== LATEST REFERRAL (include counselor signature) =====
-$referralRes = $conn->query("
-    SELECT r.referral_date, r.reason, r.counselor_remarks,
-           CONCAT(c.first_name, ' ', c.last_name) AS counselor_name,
-           c.department,
-           c.contact_number,
-           c.signature
-    FROM referrals r
-    JOIN counselors c ON r.counselor_id = c.counselor_id
-    WHERE r.student_id='$sid'
-    ORDER BY r.created_at DESC
-    LIMIT 1
-");
+// ===== REFERRAL BY ID =====
+$referral_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+if ($referral_id > 0) {
+    $referralRes = $conn->query("
+        SELECT r.referral_date, r.reason, r.counselor_remarks,
+               CONCAT(c.first_name, ' ', c.last_name) AS counselor_name,
+               c.department,
+               c.contact_number,
+               c.signature
+        FROM referrals r
+        JOIN counselors c ON r.counselor_id = c.counselor_id
+        WHERE r.referral_id = $referral_id AND r.student_id = '$sid'
+        LIMIT 1
+    ");
+} else {
+    $referralRes = $conn->query("
+        SELECT r.referral_date, r.reason, r.counselor_remarks,
+               CONCAT(c.first_name, ' ', c.last_name) AS counselor_name,
+               c.department,
+               c.contact_number,
+               c.signature
+        FROM referrals r
+        JOIN counselors c ON r.counselor_id = c.counselor_id
+        WHERE r.student_id = '$sid'
+        ORDER BY r.created_at DESC
+        LIMIT 1
+    ");
+}
+
 $referral = $referralRes ? $referralRes->fetch_assoc() : null;
 
 if (!$referral) {
     die("No referral found.");
 }
+
 
 // ===== LOGO — base64 =====
 $logoTag  = '';

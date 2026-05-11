@@ -117,6 +117,26 @@ $profileImg  = !empty($profile['profile_image'])
 <title>UNITYCARE | Student Profile</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="logout.css">
+<style>
+  .sidebar-menu a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.referral-badge {
+  width: 9px;
+  height: 9px;
+  background: rgba(147, 197, 253, 0.35);
+  border: 1.5px solid rgba(147, 197, 253, 0.75);
+  border-radius: 50%;
+  margin-left: auto;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(147, 197, 253, 0.5);
+  backdrop-filter: blur(4px);
+}
+</style>
+
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -149,7 +169,10 @@ $profileImg  = !empty($profile['profile_image'])
     <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
     <a href="sconcerns.php"><i class="fa fa-headset"></i> Submit Concern</a>
     <a href="swellness.php"><i class="fa fa-heart"></i> Wellness Check</a>
-    <a href="sreferral.php"><i class="fa fa-route"></i> Referral</a>
+    <a href="sreferral.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sreferral.php' ? 'active' : '' ?>">
+            <i class="fa fa-route"></i> Referral
+            <span class="referral-badge" id="referralBadge" style="display:none;"></span>
+        </a>
 
     <p class="sidebar-title">UPDATES</p>
     <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
@@ -257,6 +280,20 @@ $profileImg  = !empty($profile['profile_image'])
       </div>
     </div>
   </div>
+<!-- LOGOUT MODAL -->
+  <div class="logout-overlay" id="logoutOverlay">
+    <div class="logout-modal">
+      <div class="logout-icon">
+        <i class="fa fa-right-from-bracket"></i>
+      </div>
+      <h3>Logout</h3>
+      <p>Are you sure you want to logout?</p>
+      <div class="logout-actions">
+        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -350,21 +387,19 @@ function saveProfile() {
       statusEl.innerHTML = "<span class='tag warning'>Something went wrong. Please try again.</span>";
     });
 }
-</script>
-<!-- LOGOUT MODAL -->
-  <div class="logout-overlay" id="logoutOverlay">
-    <div class="logout-modal">
-      <div class="logout-icon">
-        <i class="fa fa-right-from-bracket"></i>
-      </div>
-      <h3>Logout</h3>
-      <p>Are you sure you want to logout?</p>
-      <div class="logout-actions">
-        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
-        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
-      </div>
-    </div>
-  </div>
 
+async function checkReferralBadge() {
+  try {
+    const res = await fetch('scheck_referral.php');
+    const data = await res.json();
+    const badge = document.getElementById('referralBadge');
+    if (badge) {
+      badge.style.display = data.unseen > 0 ? 'inline-block' : 'none';
+    }
+  } catch (e) {}
+}
+
+checkReferralBadge();
+</script>
 </body>
 </html>

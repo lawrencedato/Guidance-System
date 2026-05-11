@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
 }
 
 // ===== LOAD DATA =====
-$conn = new mysqli("127.0.0.1", "root", "", "gcs_db");
+$conn = new mysqli("127.0.0.1", "System_User", "gcs_db2026", "gcs_db");
 $sid = $conn->real_escape_string($_SESSION['user_id']);
 
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
@@ -104,6 +104,24 @@ $profileImg = !empty($profile['profile_image'])
     <link rel="stylesheet" href="logout.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+
+        .sidebar-menu a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        }
+
+        .referral-badge {
+        width: 9px;
+        height: 9px;
+        background: rgba(147, 197, 253, 0.35);
+        border: 1.5px solid rgba(147, 197, 253, 0.75);
+        border-radius: 50%;
+        margin-left: auto;
+        flex-shrink: 0;
+        box-shadow: 0 0 6px rgba(147, 197, 253, 0.5);
+        backdrop-filter: blur(4px);
+        }
         /* ===== FULL PAGE BLOCK OVERLAY ===== */
         .page-block-overlay {
             display: none;
@@ -416,7 +434,10 @@ $profileImg = !empty($profile['profile_image'])
         <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
         <a href="sconcerns.php"><i class="fa fa-headset"></i> Submit Concern</a>
         <a href="swellness.php"><i class="fa fa-heart"></i> Wellness Check</a>
-        <a href="sreferral.php"><i class="fa fa-route"></i> Referral</a>
+        <a href="sreferral.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sreferral.php' ? 'active' : '' ?>">
+            <i class="fa fa-route"></i> Referral
+            <span class="referral-badge" id="referralBadge" style="display:none;"></span>
+        </a>
         <p class="sidebar-title">UPDATES</p>
         <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
         <p class="sidebar-title">RECORDS</p>
@@ -741,6 +762,19 @@ function startRedirectCountdown() {
         }
     }, 1000);
 }
+
+async function checkReferralBadge() {
+  try {
+    const res = await fetch('scheck_referral.php');
+    const data = await res.json();
+    const badge = document.getElementById('referralBadge');
+    if (badge) {
+      badge.style.display = data.unseen > 0 ? 'inline-block' : 'none';
+    }
+  } catch (e) {}
+}
+
+checkReferralBadge();
 </script>
 
 </body>
