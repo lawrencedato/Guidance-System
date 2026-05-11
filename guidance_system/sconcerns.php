@@ -361,7 +361,7 @@ while ($row = $res->fetch_assoc()) $concerns[] = $row;
       </button>
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
         <a href="sprofile.php"><i class="fa fa-user"></i> Profile</a>
-        <a href="shistory.php"><i class="fa fa-clock"></i> Session History</a>
+        <a href="shistory.php"><i class="fa fa-clock"></i> History</a>
         <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
