@@ -118,7 +118,23 @@ if (!empty($referral['signature']) && file_exists($referral['signature'])) {
     color: #113f67;
     flex-shrink: 0;
   }
- 
+  
+  /* Softer version — slightly warm tone */
+  [data-theme="dark"] .sReferral-sig-wrap img {
+    filter: invert(1) brightness(1.5) opacity(0.85);
+  }
+
+  [data-theme="dark"] .sReferral-sig-placeholder {
+    border-bottom-color: rgba(255, 255, 255, 0.3);
+  }
+
+  [data-theme="dark"] .sReferral-card h3 {
+    color: #6daadf;
+  }
+
+  [data-theme="dark"] .sReferral-info-row b {
+    color: #6daadf;
+  }
 </style>
 <body class="body">
 

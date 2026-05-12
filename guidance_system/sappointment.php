@@ -117,34 +117,30 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UNITYCARE | Appointment Booking</title>
   <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="logout.css">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<style>
+  <link rel="stylesheet" href="logout.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+    /* ─────────────────────────────────────────
+      SIDEBAR MENU LINK LAYOUT
+    ───────────────────────────────────────── */
+    .sidebar-menu a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-  
-/* ─────────────────────────────────────────
-   SIDEBAR MENU LINK LAYOUT
-───────────────────────────────────────── */
-.sidebar-menu a {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.referral-badge {
-  width: 9px;
-  height: 9px;
-  background: rgba(147, 197, 253, 0.35);
-  border: 1.5px solid rgba(147, 197, 253, 0.75);
-  border-radius: 50%;
-  margin-left: auto;
-  flex-shrink: 0;
-  box-shadow: 0 0 6px rgba(147, 197, 253, 0.5);
-  backdrop-filter: blur(4px);
-}
-
-
-</style>
+    .referral-badge {
+      width: 9px;
+      height: 9px;
+      background: rgba(147, 197, 253, 0.35);
+      border: 1.5px solid rgba(147, 197, 253, 0.75);
+      border-radius: 50%;
+      margin-left: auto;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px rgba(147, 197, 253, 0.5);
+      backdrop-filter: blur(4px);
+    }
+    </style>
 </head>
 
   
