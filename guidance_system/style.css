@@ -7783,10 +7783,11 @@ body:has(.cStudentModal.show) .sidebar {
   font-size: 13px;
   color: var(--text-muted);
   margin: 0 0 8px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
   overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;          /* standard */
+  -webkit-line-clamp: 2;  /* fallback */
 }
 .cAnnouncements-meta {
   font-size: 11px;
