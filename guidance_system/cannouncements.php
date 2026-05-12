@@ -259,6 +259,7 @@ while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
 
 <!-- MAIN -->
 <main class="cAnnouncements-main">
+<div style="display:flex; flex-direction:column; gap:24px; width:100%; max-width:900px; margin:0 auto;">
 
   <!-- CREATE FORM -->
   <div class="cAnnouncements-card">
@@ -270,10 +271,21 @@ while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
     <div id="postResult" style="margin-top:10px; font-size:13px;"></div>
   </div>
 
-  <!-- POSTED ANNOUNCEMENTS -->
-  <div class="cAnnouncements-card" style="margin-top:24px;">
-    <h2 style="margin-bottom:4px;">My Posted Announcements</h2>
-    <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">
+<!-- POSTED ANNOUNCEMENTS -->
+  <div class="cAnnouncements-card">
+
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="margin:0;">My Posted Announcements</h2>
+      <button onclick="togglePostedList()" id="togglePostedBtn"
+        style="padding:8px 16px; border-radius:10px; border:1px solid var(--primary);
+               background:transparent; color:var(--primary); font-size:13px;
+               font-weight:600; cursor:pointer; transition:0.2s ease; white-space:nowrap;">
+        <i class="fa fa-chevron-down" id="togglePostedIcon"></i> Show
+      </button>
+    </div>
+
+    <div id="postedListWrapper" style="display:none; margin-top:16px;">
+    <p style="font-size:13px; color:var(--text-muted); margin:0 0 12px;">
       <?= count($myAnnouncements) ?> announcement<?= count($myAnnouncements) !== 1 ? 's' : '' ?> posted
     </p>
 
@@ -332,8 +344,11 @@ while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
         </div>
         <?php endforeach; ?>
       <?php endif; ?>
-    </div>
+      </div>
+    </div><!-- end postedListWrapper -->
   </div>
+
+</div><!-- end column wrapper -->
 
   <!-- LOGOUT MODAL -->
   <div class="logout-overlay" id="logoutOverlay">
@@ -365,6 +380,17 @@ while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
 </div>
 
 <script>
+  // ── TOGGLE POSTED LIST ──
+function togglePostedList() {
+  const wrapper  = document.getElementById("postedListWrapper");
+  const btn      = document.getElementById("togglePostedBtn");
+  const isHidden = wrapper.style.display === "none";
+
+  wrapper.style.display = isHidden ? "block" : "none";
+  btn.innerHTML = isHidden
+    ? '<i class="fa fa-chevron-up"></i> Hide'
+    : '<i class="fa fa-chevron-down"></i> Show';
+}
 // ── SETTINGS / THEME / LOGOUT ──
 function toggleSettingsMenu(e) {
   e.stopPropagation();
