@@ -13,6 +13,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'counselor') {
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $cid  = $conn->real_escape_string($_SESSION['user_id']);
 
+// ── AUTO-REJECT PAST PENDING APPOINTMENTS ──
+$conn->query("
+    UPDATE appointments
+    SET status = 'Rejected',
+        rejection_reason = 'Appointment date has passed without counselor action.'
+    WHERE status = 'Pending'
+      AND CONCAT(appointment_date, ' ', appointment_time) < NOW()
+");
 
 $counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
 $counselor    = $counselorRes->fetch_assoc();
@@ -64,9 +72,11 @@ $apptRes = $conn->query("
            s.student_id, s.first_name, s.last_name, s.course, s.year_level
     FROM appointments a
     JOIN students s ON s.student_id = a.student_id
-    WHERE a.status='Pending'
+    WHERE a.status = 'Pending'
+      AND CONCAT(a.appointment_date, ' ', a.appointment_time) >= NOW()
     ORDER BY a.appointment_date ASC, a.appointment_time ASC
 ");
+
 $appointments = [];
 while ($row = $apptRes->fetch_assoc()) $appointments[] = $row;
 // ── HANDLE GET: student profile for modal ──
