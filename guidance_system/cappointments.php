@@ -22,6 +22,24 @@ $conn->query("
       AND CONCAT(appointment_date, ' ', appointment_time) < NOW()
 ");
 
+// ── COUNT THEN AUTO-COMPLETE PAST APPROVED APPOINTMENTS (counselor forgot to mark) ──
+$autoCompletedRes   = $conn->query("
+    SELECT COUNT(*) c FROM appointments
+    WHERE status = 'Approved'
+      AND counselor_id = '$cid'
+      AND CONCAT(appointment_date, ' ', appointment_time) < NOW()
+");
+$autoCompletedCount = (int)$autoCompletedRes->fetch_assoc()['c'];
+
+$conn->query("
+    UPDATE appointments
+    SET status = 'Completed',
+        rejection_reason = NULL
+    WHERE status = 'Approved'
+      AND counselor_id = '$cid'
+      AND CONCAT(appointment_date, ' ', appointment_time) < NOW()
+");
+
 $counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
 $counselor    = $counselorRes->fetch_assoc();
 
@@ -31,28 +49,34 @@ $profileImg = !empty($counselor['profile_image'])
     ? htmlspecialchars($counselor['profile_image'])
     : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
 
-
 $pendingCount = (int)$conn->query(
     "SELECT COUNT(*) c FROM appointments WHERE status='Pending'"
 )->fetch_assoc()['c'];
 
-// ── HANDLE APPROVE / REJECT ──
+// ── HANDLE APPROVE / REJECT (Pending tab) ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_status') {
     header('Content-Type: application/json');
-    $apptId  = (int)($_POST['appointment_id'] ?? 0);
-    $status  = $_POST['status'] ?? '';
-    $allowed = ['Approved', 'Rejected'];
+    $apptId       = (int)($_POST['appointment_id'] ?? 0);
+    $status       = $_POST['status'] ?? '';
+    $rejectReason = $conn->real_escape_string(trim($_POST['rejection_reason'] ?? ''));
+    $allowed      = ['Approved', 'Rejected'];
+
     if (!$apptId || !in_array($status, $allowed)) {
         echo json_encode(['success' => false, 'message' => 'Invalid request.']); exit;
     }
+    if ($status === 'Rejected' && $rejectReason === '') {
+        echo json_encode(['success' => false, 'message' => 'Please provide a rejection reason.']); exit;
+    }
+
     $conn->begin_transaction();
     try {
-        // Row-level lock to prevent two counselors from accepting the same appointment simultaneously
         $lock = $conn->query("SELECT appointment_id FROM appointments WHERE appointment_id=$apptId AND status='Pending' FOR UPDATE");
         if (!$lock || $lock->num_rows === 0) throw new Exception("Appointment no longer available or already handled.");
-        // When approving: assign this counselor. When rejecting: keep record but mark rejected.
+
+        $reasonSql = $status === 'Rejected' ? "'$rejectReason'" : 'NULL';
         $ok = $conn->query(
-            "UPDATE appointments SET status='$status', counselor_id='$cid'
+            "UPDATE appointments
+             SET status='$status', counselor_id='$cid', rejection_reason=$reasonSql
              WHERE appointment_id=$apptId"
         );
         if (!$ok || $conn->affected_rows === 0) throw new Exception("Could not update. Try again.");
@@ -65,20 +89,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     exit;
 }
 
-// ── LOAD PENDING APPOINTMENTS ──
-$apptRes = $conn->query("
-    SELECT a.appointment_id, a.appointment_date, a.appointment_time,
-           a.priority, a.message,
-           s.student_id, s.first_name, s.last_name, s.course, s.year_level
-    FROM appointments a
-    JOIN students s ON s.student_id = a.student_id
-    WHERE a.status = 'Pending'
-      AND CONCAT(a.appointment_date, ' ', a.appointment_time) >= NOW()
-    ORDER BY a.appointment_date ASC, a.appointment_time ASC
-");
+// ── HANDLE COMPLETE / CANCEL (Approved tab) ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'mark_appointment') {
+    header('Content-Type: application/json');
+    $apptId = (int)($_POST['appointment_id'] ?? 0);
+    $result = $_POST['result'] ?? '';
+    $reason = $conn->real_escape_string(trim($_POST['reason'] ?? ''));
 
-$appointments = [];
-while ($row = $apptRes->fetch_assoc()) $appointments[] = $row;
+    if (!$apptId || !in_array($result, ['completed', 'cancelled'])) {
+        echo json_encode(['success' => false, 'message' => 'Invalid request.']); exit;
+    }
+    if ($result === 'cancelled' && $reason === '') {
+        echo json_encode(['success' => false, 'message' => 'Please provide a cancellation reason.']); exit;
+    }
+
+    $newStatus = $result === 'completed' ? 'Completed' : 'Cancelled';
+    $reasonSql = $result === 'cancelled' ? "'$reason'" : 'NULL';
+
+    $ok = $conn->query("
+        UPDATE appointments
+        SET status = '$newStatus',
+            rejection_reason = $reasonSql
+        WHERE appointment_id = $apptId
+          AND counselor_id = '$cid'
+          AND status = 'Approved'
+    ");
+
+    echo json_encode($ok && $conn->affected_rows > 0
+        ? ['success' => true]
+        : ['success' => false, 'message' => 'Could not update. Appointment may have already been actioned.']);
+    exit;
+}
+
 // ── HANDLE GET: student profile for modal ──
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_student') {
     header('Content-Type: application/json');
@@ -111,38 +153,367 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_stu
     echo json_encode(['success' => true, 'student' => $student]);
     exit;
 }
-?>
 
+// ── LOAD PENDING APPOINTMENTS ──
+$apptRes = $conn->query("
+    SELECT a.appointment_id, a.appointment_date, a.appointment_time,
+           a.priority, a.message,
+           s.student_id, s.first_name, s.last_name, s.course, s.year_level
+    FROM appointments a
+    JOIN students s ON s.student_id = a.student_id
+    WHERE a.status = 'Pending'
+      AND CONCAT(a.appointment_date, ' ', a.appointment_time) >= NOW()
+    ORDER BY a.appointment_date ASC, a.appointment_time ASC
+");
+$appointments = [];
+while ($row = $apptRes->fetch_assoc()) $appointments[] = $row;
+
+// ── LOAD ALL APPROVED APPOINTMENTS (this counselor only) ──
+$approvedRes = $conn->query("
+    SELECT a.appointment_id, a.appointment_date, a.appointment_time,
+           a.priority, a.message,
+           s.first_name, s.last_name, s.course, s.year_level
+    FROM appointments a
+    JOIN students s ON s.student_id = a.student_id
+    WHERE a.counselor_id = '$cid'
+      AND a.status = 'Approved'
+    ORDER BY a.appointment_date ASC, a.appointment_time ASC
+");
+$approvedAppointments = [];
+while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
+?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Appointment Requests - UNITYCARE</title>
-
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-</head>
+<style>
 
+/* ══════════════════════════════════════════════
+   TABS  —  all cAppointment-*
+══════════════════════════════════════════════ */
+.cAppointment-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+}
+.cAppointment-tab {
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.cAppointment-tab:hover { color: var(--primary); }
+.cAppointment-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+.cAppointment-tabBadge {
+    background: var(--primary);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* ══════════════════════════════════════════════
+   TAB PANELS
+══════════════════════════════════════════════ */
+.cAppointment-panel { display: none; }
+.cAppointment-panel.active { display: block; }
+
+/* ══════════════════════════════════════════════
+   AUTO-COMPLETE NOTICE BANNER
+══════════════════════════════════════════════ */
+.cAppointment-noticeBanner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #92400e;
+    animation: cAppointment-fadeIn 0.35s ease;
+}
+.cAppointment-noticeBanner i {
+    font-size: 16px;
+    color: #f59e0b;
+    flex-shrink: 0;
+}
+.cAppointment-noticeBanner strong { color: #78350f; }
+
+[data-theme="dark"] .cAppointment-noticeBanner {
+    background: rgba(245,158,11,0.1);
+    border-color: rgba(245,158,11,0.3);
+    color: #fcd34d;
+}
+[data-theme="dark"] .cAppointment-noticeBanner strong { color: #fde68a; }
+
+@keyframes cAppointment-fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════
+   APPROVED CARD GRID
+   (cards reuse .cAppointment-card from style.css)
+══════════════════════════════════════════════ */
+.cAppointment-approvedGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+/* past pill inside card header */
+.cAppointment-pastPill {
+    margin-left: auto;
+    font-size: 11px;
+    background: #fef3c7;
+    color: #92400e;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+/* action row inside approved card */
+.cAppointment-approvedActions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+.cAppointment-approvedBtn {
+    flex: 1;
+    padding: 8px 0;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.cAppointment-approvedBtn:hover  { opacity: 0.82; }
+.cAppointment-approvedBtn:active { transform: scale(0.97); }
+.cAppointment-approvedBtn.complete { background: #d1fae5; color: #065f46; }
+.cAppointment-approvedBtn.cancel   { background: #fee2e2; color: #991b1b; }
+
+/* status badge that replaces the action row after acting */
+.cAppointment-statusBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+    width: 100%;
+    box-sizing: border-box;
+}
+.cAppointment-statusBadge.completed { background: #d1fae5; color: #065f46; }
+.cAppointment-statusBadge.cancelled { background: #fee2e2; color: #991b1b; }
+
+/* ══════════════════════════════════════════════
+   SHARED MODAL  —  logout-style
+   (Reject + Cancel both use this)
+══════════════════════════════════════════════ */
+.cAppointment-modalOverlay {
+    visibility: hidden;
+    opacity: 0;
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 63, 103, 0.25);
+    backdrop-filter: blur(6px);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+.cAppointment-modalOverlay.show {
+    visibility: visible;
+    opacity: 1;
+}
+.cAppointment-modalBox {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xxl);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    animation: cAppointment-modalPop 0.25s ease;
+}
+@keyframes cAppointment-modalPop {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+/* icon circle */
+.cAppointment-modalIcon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.1);
+    color: #e53e3e;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--spacing-lg);
+}
+
+.cAppointment-modalBox h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text);
+}
+.cAppointment-modalBox > p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-xl);
+    line-height: 1.6;
+}
+
+/* cancel reason type — radio pills */
+.cAppointment-cancelWho {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    justify-content: center;
+}
+.cAppointment-cancelWho label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-soft);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: 0.18s ease;
+}
+.cAppointment-cancelWho input[type="radio"] { display: none; }
+.cAppointment-cancelWho input[type="radio"]:checked + span {
+    /* handled via JS adding .selected to label */
+}
+.cAppointment-cancelWho label.selected {
+    background: rgba(239,68,68,0.1);
+    border-color: #ef4444;
+    color: #c53030;
+}
+
+/* shared textarea + select */
+.cAppointment-modalBox textarea,
+.cAppointment-modalBox select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    margin-bottom: 0;
+}
+.cAppointment-modalBox textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+.cAppointment-modalBox textarea:focus,
+.cAppointment-modalBox select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(73,136,196,0.15);
+}
+
+.cAppointment-modalError {
+    font-size: 12px;
+    color: #ef4444;
+    margin-top: 6px;
+    text-align: left;
+    display: none;
+}
+
+/* action buttons — full-width row like logout */
+.cAppointment-modalActions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+}
+.cAppointment-modalBtn {
+    flex: 1;
+    padding: 12px;
+    border-radius: var(--radius);
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.cAppointment-modalBtn.back {
+    background: var(--bg-soft);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+.cAppointment-modalBtn.back:hover { background: var(--border); }
+.cAppointment-modalBtn.confirm {
+    background: linear-gradient(135deg, #c53030, #e53e3e);
+    color: #fff;
+    box-shadow: 0 10px 20px rgba(229,62,62,0.25);
+}
+.cAppointment-modalBtn.confirm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(229,62,62,0.35);
+}
+</style>
+</head>
 <body class="body">
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
-
   <div class="sidebar-logoBar">
-
     <div class="sidebar-logo">
       <img src="logo.png" alt="logo">
       <span class="sidebar-logoText">UNITYCARE</span>
     </div>
-
     <div class="sidebar-settings">
       <button class="sidebar-settingsButton" onclick="toggleSettingsMenu(event)">
         <i class="fa fa-gear"></i>
       </button>
-
       <div class="sidebar-settingsDropdown" id="settingsDropdown">
         <a href="cprofile.php"><i class="fa fa-user"></i> Profile</a>
         <a href="chistory.php"><i class="fa fa-clock"></i> History</a>
@@ -150,24 +521,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_stu
         <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
       </div>
     </div>
-
   </div>
-
   <nav class="sidebar-menu">
     <a href="counselor.php"><i class="fa fa-gauge"></i> Dashboard</a>
-
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.php" class="active"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
     <a href="cavailability.php"><i class="fa fa-clock"></i> My Availability</a>
     <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
     <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
-
     <p class="sidebar-title">STUDENTS</p>
     <a href="cstudents.php"><i class="fa fa-users"></i> Students</a>
-
     <p class="sidebar-title">REPORTS</p>
     <a href="creports.php"><i class="fa fa-file"></i> Session Notes</a>
-
     <p class="sidebar-title">INFORMATION</p>
     <a href="cannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
     <a href="creferral.php"><i class="fa fa-route"></i> Referrals</a>
@@ -179,299 +544,512 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_stu
   <div class="topbar-left">
     <h2>Appointment Requests</h2>
   </div>
-
   <div class="topbar-right">
-
     <div class="topbar-searchBox">
       <i class="fa fa-search"></i>
-      <input type="text" placeholder="Search...">
+      <input type="text" placeholder="Search..." id="searchInput">
     </div>
-
     <div class="filter-wrapper">
-
       <button class="btn" onclick="toggleFilterBox()">
         <i class="fa fa-filter"></i> Filter
       </button>
-
       <div id="filterBox" class="filter-box">
-
         <select id="filterPriority">
           <option value="all">Priority</option>
           <option>Low</option>
           <option>Medium</option>
           <option>High</option>
         </select>
-
         <input type="date" id="filterDate">
-
         <div class="filter-actions">
           <button onclick="applyFilter()" class="btn-apply">Apply</button>
           <button onclick="clearFilter()" class="btn-clear">Clear</button>
         </div>
-
       </div>
-
     </div>
-
     <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
       <i class="fa fa-bell"></i>
       <?php if ($pendingCount > 0): ?>
-  <span class="badge"><?= $pendingCount ?></span>
-<?php endif; ?>
-
-<div class="icon-dropdown" id="notifDropdown">
-  <?php if ($pendingCount > 0): ?>
-    <p><?= $pendingCount ?> pending appointment request(s)</p>
-  <?php else: ?>
-    <p>No new notifications</p>
-  <?php endif; ?>
-</div>
+        <span class="badge"><?= $pendingCount ?></span>
+      <?php endif; ?>
+      <div class="icon-dropdown" id="notifDropdown">
+        <?php if ($pendingCount > 0): ?>
+          <p><?= $pendingCount ?> pending appointment request(s)</p>
+        <?php else: ?>
+          <p>No new notifications</p>
+        <?php endif; ?>
+      </div>
     </div>
-
     <div class="topbar-user">
-     <img src="<?= $profileImg ?>" alt="user"
-     onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff'">
-<div>
-  <strong><?= $fullName ?></strong>
-  <p><?= $email ?></p>
-</div>
+      <img src="<?= $profileImg ?>" alt="user"
+           onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff'">
+      <div>
+        <strong><?= $fullName ?></strong>
+        <p><?= $email ?></p>
+      </div>
     </div>
-
   </div>
 </header>
 
 <!-- MAIN -->
 <main class="cAppointment-main">
 
-  <section class="cAppointment-grid">
-
-<?php if (empty($appointments)): ?>
-  <div style="text-align:center; padding:3rem; color:var(--text-muted); grid-column:1/-1;">
-    <i class="fa fa-calendar-check" style="font-size:2.5rem; opacity:0.3; display:block; margin-bottom:1rem;"></i>
-    <p>No pending appointment requests.</p>
+  <!-- TABS -->
+  <div class="cAppointment-tabs">
+    <button class="cAppointment-tab active" onclick="switchTab('pending', this)">
+      <i class="fa fa-clock"></i> Pending
+      <span class="cAppointment-tabBadge"><?= count($appointments) ?></span>
+    </button>
+    <button class="cAppointment-tab" onclick="switchTab('approved', this)">
+      <i class="fa fa-calendar-check"></i> Approved
+      <span class="cAppointment-tabBadge"><?= count($approvedAppointments) ?></span>
+    </button>
   </div>
-<?php else: ?>
-  <?php foreach ($appointments as $appt):
-    $sName = htmlspecialchars($appt['first_name'] . ' ' . $appt['last_name']);
-    $apptId = (int)$appt['appointment_id'];
-  ?>
-  <div class="cAppointment-card" data-id="<?= $apptId ?>">
-    <h3><i class="fa fa-user"></i> <?= $sName ?></h3>
-    <p><b>Reason:</b> <?= htmlspecialchars($appt['message'] ?? 'N/A') ?></p>
-    <p><b>Program:</b> <?= htmlspecialchars($appt['year_level'] . ' - ' . $appt['course']) ?></p>
-    <p><b>Date:</b> <?= date('F d, Y', strtotime($appt['appointment_date'])) ?></p>
-    <p><b>Time:</b> <?= date('g:i A', strtotime($appt['appointment_time'])) ?></p>
-    <p><b>Priority:</b> <?= htmlspecialchars($appt['priority']) ?></p>
-    <div class="cAppointment-actions">
-      <button class="cAppointment-btn approve" onclick="updateStatus(<?= $apptId ?>, 'Approved', this)">
-        <i class="fa fa-check"></i> Approve
-      </button>
-      <button class="cAppointment-btn decline" onclick="updateStatus(<?= $apptId ?>, 'Rejected', this)">
-        <i class="fa fa-times"></i> Decline
-      </button>
+
+  <!-- ══ PENDING TAB ══ -->
+  <div class="cAppointment-panel active" id="panel-pending">
+    <section class="cAppointment-grid">
+      <?php if (empty($appointments)): ?>
+        <div style="text-align:center; padding:3rem; color:var(--text-muted); grid-column:1/-1;">
+          <i class="fa fa-calendar-check" style="font-size:2.5rem; opacity:0.3; display:block; margin-bottom:1rem;"></i>
+          <p>No pending appointment requests.</p>
+        </div>
+      <?php else: ?>
+        <?php foreach ($appointments as $appt):
+          $sName  = htmlspecialchars($appt['first_name'] . ' ' . $appt['last_name']);
+          $apptId = (int)$appt['appointment_id'];
+        ?>
+        <div class="cAppointment-card"
+             data-id="<?= $apptId ?>"
+             data-name="<?= strtolower($sName) ?>"
+             data-priority="<?= strtolower($appt['priority']) ?>"
+             data-date="<?= $appt['appointment_date'] ?>">
+          <h3><i class="fa fa-user"></i> <?= $sName ?></h3>
+          <p><b>Reason:</b> <?= htmlspecialchars($appt['message'] ?? 'N/A') ?></p>
+          <p><b>Program:</b> <?= htmlspecialchars($appt['year_level'] . ' - ' . $appt['course']) ?></p>
+          <p><b>Date:</b> <?= date('F d, Y', strtotime($appt['appointment_date'])) ?></p>
+          <p><b>Time:</b> <?= date('g:i A', strtotime($appt['appointment_time'])) ?></p>
+          <p><b>Priority:</b> <?= htmlspecialchars($appt['priority']) ?></p>
+          <div class="cAppointment-actions">
+            <button class="cAppointment-btn approve" onclick="approveAppointment(<?= $apptId ?>, this)">
+              <i class="fa fa-check"></i> Approve
+            </button>
+            <button class="cAppointment-btn decline" onclick="openRejectModal(<?= $apptId ?>)">
+              <i class="fa fa-times"></i> Decline
+            </button>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </section>
+    <div id="noResultsMsg" style="display:none; text-align:center; padding:2rem; color:var(--text-muted);">
+      <i class="fa fa-search" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:0.75rem;"></i>
+      <p>No appointments match your filter.</p>
     </div>
   </div>
-  <?php endforeach; ?>
-<?php endif; ?>
 
-  </section>
-  
-<div id="noResultsMsg" style="display:none; text-align:center; padding:2rem; color:var(--text-muted);">
-    <i class="fa fa-search" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:0.75rem;"></i>
-    <p>No appointments match your filter.</p>
+  <!-- ══ APPROVED TAB ══ -->
+  <div class="cAppointment-panel" id="panel-approved">
+
+    <?php if ($autoCompletedCount > 0): ?>
+      <div class="cAppointment-noticeBanner">
+        <i class="fa fa-circle-info"></i>
+        <span>
+          <strong>
+            <?= $autoCompletedCount ?>
+            past appointment<?= $autoCompletedCount > 1 ? 's were' : ' was' ?>
+            automatically marked as Completed
+          </strong>
+          — the session date had already passed without a recorded action.
+        </span>
+      </div>
+    <?php endif; ?>
+
+    <?php if (empty($approvedAppointments)): ?>
+      <div style="text-align:center; padding:3rem; color:var(--text-muted);">
+        <i class="fa fa-calendar" style="font-size:2.5rem; opacity:0.3; display:block; margin-bottom:1rem;"></i>
+        <p>No approved appointments.</p>
+      </div>
+    <?php else: ?>
+      <div class="cAppointment-approvedGrid">
+        <?php foreach ($approvedAppointments as $appt):
+          $sName  = htmlspecialchars($appt['first_name'] . ' ' . $appt['last_name']);
+          $apptId = (int)$appt['appointment_id'];
+          $isPast = strtotime($appt['appointment_date'] . ' ' . $appt['appointment_time']) < time();
+        ?>
+        <div class="cAppointment-card" id="cAppointment-approvedCard-<?= $apptId ?>">
+          <h3>
+            <i class="fa fa-user"></i> <?= $sName ?>
+            <?php if ($isPast): ?>
+              <span class="cAppointment-pastPill">Past</span>
+            <?php endif; ?>
+          </h3>
+          <p><b>Reason:</b> <?= htmlspecialchars($appt['message'] ?? 'N/A') ?></p>
+          <p><b>Program:</b> <?= htmlspecialchars($appt['year_level'] . ' - ' . $appt['course']) ?></p>
+          <p><b>Date:</b> <?= date('F d, Y', strtotime($appt['appointment_date'])) ?></p>
+          <p><b>Time:</b> <?= date('g:i A', strtotime($appt['appointment_time'])) ?></p>
+          <p><b>Priority:</b> <?= htmlspecialchars($appt['priority']) ?></p>
+          <div class="cAppointment-approvedActions" id="cAppointment-approvedActions-<?= $apptId ?>">
+            <button class="cAppointment-approvedBtn complete" onclick="markComplete(<?= $apptId ?>)">
+              <i class="fa fa-check"></i> Complete
+            </button>
+            <button class="cAppointment-approvedBtn cancel" onclick="openCancelModal(<?= $apptId ?>)">
+              <i class="fa fa-ban"></i> Cancel
+            </button>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
   </div>
-<div class="logout-overlay" id="logoutOverlay">
-  <div class="logout-modal">
-    <div class="logout-icon"><i class="fa fa-right-from-bracket"></i></div>
-    <h3>Logout</h3>
-    <p>Are you sure you want to logout?</p>
-    <div class="logout-actions">
-      <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
-      <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+
+  <!-- LOGOUT MODAL -->
+  <div class="logout-overlay" id="logoutOverlay">
+    <div class="logout-modal">
+      <div class="logout-icon"><i class="fa fa-right-from-bracket"></i></div>
+      <h3>Logout</h3>
+      <p>Are you sure you want to logout?</p>
+      <div class="logout-actions">
+        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+      </div>
     </div>
   </div>
-</div>
+
 </main>
 
+<!-- STUDENT PROFILE MODAL -->
 <div class="cStudentModal" id="studentModal">
-
   <div class="cStudentModal-container">
-
     <div class="cStudentModal-header">
       <h2>Student Profile</h2>
       <button onclick="closeStudentModal()">✕</button>
     </div>
-
-<div class="cStudentModal-body" id="studentModalBody">
-  <p style="text-align:center; padding:2rem; color:var(--text-muted);">Loading...</p>
+    <div class="cStudentModal-body" id="studentModalBody">
+      <p style="text-align:center; padding:2rem; color:var(--text-muted);">Loading...</p>
+    </div>
+  </div>
 </div>
 
+<!-- ══════════════════════════════════════════════
+     REJECT REASON MODAL
+══════════════════════════════════════════════ -->
+<div class="cAppointment-modalOverlay" id="rejectModal">
+  <div class="cAppointment-modalBox">
+    <h3><i class="fa fa-times-circle"></i> Decline Appointment</h3>
+    <p>Please provide a reason for declining. The student will be able to see this explanation.</p>
+    <textarea id="rejectReason" placeholder="e.g. Schedule conflict — please rebook for another available date..."></textarea>
+    <div class="cAppointment-modalError" id="rejectError">Please enter a reason before declining.</div>
+    <div class="cAppointment-modalActions">
+      <button class="cAppointment-modalBtn back" onclick="closeRejectModal()">Go Back</button>
+      <button class="cAppointment-modalBtn confirm" onclick="confirmReject()">
+        <i class="fa fa-times"></i> Confirm Decline
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     CANCEL REASON MODAL
+══════════════════════════════════════════════ -->
+<div class="cAppointment-modalOverlay" id="cancelModal">
+  <div class="cAppointment-modalBox">
+    <h3><i class="fa fa-ban"></i> Cancel Appointment</h3>
+    <p>Please provide a reason for cancelling. The student will be able to see this explanation.</p>
+    <textarea id="cancelReason" placeholder="e.g. Counselor unavailable due to an emergency..."></textarea>
+    <div class="cAppointment-modalError" id="cancelError">Please enter a reason before cancelling.</div>
+    <div class="cAppointment-modalActions">
+      <button class="cAppointment-modalBtn back" onclick="closeCancelModal()">Go Back</button>
+      <button class="cAppointment-modalBtn confirm" onclick="confirmCancel()">
+        <i class="fa fa-ban"></i> Confirm Cancel
+      </button>
+    </div>
   </div>
 </div>
 
 <script>
+// ── Settings / theme ──────────────────────────────────────────────────────────
 function toggleSettingsMenu(e) {
-  e.stopPropagation();
-  document.getElementById("settingsDropdown").classList.toggle("show");
+    e.stopPropagation();
+    document.getElementById("settingsDropdown").classList.toggle("show");
 }
-
 document.addEventListener("click", e => {
-  const menu = document.getElementById("settingsDropdown");
-  const btn  = document.querySelector(".sidebar-settingsButton");
-  if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("show");
+    const menu = document.getElementById("settingsDropdown");
+    const btn  = document.querySelector(".sidebar-settingsButton");
+    if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("show");
 });
-
 function toggleTheme() {
-  const html = document.documentElement;
-  html.setAttribute("data-theme", html.getAttribute("data-theme") === "light" ? "dark" : "light");
+    const html = document.documentElement;
+    html.setAttribute("data-theme", html.getAttribute("data-theme") === "light" ? "dark" : "light");
 }
 
-// ── LOGOUT ──
-function logout() {
-  document.getElementById('logoutOverlay').classList.add('show');
-}
-function closeLogout() {
-  document.getElementById('logoutOverlay').classList.remove('show');
-}
-function confirmLogout() {
-  window.location.href = 'logout.php?role=counselor';
-}
+// ── Logout ────────────────────────────────────────────────────────────────────
+function logout()      { document.getElementById('logoutOverlay').classList.add('show'); }
+function closeLogout() { document.getElementById('logoutOverlay').classList.remove('show'); }
+function confirmLogout() { window.location.href = 'logout.php?role=counselor'; }
 document.getElementById('logoutOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeLogout();
+    if (e.target === this) closeLogout();
 });
 
-// ── NOTIFICATION DROPDOWN ──
+// ── Notification dropdown ─────────────────────────────────────────────────────
 function toggleDropdown(id, e) {
-  e.stopPropagation();
-  document.getElementById(id).classList.toggle("show");
+    e.stopPropagation();
+    document.getElementById(id).classList.toggle("show");
 }
 document.addEventListener("click", e => {
-  const notif = document.getElementById("notifDropdown");
-  if (notif && !notif.contains(e.target)) notif.classList.remove("show");
+    const notif = document.getElementById("notifDropdown");
+    if (notif && !notif.contains(e.target)) notif.classList.remove("show");
 });
 
-// ── FILTER ──
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+    document.querySelectorAll('.cAppointment-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.cAppointment-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+}
+
+// ── Filter (Pending tab) ──────────────────────────────────────────────────────
 function toggleFilterBox() {
-  document.getElementById("filterBox").classList.toggle("show");
+    document.getElementById("filterBox").classList.toggle("show");
 }
-
 function applyFilter() {
-  const priority = document.getElementById("filterPriority").value.toLowerCase();
-  const date     = document.getElementById("filterDate").value;
-  let   visible  = 0;
-
-  document.querySelectorAll(".cAppointment-card").forEach(card => {
-    const matchP = priority === "all" || card.dataset.priority === priority;
-    const matchD = !date || card.dataset.date === date;
-    const show   = matchP && matchD;
-    card.style.display = show ? "" : "none";
-    if (show) visible++;
-  });
-
-  document.getElementById("noResultsMsg").style.display = visible === 0 ? "block" : "none";
+    const priority = document.getElementById("filterPriority").value.toLowerCase();
+    const date     = document.getElementById("filterDate").value;
+    let   visible  = 0;
+    document.querySelectorAll(".cAppointment-card[data-id]").forEach(card => {
+        const matchP = priority === "all" || card.dataset.priority === priority;
+        const matchD = !date || card.dataset.date === date;
+        const show   = matchP && matchD;
+        card.style.display = show ? "" : "none";
+        if (show) visible++;
+    });
+    document.getElementById("noResultsMsg").style.display = visible === 0 ? "block" : "none";
 }
-
 function clearFilter() {
-  document.getElementById("filterPriority").value = "all";
-  document.getElementById("filterDate").value     = "";
-  document.querySelectorAll(".cAppointment-card").forEach(c => c.style.display = "");
-  document.getElementById("noResultsMsg").style.display = "none";
+    document.getElementById("filterPriority").value = "all";
+    document.getElementById("filterDate").value     = "";
+    document.querySelectorAll(".cAppointment-card[data-id]").forEach(c => c.style.display = "");
+    document.getElementById("noResultsMsg").style.display = "none";
 }
 
-// ── SEARCH ──
-document.querySelector(".topbar-searchBox input").addEventListener("input", function() {
-  const q       = this.value.toLowerCase();
-  let   visible = 0;
-
-  document.querySelectorAll(".cAppointment-card").forEach(card => {
-    const show = card.dataset.name.includes(q);
-    card.style.display = show ? "" : "none";
-    if (show) visible++;
-  });
-
-  document.getElementById("noResultsMsg").style.display = visible === 0 ? "block" : "none";
+// ── Search ────────────────────────────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener("input", function() {
+    const q       = this.value.toLowerCase();
+    let   visible = 0;
+    document.querySelectorAll(".cAppointment-card[data-id]").forEach(card => {
+        const show = (card.dataset.name || '').includes(q);
+        card.style.display = show ? "" : "none";
+        if (show) visible++;
+    });
+    document.getElementById("noResultsMsg").style.display = visible === 0 ? "block" : "none";
 });
 
-// ── APPROVE / REJECT ──
-function updateStatus(apptId, status, btn) {
-  if (!confirm(`${status === 'Approved' ? 'Approve' : 'Decline'} this appointment?`)) return;
-
-  const fd = new FormData();
-  fd.append('action',         'update_status');
-  fd.append('appointment_id', apptId);
-  fd.append('status',         status);
-
-  fetch('cappointments.php', { method: 'POST', body: fd })
-    .then(r => r.json())
-    .then(json => {
-      if (json.success) {
-        const card = btn.closest('.cAppointment-card');
-        card.style.opacity    = '0';
-        card.style.transform  = 'scale(0.95)';
-        card.style.transition = '0.3s ease';
-        setTimeout(() => card.remove(), 300);
-      } else {
-        alert(json.message || 'Failed to update.');
-      }
-    })
-    .catch(() => alert('Something went wrong.'));
+// ── APPROVE ───────────────────────────────────────────────────────────────────
+function approveAppointment(apptId, btn) {
+    if (!confirm('Approve this appointment?')) return;
+    const fd = new FormData();
+    fd.append('action',         'update_status');
+    fd.append('appointment_id', apptId);
+    fd.append('status',         'Approved');
+    fetch('cappointments.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(json => {
+            if (json.success) {
+                removeCardWithFade(
+                    btn.closest('.cAppointment-card'),
+                    '.cAppointment-tab:first-child .cAppointment-tabBadge'
+                );
+            } else {
+                alert(json.message || 'Failed to update.');
+            }
+        })
+        .catch(() => alert('Something went wrong.'));
 }
 
-// ── STUDENT MODAL ──
-function openStudentModal(apptId) {
-  document.getElementById("studentModal").classList.add("show");
-  const body = document.getElementById("studentModalBody");
-  body.innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-muted);">Loading...</p>';
+// ── REJECT MODAL ──────────────────────────────────────────────────────────────
+let _rejectApptId = null;
 
-  fetch('cappointments.php?action=get_student&appointment_id=' + apptId)
-    .then(r => r.json())
-    .then(json => {
-      if (!json.success) {
-        body.innerHTML = '<p style="padding:2rem;color:var(--text-muted);">Could not load profile.</p>';
-        return;
-      }
-      const s        = json.student;
-      const initials = (s.first_name[0] + s.last_name[0]).toUpperCase();
-      body.innerHTML = `
-        <div class="cStudentModal-profile">
-          <div class="cStudentModal-avatar">${initials}</div>
-          <div class="cStudentModal-profileText">
-            <div class="cStudentModal-nameRow">
-              <h3>${s.first_name} ${s.last_name}</h3>
-              <span class="tag stable">Active</span>
-            </div>
-            <p>${s.course} • ${s.year_level}</p>
-          </div>
-        </div>
-        <div class="cStudentModal-grid" style="margin-top:12px;">
-          <div class="cStudentModal-box">
-            <h4>Academic Information</h4>
-            <p><b>Program:</b> ${s.course}</p>
-            <p><b>Year Level:</b> ${s.year_level}</p>
-            <p><b>Email:</b> ${s.email}</p>
-          </div>
-          <div class="cStudentModal-box">
-            <h4>Emergency Contact</h4>
-            <p><b>Name:</b> ${s.emergency_name || 'N/A'}</p>
-            <p><b>Relation:</b> ${s.emergency_relation || 'N/A'}</p>
-            <p><b>Contact:</b> ${s.emergency_number || 'N/A'}</p>
-          </div>
-        </div>
-        <div class="cStudentModal-box" style="margin-top:12px;">
-          <h4>Last Wellness Check-in</h4>
-          <p><b>Mood:</b> ${s.last_mood || 'N/A'}</p>
-          <p><b>Date:</b> ${s.last_wellness || 'No check-in yet'}</p>
+function openRejectModal(apptId) {
+    _rejectApptId = apptId;
+    document.getElementById('rejectReason').value = '';
+    document.getElementById('rejectError').style.display = 'none';
+    document.getElementById('rejectModal').classList.add('show');
+}
+function closeRejectModal() {
+    _rejectApptId = null;
+    document.getElementById('rejectModal').classList.remove('show');
+}
+document.getElementById('rejectModal').addEventListener('click', function(e) {
+    if (e.target === this) closeRejectModal();
+});
+
+function confirmReject() {
+    const reason = document.getElementById('rejectReason').value.trim();
+    const errEl  = document.getElementById('rejectError');
+    if (!reason) { errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+
+    const fd = new FormData();
+    fd.append('action',           'update_status');
+    fd.append('appointment_id',   _rejectApptId);
+    fd.append('status',           'Rejected');
+    fd.append('rejection_reason', reason);
+
+    fetch('cappointments.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(json => {
+            if (json.success) {
+                const id = _rejectApptId;
+                closeRejectModal();
+                const card = document.querySelector(`.cAppointment-card[data-id="${id}"]`);
+                if (card) removeCardWithFade(card, '.cAppointment-tab:first-child .cAppointment-tabBadge');
+            } else {
+                alert(json.message || 'Failed to decline.');
+            }
+        })
+        .catch(() => alert('Something went wrong.'));
+}
+
+// ── COMPLETE ──────────────────────────────────────────────────────────────────
+function markComplete(apptId) {
+    if (!confirm('Mark this appointment as Completed?')) return;
+    const fd = new FormData();
+    fd.append('action',         'mark_appointment');
+    fd.append('appointment_id', apptId);
+    fd.append('result',         'completed');
+    fetch('cappointments.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(json => {
+            if (json.success) {
+                replaceActionsWithBadge(apptId, 'completed');
+            } else {
+                alert(json.message || 'Failed to update.');
+            }
+        })
+        .catch(() => alert('Something went wrong.'));
+}
+
+// ── CANCEL MODAL ──────────────────────────────────────────────────────────────
+let _cancelApptId = null;
+
+function openCancelModal(apptId) {
+    _cancelApptId = apptId;
+    document.getElementById('cancelReason').value = '';
+    document.getElementById('cancelError').style.display = 'none';
+    document.getElementById('cancelModal').classList.add('show');
+}
+function closeCancelModal() {
+    _cancelApptId = null;
+    document.getElementById('cancelModal').classList.remove('show');
+}
+document.getElementById('cancelModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCancelModal();
+});
+
+function confirmCancel() {
+    const reason = document.getElementById('cancelReason').value.trim();
+    const errEl  = document.getElementById('cancelError');
+    if (!reason) { errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+
+    const fd = new FormData();
+    fd.append('action',         'mark_appointment');
+    fd.append('appointment_id', _cancelApptId);
+    fd.append('result',         'cancelled');
+    fd.append('reason',         reason);
+
+    fetch('cappointments.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(json => {
+            if (json.success) {
+                const id = _cancelApptId;
+                closeCancelModal();
+                replaceActionsWithBadge(id, 'cancelled');
+            } else {
+                alert(json.message || 'Failed to cancel.');
+            }
+        })
+        .catch(() => alert('Something went wrong.'));
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function removeCardWithFade(card, badgeSelector) {
+    card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    card.style.opacity    = '0';
+    card.style.transform  = 'scale(0.95)';
+    setTimeout(() => {
+        card.remove();
+        const badge = document.querySelector(badgeSelector);
+        if (badge) badge.textContent = Math.max(0, parseInt(badge.textContent) - 1);
+    }, 300);
+}
+
+function replaceActionsWithBadge(apptId, status) {
+    const el = document.getElementById('cAppointment-approvedActions-' + apptId);
+    if (!el) return;
+    const icon  = status === 'completed' ? 'fa-check' : 'fa-ban';
+    const label = status === 'completed' ? 'Completed'  : 'Cancelled';
+    el.outerHTML = `
+        <div class="cAppointment-statusBadge ${status}" id="cAppointment-approvedActions-${apptId}">
+            <i class="fa ${icon}"></i> ${label}
         </div>`;
-    })
-    .catch(() => {
-      body.innerHTML = '<p style="padding:2rem;color:var(--text-muted);">Could not load profile.</p>';
-    });
+    const badge = document.querySelectorAll('.cAppointment-tab')[1]?.querySelector('.cAppointment-tabBadge');
+    if (badge) badge.textContent = Math.max(0, parseInt(badge.textContent) - 1);
 }
 
+// ── Student profile modal ─────────────────────────────────────────────────────
+function openStudentModal(apptId) {
+    document.getElementById("studentModal").classList.add("show");
+    const body = document.getElementById("studentModalBody");
+    body.innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-muted);">Loading...</p>';
+    fetch('cappointments.php?action=get_student&appointment_id=' + apptId)
+        .then(r => r.json())
+        .then(json => {
+            if (!json.success) {
+                body.innerHTML = '<p style="padding:2rem;color:var(--text-muted);">Could not load profile.</p>';
+                return;
+            }
+            const s        = json.student;
+            const initials = (s.first_name[0] + s.last_name[0]).toUpperCase();
+            body.innerHTML = `
+                <div class="cStudentModal-profile">
+                    <div class="cStudentModal-avatar">${initials}</div>
+                    <div class="cStudentModal-profileText">
+                        <div class="cStudentModal-nameRow">
+                            <h3>${s.first_name} ${s.last_name}</h3>
+                            <span class="tag stable">Active</span>
+                        </div>
+                        <p>${s.course} • ${s.year_level}</p>
+                    </div>
+                </div>
+                <div class="cStudentModal-grid" style="margin-top:12px;">
+                    <div class="cStudentModal-box">
+                        <h4>Academic Information</h4>
+                        <p><b>Program:</b> ${s.course}</p>
+                        <p><b>Year Level:</b> ${s.year_level}</p>
+                        <p><b>Email:</b> ${s.email}</p>
+                    </div>
+                    <div class="cStudentModal-box">
+                        <h4>Emergency Contact</h4>
+                        <p><b>Name:</b> ${s.emergency_name || 'N/A'}</p>
+                        <p><b>Relation:</b> ${s.emergency_relation || 'N/A'}</p>
+                        <p><b>Contact:</b> ${s.emergency_number || 'N/A'}</p>
+                    </div>
+                </div>
+                <div class="cStudentModal-box" style="margin-top:12px;">
+                    <h4>Last Wellness Check-in</h4>
+                    <p><b>Mood:</b> ${s.last_mood || 'N/A'}</p>
+                    <p><b>Date:</b> ${s.last_wellness || 'No check-in yet'}</p>
+                </div>`;
+        })
+        .catch(() => {
+            body.innerHTML = '<p style="padding:2rem;color:var(--text-muted);">Could not load profile.</p>';
+        });
+}
 function closeStudentModal() {
-  document.getElementById("studentModal").classList.remove("show");
+    document.getElementById("studentModal").classList.remove("show");
 }
 </script>
-
 </body>
 </html>
