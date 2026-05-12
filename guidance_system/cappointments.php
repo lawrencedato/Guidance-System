@@ -462,6 +462,128 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
   </div>
 </div>
 
+<!-- ══ APPROVAL RECEIPT MODAL ══ -->
+<!-- REPLACE the entire receiptModal div in cappointments.php with this -->
+
+<div class="cAppointment-modalOverlay" id="receiptModal" style="z-index:99999;">
+  <div style="
+    background: #ffffff;
+    border-radius: 20px;
+    width: 340px;
+    overflow: hidden;
+    box-shadow: 0 18px 45px rgba(0,0,0,0.20);
+    font-family: 'Poppins', sans-serif;
+    animation: cAppointment-modalPop 0.25s ease;
+  " id="receiptCard">
+
+    <!-- ── GRADIENT HEADER (keep as-is) ── -->
+    <div style="
+      background: linear-gradient(135deg, #113F67, #4988C4);
+      color: #fff;
+      text-align: center;
+      padding: 22px 16px 20px;
+    ">
+      <div style="font-size:9px; letter-spacing:3px; opacity:0.65; margin-bottom:6px; text-transform:uppercase;">UNITYCARE</div>
+      <div style="font-size:18px; font-weight:700; letter-spacing:2px; text-transform:uppercase;">SESSION TICKET</div>
+      <div style="font-size:10px; opacity:0.55; margin-top:5px;">Guidance &amp; Counseling Services</div>
+    </div>
+
+    <!-- ── DASHED SEPARATOR ── -->
+    <div style="border-top:2px dashed #b0cde8; margin:14px 20px 0;"></div>
+
+    <!-- ── TICKET ROWS ── -->
+    <div style="padding:10px 24px 8px;">
+
+      <!-- Ticket No. -->
+      <div style="display:table; width:100%; padding:7px 0; border-bottom:1px dashed #dce8f0;">
+        <span style="display:table-cell; font-size:11px; color:#64748b; width:90px; vertical-align:middle;">Ticket No.</span>
+        <span style="display:table-cell; font-size:13px; font-weight:700; color:#113f67; text-align:right; vertical-align:middle;" id="rt-id">—</span>
+      </div>
+
+      <!-- Student -->
+      <div style="display:table; width:100%; padding:7px 0; border-bottom:1px dashed #dce8f0;">
+        <span style="display:table-cell; font-size:11px; color:#64748b; width:90px; vertical-align:middle;">Student</span>
+        <span style="display:table-cell; font-size:12px; color:#0f172a; text-align:right; vertical-align:middle;" id="rt-name">—</span>
+      </div>
+
+      <!-- Program -->
+      <div style="display:table; width:100%; padding:7px 0; border-bottom:1px dashed #dce8f0;">
+        <span style="display:table-cell; font-size:11px; color:#64748b; width:90px; vertical-align:middle;">Program</span>
+        <span style="display:table-cell; font-size:12px; color:#0f172a; text-align:right; vertical-align:middle;" id="rt-program">—</span>
+      </div>
+
+      <!-- Date -->
+      <div style="display:table; width:100%; padding:7px 0; border-bottom:1px dashed #dce8f0;">
+        <span style="display:table-cell; font-size:11px; color:#64748b; width:90px; vertical-align:middle;">Date</span>
+        <span style="display:table-cell; font-size:12px; color:#0f172a; text-align:right; vertical-align:middle;" id="rt-date">—</span>
+      </div>
+
+      <!-- Time -->
+      <div style="display:table; width:100%; padding:7px 0; border-bottom:1px dashed #dce8f0;">
+        <span style="display:table-cell; font-size:11px; color:#64748b; width:90px; vertical-align:middle;">Time</span>
+        <span style="display:table-cell; font-size:12px; color:#0f172a; text-align:right; vertical-align:middle;" id="rt-time">—</span>
+      </div>
+
+      <!-- Priority -->
+      <div style="display:table; width:100%; padding:7px 0;">
+        <span style="display:table-cell; font-size:11px; color:#64748b; width:90px; vertical-align:middle;">Priority</span>
+        <span style="display:table-cell; text-align:right; vertical-align:middle;">
+          <span id="rt-priority" style="font-size:10px; font-weight:600; padding:3px 14px; border-radius:999px; display:inline-block;">—</span>
+        </span>
+      </div>
+
+    </div>
+
+    <!-- ── STATUS SECTION ── -->
+    <div style="border-top:2px dashed #b0cde8; border-bottom:2px dashed #b0cde8; margin:4px 20px; padding:12px 0; text-align:center;">
+      <div style="font-size:9px; color:#94a3b8; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:7px;">STATUS</div>
+      <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(34,197,94,0.12); border:1px solid rgba(34,197,94,0.35); color:#15803d; font-size:12px; font-weight:700; padding:6px 22px; border-radius:999px; letter-spacing:1px;">
+        <i class="fa fa-check"></i> APPROVED
+      </div>
+    </div>
+
+    <!-- ── REASON ── -->
+    <div style="border-bottom:2px dashed #b0cde8; margin:0 20px; padding:12px 0 14px;">
+      <div style="font-size:9px; color:#94a3b8; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:5px;">REASON</div>
+      <div style="font-size:11.5px; color:#0f172a; line-height:1.6;" id="rt-reason">—</div>
+    </div>
+
+    <!-- ── BARCODE ── -->
+    <div style="text-align:center; padding:12px 0 6px;">
+      <div style="font-size:14px; letter-spacing:5px; color:#94a3b8; font-family:'Courier New',monospace;">||||| ||||| || |||||</div>
+      <div style="font-size:9px; color:#94a3b8; letter-spacing:1.5px; margin-top:3px;" id="rt-barcode">APPT-0 &bull; 2026</div>
+    </div>
+
+    <!-- ── THANK YOU ── -->
+    <div style="background:#f0f4f8; text-align:center; padding:10px; font-size:9px; color:#94a3b8; letter-spacing:3px; text-transform:uppercase; border-top:1px solid #dce8f0;">
+      THANK YOU
+    </div>
+
+    <!-- ── CLOSE BUTTON ── -->
+    <div style="padding:14px 20px;">
+      <button onclick="closeReceiptModal()" style="
+        width:100%; padding:11px;
+        background:#ffffff;
+        border:1px solid rgba(15,23,42,0.10);
+        border-radius:14px;
+        font-size:13px; font-weight:600;
+        cursor:pointer;
+        font-family:'Poppins',sans-serif;
+        color:#0f172a;
+        transition:background 0.2s ease;
+      " onmouseover="this.style.background='rgba(73,136,196,0.08)'" onmouseout="this.style.background='#ffffff'">
+        Close
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
 <script>
 
 (function() {
@@ -551,24 +673,65 @@ document.getElementById('searchInput').addEventListener("input", function() {
 // ── APPROVE ───────────────────────────────────────────────────────────────────
 function approveAppointment(apptId, btn) {
     if (!confirm('Approve this appointment?')) return;
+    const card = btn.closest('.cAppointment-card');
     const fd = new FormData();
     fd.append('action',         'update_status');
     fd.append('appointment_id', apptId);
     fd.append('status',         'Approved');
+
     fetch('cappointments.php', { method: 'POST', body: fd })
         .then(r => r.json())
         .then(json => {
             if (json.success) {
-                removeCardWithFade(
-                    btn.closest('.cAppointment-card'),
-                    '.cAppointment-tab:first-child .cAppointment-tabBadge'
-                );
+                // Pull data from card paragraphs
+                let reason = '', program = '', time = '';
+                card.querySelectorAll('p').forEach(p => {
+                    const t = p.textContent.trim();
+                    if (t.startsWith('Reason:'))  reason  = t.replace('Reason:','').trim();
+                    if (t.startsWith('Program:')) program = t.replace('Program:','').trim();
+                    if (t.startsWith('Time:'))    time    = t.replace('Time:','').trim();
+                });
+                const rawName  = card.querySelector('h3').textContent.trim().replace(/^\S+\s*/, '');
+                const rawDate  = card.dataset.date;
+                const priority = (card.dataset.priority || '').toLowerCase();
+
+                // ── Fill receipt rows ──
+                document.getElementById('rt-id').textContent      = 'APPT-' + apptId;
+                document.getElementById('rt-name').textContent    = rawName;
+                document.getElementById('rt-program').textContent = program;
+                document.getElementById('rt-date').textContent    = new Date(rawDate + 'T00:00:00')
+                    .toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                document.getElementById('rt-time').textContent    = time;
+                document.getElementById('rt-reason').textContent  = reason || 'N/A';
+                document.getElementById('rt-barcode').textContent =
+                    'APPT-' + apptId + ' \u2022 ' + new Date().getFullYear();
+
+                // ── Priority pill ──
+                const pBadge = document.getElementById('rt-priority');
+                pBadge.textContent = priority.charAt(0).toUpperCase() + priority.slice(1);
+                const pMap = {
+                    high:   'background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5;',
+                    medium: 'background:#fef3c7; color:#92400e; border:1px solid #fcd34d;',
+                    low:    'background:#d1fae5; color:#065f46; border:1px solid #6ee7b7;',
+                };
+                pBadge.style.cssText = pMap[priority] || 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;';
+
+                document.getElementById('receiptModal').classList.add('show');
+                removeCardWithFade(card, '.cAppointment-tab:first-child .cAppointment-tabBadge');
             } else {
                 alert(json.message || 'Failed to update.');
             }
         })
         .catch(() => alert('Something went wrong.'));
 }
+
+function closeReceiptModal() {
+    document.getElementById('receiptModal').classList.remove('show');
+}
+
+document.getElementById('receiptModal').addEventListener('click', function(e) {
+    if (e.target === this) closeReceiptModal();
+});
 
 // ── REJECT MODAL ──────────────────────────────────────────────────────────────
 let _rejectApptId = null;
