@@ -113,17 +113,22 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UNITYCARE | Appointment Booking</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNITYCARE | Appointment Booking</title>
+  <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
+
+  
+/* ─────────────────────────────────────────
+   SIDEBAR MENU LINK LAYOUT
+───────────────────────────────────────── */
 .sidebar-menu a {
-   display: flex;
-   align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .referral-badge {
@@ -136,281 +141,13 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
   flex-shrink: 0;
   box-shadow: 0 0 6px rgba(147, 197, 253, 0.5);
   backdrop-filter: blur(4px);
- }
-/* ── Layout ── */
-.sAppt-wrap {
-  margin-left: 280px;
-  padding: 36px 40px;
-  background: var(--bg);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
 }
 
-/* ── Main booking card ── */
-.sAppt-card {
-  position: relative;
-  padding: 32px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.75);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  overflow: hidden;
-}
-.sAppt-card::before {
-  content:"";
-  position:absolute; inset:0;
-  background: radial-gradient(circle at top left, rgba(73,136,196,0.15), transparent 60%);
-  pointer-events:none;
-}
 
-.sAppt-card h3 {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 24px;
-}
-
-/* ── Three-column layout ── */
-.sAppt-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 24px;
-  align-items: start;
-}
-
-/* ── Section headers ── */
-.sAppt-section-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--primary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 14px;
-}
-.sAppt-section-num {
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: white;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; flex-shrink: 0;
-}
-
-/* ── Counselor cards ── */
-.sCounselor-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.sCounselor-option {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 2px solid var(--border);
-  background: rgba(255,255,255,0.5);
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-.sCounselor-option:hover {
-  border-color: var(--primary);
-  background: rgba(73,136,196,0.07);
-  transform: translateX(3px);
-}
-.sCounselor-option.selected {
-  border-color: var(--primary);
-  background: rgba(73,136,196,0.12);
-  box-shadow: 0 0 0 3px rgba(73,136,196,0.15);
-}
-.sCounselor-option img {
-  width: 46px; height: 46px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--border);
-  flex-shrink: 0;
-}
-.sCounselor-option-info strong {
-  display: block;
-  font-size: 13px;
-  color: var(--text);
-  line-height: 1.3;
-}
-.sCounselor-option-info span {
-  font-size: 11px;
-  color: var(--text-muted);
-  background: var(--bg-soft);
-  padding: 2px 8px;
-  border-radius: 999px;
-  display: inline-block;
-  margin-top: 3px;
-}
-
-/* ── Date & Slots column ── */
-.sAppt-date-input {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.6);
-  font-size: 14px;
-  color: var(--text);
-  outline: none;
-  transition: 0.2s;
-  margin-bottom: 20px;
-}
-.sAppt-date-input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(73,136,196,0.15);
-}
-
-/* ── Slots ── */
-.sAppt-slots-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.sAppt-slotBtn {
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.6);
-  font-size: 13px;
-  cursor: pointer;
-  transition: 0.2s ease;
-  color: var(--text);
-}
-.sAppt-slotBtn:hover:not(:disabled) {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-  transform: translateY(-1px);
-}
-.sAppt-slotBtn.chosen {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
-.sAppt-slotBtn.taken {
-  opacity: 0.4;
-  cursor: not-allowed;
-  text-decoration: line-through;
-}
-.sAppt-slots-hint {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-/* ── Details column ── */
-.sAppt-field {
-  margin-bottom: 14px;
-}
-.sAppt-field label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 6px;
-}
-.sAppt-field input,
-.sAppt-field select,
-.sAppt-field textarea {
-  width: 100%;
-  padding: 11px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.6);
-  font-size: 14px;
-  color: var(--text);
-  outline: none;
-  transition: 0.2s;
-}
-.sAppt-field input:focus,
-.sAppt-field select:focus,
-.sAppt-field textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(73,136,196,0.15);
-}
-.sAppt-field textarea {
-  min-height: 110px;
-  resize: vertical;
-}
-.sAppt-field input[readonly] {
-  background: var(--bg-soft);
-  color: var(--text-muted);
-  cursor: default;
-}
-
-/* ── Submit button ── */
-.sAppt-submit {
-  width: 100%;
-  padding: 13px;
-  margin-top: 4px;
-  border-radius: 12px;
-  border: none;
-  font-size: 14px;
-  font-weight: 600;
-  color: white;
-  cursor: pointer;
-  background: linear-gradient(135deg, #113F67, #4988C4);
-  box-shadow: 0 10px 20px rgba(17,63,103,0.25);
-  transition: 0.2s ease;
-}
-.sAppt-submit:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(17,63,103,0.35);
-}
-#bookingResult { margin-top: 10px; font-size: 13px; }
-
-/* ── Dividers between columns ── */
-.sAppt-col-divider {
-  border-left: 1px solid var(--border);
-  padding-left: 24px;
-}
-
-/* ── Upload card ── */
-.sAppt-upload-card {
-  position: relative;
-  padding: 28px 32px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.75);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  overflow: hidden;
-}
-.sAppt-upload-card::before {
-  content:"";
-  position:absolute; inset:0;
-  background: radial-gradient(circle at top left, rgba(73,136,196,0.1), transparent 60%);
-  pointer-events:none;
-}
-.sAppt-upload-card h3 {
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-.sAppt-upload-card p {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-bottom: 14px;
-}
-
-/* ── Slot loading state ── */
-.sAppt-slots-loading {
-  font-size: 13px;
-  color: var(--text-muted);
-  font-style: italic;
-}
 </style>
 </head>
+
+  
 <body class="body">
 
 <!-- SIDEBAR -->
@@ -439,9 +176,9 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
     <a href="sconcerns.php"><i class="fa fa-headset"></i> Submit Concern</a>
     <a href="swellness.php"><i class="fa fa-heart"></i> Wellness Check</a>
     <a href="sreferral.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sreferral.php' ? 'active' : '' ?>">
-            <i class="fa fa-route"></i> Referral
-            <span class="referral-badge" id="referralBadge" style="display:none;"></span>
-        </a>
+      <i class="fa fa-route"></i> Referral
+      <span class="referral-badge" id="referralBadge" style="display:none;"></span>
+    </a>
     <p class="sidebar-title">UPDATES</p>
     <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
     <p class="sidebar-title">RECORDS</p>
@@ -467,32 +204,32 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
 </header>
 
 <!-- MAIN -->
-<div class="sAppt-wrap">
+<div class="sBooking-wrap">
 
   <!-- Booking Card -->
-  <div class="sAppt-card">
+  <div class="sBooking-card">
     <h3>Schedule Appointment</h3>
 
-    <div class="sAppt-columns">
+    <div class="sBooking-columns">
 
       <!-- COL 1: Choose Counselor -->
       <div>
-        <div class="sAppt-section-label">
-          <span class="sAppt-section-num">1</span> Choose a Counselor
+        <div class="sBooking-section-label">
+          <span class="sBooking-section-num">1</span> Choose a Counselor
         </div>
-        <div class="sCounselor-grid">
+        <div class="sBooking-counselor-grid">
           <?php foreach ($counselors as $c):
             $cName = htmlspecialchars($c['first_name'] . ' ' . $c['last_name']);
             $cDept = htmlspecialchars($c['department']);
             $cImg  = 'c_' . $c['counselor_id'] . '.jpg';
           ?>
-          <div class="sCounselor-option"
+          <div class="sBooking-counselor-option"
                data-id="<?= $c['counselor_id'] ?>"
                onclick="selectCounselor(this, <?= $c['counselor_id'] ?>)">
             <img src="<?= $cImg ?>"
                  onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($cName) ?>&background=113f67&color=fff'"
                  alt="<?= $cName ?>">
-            <div class="sCounselor-option-info">
+            <div class="sBooking-counselor-info">
               <strong><?= $cName ?></strong>
               <span><?= $cDept ?></span>
             </div>
@@ -502,17 +239,17 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
       </div>
 
       <!-- COL 2: Date & Slots -->
-      <div class="sAppt-col-divider">
-        <div class="sAppt-section-label">
-          <span class="sAppt-section-num">2</span> Pick a Date
+      <div class="sBooking-col-divider">
+        <div class="sBooking-section-label">
+          <span class="sBooking-section-num">2</span> Pick a Date
         </div>
-        <input type="date" id="date" class="sAppt-date-input">
+        <input type="date" id="date" class="sBooking-date-input">
 
-        <div class="sAppt-section-label" style="margin-top:4px;">
-          <span class="sAppt-section-num">3</span> Available Slots
+        <div class="sBooking-section-label" style="margin-top:4px;">
+          <span class="sBooking-section-num">3</span> Available Slots
         </div>
         <div id="slotsWrap">
-          <p class="sAppt-slots-hint">Select a counselor and date to see available slots.</p>
+          <p class="sBooking-slots-hint">Select a counselor and date to see available slots.</p>
         </div>
         <p id="noSlots" style="display:none; font-size:13px; color:var(--text-muted); margin-top:6px;">
           No available slots for this day. Try a different date.
@@ -520,18 +257,18 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
       </div>
 
       <!-- COL 3: Details -->
-      <div class="sAppt-col-divider">
-        <div class="sAppt-section-label">
-          <span class="sAppt-section-num">4</span> Appointment Details
+      <div class="sBooking-col-divider">
+        <div class="sBooking-section-label">
+          <span class="sBooking-section-num">4</span> Appointment Details
         </div>
 
-        <div class="sAppt-field">
+        <div class="sBooking-field">
           <label>Selected Time</label>
           <input type="text" id="timeDisplay" readonly placeholder="No slot selected yet">
           <input type="hidden" id="time">
         </div>
 
-        <div class="sAppt-field">
+        <div class="sBooking-field">
           <label>Priority</label>
           <select id="priority">
             <option value="Low">Low</option>
@@ -540,12 +277,12 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
           </select>
         </div>
 
-        <div class="sAppt-field">
+        <div class="sBooking-field">
           <label>Message</label>
           <textarea id="message" placeholder="Describe your concern..."></textarea>
         </div>
 
-        <button class="sAppt-submit" onclick="bookAppointment()">
+        <button class="sBooking-submit" onclick="bookAppointment()">
           <i class="fa fa-calendar-check" style="margin-right:6px;"></i> Confirm Booking
         </button>
         <div id="bookingResult"></div>
@@ -555,12 +292,12 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
   </div>
 
   <!-- Upload Card -->
-  <div class="sAppt-upload-card">
+  <div class="sBooking-upload-card">
     <h3>Upload Documents</h3>
     <p>You may upload supporting documents for your appointment.</p>
     <input type="file" id="fileInput">
-    <p id="fileName" style="font-size:12px; color:var(--text-muted); margin-top:8px;"></p>
-    <button class="sBooking-button" style="width:auto; padding:10px 20px; margin-top:10px;">Upload File</button>
+    <p id="fileName" style="font-size:12px; margin-top:8px;"></p>
+    <button class="sBooking-upload-btn">Upload File</button>
   </div>
 
 </div>
@@ -612,9 +349,9 @@ let selectedCounselorId = null;
 // Set min date to today
 document.addEventListener('DOMContentLoaded', () => {
     const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm   = String(today.getMonth() + 1).padStart(2, '0');
-    const dd   = String(today.getDate()).padStart(2, '0');
+    const yyyy  = today.getFullYear();
+    const mm    = String(today.getMonth() + 1).padStart(2, '0');
+    const dd    = String(today.getDate()).padStart(2, '0');
     document.getElementById('date').min = `${yyyy}-${mm}-${dd}`;
 
     document.getElementById('date').addEventListener('change', function () {
@@ -624,11 +361,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function selectCounselor(el, cid) {
-    document.querySelectorAll('.sCounselor-option').forEach(o => o.classList.remove('selected'));
+    document.querySelectorAll('.sBooking-counselor-option').forEach(o => o.classList.remove('selected'));
     el.classList.add('selected');
     selectedCounselorId = cid;
 
-    // Reset slot/time selections
     document.getElementById('time').value        = '';
     document.getElementById('timeDisplay').value = '';
     document.getElementById('bookingResult').innerHTML = '';
@@ -638,14 +374,14 @@ function selectCounselor(el, cid) {
         loadSlots(cid, dateVal);
     } else {
         document.getElementById('slotsWrap').innerHTML =
-            '<p class="sAppt-slots-hint">Now pick a date to see available slots.</p>';
+            '<p class="sBooking-slots-hint">Now pick a date to see available slots.</p>';
     }
 }
 
 function loadSlots(cid, date) {
     const wrap    = document.getElementById('slotsWrap');
     const noSlots = document.getElementById('noSlots');
-    wrap.innerHTML = '<span class="sAppt-slots-loading"><i class="fa fa-spinner fa-spin"></i> Loading slots…</span>';
+    wrap.innerHTML = '<span class="sBooking-slots-loading"><i class="fa fa-spinner fa-spin"></i> Loading slots…</span>';
     noSlots.style.display = 'none';
     document.getElementById('time').value        = '';
     document.getElementById('timeDisplay').value = '';
@@ -659,15 +395,15 @@ function loadSlots(cid, date) {
                 return;
             }
             const container = document.createElement('div');
-            container.className = 'sAppt-slots-wrap';
+            container.className = 'sBooking-slots-wrap';
             json.slots.forEach(s => {
                 const btn = document.createElement('button');
-                btn.className = 'sAppt-slotBtn' + (s.taken ? ' taken' : '');
+                btn.className = 'sBooking-slotBtn' + (s.taken ? ' taken' : '');
                 btn.textContent = formatTime(s.time) + (s.taken ? ' — Taken' : '');
                 btn.disabled = s.taken;
                 if (!s.taken) {
                     btn.onclick = () => {
-                        document.querySelectorAll('.sAppt-slotBtn').forEach(b => b.classList.remove('chosen'));
+                        document.querySelectorAll('.sBooking-slotBtn').forEach(b => b.classList.remove('chosen'));
                         btn.classList.add('chosen');
                         document.getElementById('time').value        = s.time.substring(0, 5);
                         document.getElementById('timeDisplay').value = formatTime(s.time);
@@ -722,14 +458,14 @@ function bookAppointment() {
                 ? "<span style='color:var(--success,#15803d);'>✔ Appointment submitted successfully!</span>"
                 : "<span style='color:var(--error,#e53e3e);'>❌ " + (json.message || 'Failed.') + "</span>";
             if (json.success) {
-                document.querySelectorAll('.sCounselor-option').forEach(o => o.classList.remove('selected'));
+                document.querySelectorAll('.sBooking-counselor-option').forEach(o => o.classList.remove('selected'));
                 selectedCounselorId = null;
                 document.getElementById('date').value        = '';
                 document.getElementById('time').value        = '';
                 document.getElementById('timeDisplay').value = '';
                 document.getElementById('message').value     = '';
                 document.getElementById('slotsWrap').innerHTML =
-                    '<p class="sAppt-slots-hint">Select a counselor and date to see available slots.</p>';
+                    '<p class="sBooking-slots-hint">Select a counselor and date to see available slots.</p>';
                 document.getElementById('noSlots').style.display = 'none';
                 setTimeout(() => result.innerHTML = '', 5000);
             }
@@ -741,12 +477,10 @@ function bookAppointment() {
 
 async function checkReferralBadge() {
   try {
-    const res = await fetch('scheck_referral.php');
+    const res  = await fetch('scheck_referral.php');
     const data = await res.json();
     const badge = document.getElementById('referralBadge');
-    if (badge) {
-      badge.style.display = data.unseen > 0 ? 'inline-block' : 'none';
-    }
+    if (badge) badge.style.display = data.unseen > 0 ? 'inline-block' : 'none';
   } catch (e) {}
 }
 

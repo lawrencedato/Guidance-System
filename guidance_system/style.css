@@ -1512,49 +1512,29 @@ i, svg {
 /* =========================
    BOOK APPOINTMENT MAIN LAYOUT
 ========================= */
-.sBooking-main {
+.sBooking-wrap {
   margin-left: 280px;
-
-  padding: 40px 28px;
-
+  padding: 36px 40px;
+  background: var(--bg);
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-
-  background: var(--bg);
+  gap: 24px;
 }
 
+/* ─────────────────────────────────────────
+   BOOKING CARD
+───────────────────────────────────────── */
 .sBooking-card {
   position: relative;
-
-  padding: 28px;
-
+  padding: 32px;
   border-radius: 20px;
-
-  border: 1px solid rgba(255, 255, 255, 0.08);
-
+  border: 1px solid rgba(255, 255, 255, 0.08); 
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(14px);
-
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-
   transition: 0.25s ease;
-
   overflow: hidden;
-}
-
-.sBooking-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-
-  background: radial-gradient(
-    circle at top left,
-    rgba(73, 136, 196, 0.18),
-    transparent 60%
-  );
-
-  pointer-events: none;
 }
 
 .sBooking-card:hover {
@@ -1562,147 +1542,522 @@ i, svg {
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
 
-.sBooking-formGroup {
+.sBooking-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top left, rgba(73, 136, 196, 0.15), transparent 60%);
+  pointer-events: none;
+}
+
+.sBooking-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 24px;
+}
+
+/* ─────────────────────────────────────────
+   THREE-COLUMN LAYOUT
+───────────────────────────────────────── */
+.sBooking-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ─────────────────────────────────────────
+   SECTION LABELS
+───────────────────────────────────────── */
+.sBooking-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 14px;
+}
+
+.sBooking-section-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────
+   COUNSELOR GRID
+───────────────────────────────────────── */
+.sBooking-counselor-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-
-  margin-bottom: 18px;
+  gap: 10px;
 }
 
-.sBooking-formGroup label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  opacity: 0.9;
-}
-
-.sBooking-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-
-  gap: 18px;
-
-  padding: 20px;
-  margin-top: 10px;
-
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 14px;
-}
-
-.sBooking-grid input,
-.sBooking-grid select,
-.sBooking-grid textarea {
-  width: 100%;
-
+.sBooking-counselor-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 12px 14px;
-
-  border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-
-  color: var(--text);
-  font-size: 14px;
-
-  outline: none;
-
+  border-radius: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
   transition: 0.2s ease;
 }
 
-.sBooking-grid input:focus,
-.sBooking-grid select:focus,
-.sBooking-grid textarea:focus {
-  border-color: #4988C4;
-
-  box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.15);
+.sBooking-counselor-option:hover {
+  border-color: var(--primary);
+  background: rgba(73, 136, 196, 0.07);
+  transform: translateX(3px);
 }
 
-.sBooking-message textarea {
-  min-height: 140px;
-  resize: none;
+.sBooking-counselor-option.selected {
+  border-color: var(--primary);
+  background: rgba(73, 136, 196, 0.12);
+  box-shadow: 0 0 0 3px rgba(73, 136, 196, 0.15);
 }
 
-.sBooking-slots {
+.sBooking-counselor-option img {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sBooking-counselor-info strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.sBooking-counselor-info span {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-soft);
+  padding: 2px 8px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-top: 3px;
+}
+
+/* ─────────────────────────────────────────
+   DATE INPUT
+───────────────────────────────────────── */
+.sBooking-date-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: 0.2s;
+  margin-bottom: 20px;
+}
+
+.sBooking-date-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(73, 136, 196, 0.15);
+}
+
+/* ─────────────────────────────────────────
+   SLOT BUTTONS
+───────────────────────────────────────── */
+.sBooking-slots-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .sBooking-slotBtn {
   padding: 8px 14px;
-
   border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-
+  border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.6);
-
   font-size: 13px;
   cursor: pointer;
-
-  transition: 0.25s ease;
+  transition: 0.2s ease;
+  color: var(--text);
 }
 
-.sBooking-slotBtn:hover {
-  transform: scale(1.05);
+.sBooking-slotBtn:hover:not(:disabled) {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.sBooking-slotBtn.chosen {
   background: var(--primary);
   color: white;
   border-color: var(--primary);
 }
 
-.sBooking-slotBtn.active-slot {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
-
-.sBooking-slotBtn:disabled {
-  opacity: 0.5;
+.sBooking-slotBtn.taken {
+  opacity: 0.4;
   cursor: not-allowed;
+  text-decoration: line-through;
 }
 
-.sBooking-button {
+.sBooking-slots-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.sBooking-slots-loading {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ─────────────────────────────────────────
+   DETAIL FIELDS
+───────────────────────────────────────── */
+.sBooking-field {
+  margin-bottom: 14px;
+}
+
+.sBooking-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.sBooking-field input,
+.sBooking-field select,
+.sBooking-field textarea {
   width: 100%;
-  padding: 14px;
+  padding: 11px 14px;
+  border-radius: 12px;
+border: 1px solid rgba(0, 0, 0, 0.08); 
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: 0.2s;
+}
 
-  margin-top: 15px;
+.sBooking-field input:focus,
+.sBooking-field select:focus,
+.sBooking-field textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(73, 136, 196, 0.15);
+}
 
-  border-radius: 14px;
+.sBooking-field textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.sBooking-field input[readonly] {
+  background: var(--bg-soft);
+  color: var(--text-muted);
+  cursor: default;
+}
+
+/* ─────────────────────────────────────────
+   COLUMN DIVIDER
+───────────────────────────────────────── */
+.sBooking-col-divider {
+  border-left: 1px solid var(--border);
+  padding-left: 24px;
+}
+
+/* ─────────────────────────────────────────
+   SUBMIT BUTTON
+───────────────────────────────────────── */
+.sBooking-submit {
+  width: 100%;
+  padding: 13px;
+  margin-top: 4px;
+  border-radius: 12px;
   border: none;
-
   font-size: 14px;
   font-weight: 600;
-
   color: white;
   cursor: pointer;
-
   background: linear-gradient(135deg, #113F67, #4988C4);
-
   box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
-
   transition: 0.2s ease;
 }
 
-.sBooking-button:hover {
+.sBooking-submit:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
 }
 
-.sBooking-card input[type="file"] {
-  margin-top: 10px;
-  padding: 10px;
+/* ─────────────────────────────────────────
+   UPLOAD CARD
+───────────────────────────────────────── */
+.sBooking-upload-card {
+  position: relative;
+  padding: 28px 32px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08); /* changed from var(--border) */
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  transition: 0.25s ease;
+  overflow: hidden;
+}
 
-  border-radius: 14px;
-  border: 1px dashed rgba(0, 0, 0, 0.08);
+.sBooking-upload-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
 
-  background: rgba(255, 255, 255, 0.6);
+.sBooking-upload-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top left, rgba(73, 136, 196, 0.1), transparent 60%);
+  pointer-events: none;
+}
+
+.sBooking-upload-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
   color: var(--text);
 }
 
+.sBooking-upload-card p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.sBooking-upload-btn {
+  width: auto;
+  padding: 10px 20px;
+  margin-top: 10px;
+  border-radius: 12px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  background: linear-gradient(135deg, #113F67, #4988C4);
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+  transition: 0.2s ease;
+}
+
+.sBooking-upload-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+#bookingResult {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.sBooking-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+.sBooking-upload-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* ══════════════════════════════════════════
+   DARK THEME
+══════════════════════════════════════════ */
+
+/* ── Cards ── */
+[data-theme="dark"] .sBooking-card,
+[data-theme="dark"] .sBooking-upload-card {
+  background: rgba(20, 30, 45, 0.85);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .sBooking-card::before,
+[data-theme="dark"] .sBooking-upload-card::before {
+  background: radial-gradient(circle at top left, rgba(73, 136, 196, 0.12), transparent 60%);
+}
+
+[data-theme="dark"] .sBooking-card h3,
+[data-theme="dark"] .sBooking-upload-card h3 {
+  color: #e2eaf4;
+}
+
+[data-theme="dark"] .sBooking-upload-card p {
+  color: #8ba4be;
+}
+
+/* ── Section labels ── */
+[data-theme="dark"] .sBooking-section-label {
+  color: #6daadf;
+}
+
+[data-theme="dark"] .sBooking-section-num {
+  background: #4988C4;
+}
+
+/* ── Column divider ── */
+[data-theme="dark"] .sBooking-col-divider {
+  border-left-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Counselor options ── */
+[data-theme="dark"] .sBooking-counselor-option {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .sBooking-counselor-option:hover {
+  background: rgba(73, 136, 196, 0.15);
+  border-color: #4988C4;
+}
+
+[data-theme="dark"] .sBooking-counselor-option.selected {
+  background: rgba(73, 136, 196, 0.2);
+  border-color: #4988C4;
+  box-shadow: 0 0 0 3px rgba(73, 136, 196, 0.25);
+}
+
+[data-theme="dark"] .sBooking-counselor-option img {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .sBooking-counselor-info strong {
+  color: #dce8f5;
+}
+
+[data-theme="dark"] .sBooking-counselor-info span {
+  background: rgba(255, 255, 255, 0.07);
+  color: #8ba4be;
+}
+
+/* ── Date input ── */
+[data-theme="dark"] .sBooking-date-input {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #dce8f5;
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .sBooking-date-input:focus {
+  border-color: #4988C4;
+  box-shadow: 0 0 0 3px rgba(73, 136, 196, 0.2);
+}
+
+/* ── Slot buttons ── */
+[data-theme="dark"] .sBooking-slotBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #dce8f5;
+}
+
+[data-theme="dark"] .sBooking-slotBtn:hover:not(:disabled) {
+  background: #4988C4;
+  border-color: #4988C4;
+  color: #fff;
+}
+
+[data-theme="dark"] .sBooking-slotBtn.chosen {
+  background: #4988C4;
+  border-color: #4988C4;
+  color: #fff;
+}
+
+[data-theme="dark"] .sBooking-slotBtn.taken {
+  color: #556b85;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .sBooking-slots-hint,
+[data-theme="dark"] .sBooking-slots-loading {
+  color: #6e8ea8;
+}
+
+[data-theme="dark"] #noSlots {
+  color: #6e8ea8;
+}
+
+/* ── Detail fields ── */
+[data-theme="dark"] .sBooking-field label {
+  color: #c4d6e8;
+}
+
+[data-theme="dark"] .sBooking-field input,
+[data-theme="dark"] .sBooking-field select,
+[data-theme="dark"] .sBooking-field textarea {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #dce8f5;
+}
+
+[data-theme="dark"] .sBooking-field input:focus,
+[data-theme="dark"] .sBooking-field select:focus,
+[data-theme="dark"] .sBooking-field textarea:focus {
+  border-color: #4988C4;
+  box-shadow: 0 0 0 3px rgba(73, 136, 196, 0.2);
+}
+
+[data-theme="dark"] .sBooking-field input[readonly] {
+  background: rgba(255, 255, 255, 0.03);
+  color: #5c7d9a;
+}
+
+[data-theme="dark"] .sBooking-field select option {
+  background: #1a2a3a;
+  color: #dce8f5;
+}
+
+[data-theme="dark"] .sBooking-field textarea::placeholder {
+  color: #4a6680;
+}
+
+[data-theme="dark"] .sBooking-date-input::placeholder {
+  color: #4a6680;
+}
+
+/* ── Submit & upload buttons ── */
+[data-theme="dark"] .sBooking-submit,
+[data-theme="dark"] .sBooking-upload-btn {
+  background: linear-gradient(135deg, #0d3254, #3a7ab8);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .sBooking-submit:hover,
+[data-theme="dark"] .sBooking-upload-btn:hover {
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] #fileInput {
+  color: #8ba4be;
+}
+
+[data-theme="dark"] #fileName {
+  color: #6e8ea8;
+}
+
+
+/* =========================
+   CONCERN MAIN LAYOUT
+========================= */
 .sConcern-main {
   margin-left: 280px;
 
@@ -1990,6 +2345,300 @@ i, svg {
 
   font-weight: 600;
   color: var(--text);
+}
+
+/* =============================================
+   DONE BANNER — LIGHT
+============================================= */
+.sWellness-done-banner {
+  background: linear-gradient(135deg, rgba(240,253,244,0.9), rgba(220,252,231,0.9));
+  border: 1.5px solid #86efac;
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  margin-bottom: 8px;
+  transition: var(--transition);
+}
+.sWellness-done-banner .done-emoji {
+  font-size: 56px;
+  display: block;
+  margin-bottom: 10px;
+}
+.sWellness-done-banner h3 {
+  color: #15803d;
+  font-size: 20px;
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+.sWellness-done-banner p {
+  color: #166534;
+  font-size: 13px;
+  margin: 0;
+}
+
+/* DONE SUMMARY CHIPS */
+.sWellness-done-summary {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.sWellness-done-chip {
+  background: rgba(255,255,255,0.8);
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-size: 13px;
+  color: #166534;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(6px);
+  transition: var(--transition);
+}
+.sWellness-done-time {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 14px;
+}
+.sWellness-done-note {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+/* =============================================
+   DONE BANNER — DARK MODE (FIXED: visible, glowing, distinct)
+============================================= */
+[data-theme="dark"] .sWellness-done-banner {
+  background: linear-gradient(135deg, rgba(5, 46, 22, 0.95), rgba(2, 44, 34, 0.9));
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(74, 222, 128, 0.12),
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(74, 222, 128, 0.1);
+}
+[data-theme="dark"] .sWellness-done-banner h3 {
+  color: #4ade80;
+  text-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
+}
+[data-theme="dark"] .sWellness-done-banner > p {
+  color: #a7f3d0;
+}
+[data-theme="dark"] .sWellness-done-chip {
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  color: #6ee7b7;
+}
+[data-theme="dark"] .sWellness-done-chip i {
+  color: #4ade80;
+}
+[data-theme="dark"] .sWellness-done-time {
+  color: #94a3b8;
+}
+[data-theme="dark"] .sWellness-done-note {
+  color: #64748b;
+}
+
+/* =============================================
+   EDIT BUTTON — LIGHT
+============================================= */
+.sWellness-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 10px 22px;
+  border-radius: 20px;
+  border: 1.5px solid #4988C4;
+  background: transparent;
+  color: #4988C4;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.15s, border-color 0.2s;
+}
+.sWellness-edit-btn:hover {
+  background: #4988C4;
+  color: #fff;
+  transform: scale(1.04);
+}
+
+/* EDIT BUTTON — DARK MODE */
+[data-theme="dark"] .sWellness-edit-btn {
+  border-color: rgba(99, 179, 237, 0.6);
+  color: #93c5fd;
+  background: rgba(99, 179, 237, 0.06);
+}
+[data-theme="dark"] .sWellness-edit-btn:hover {
+  background: rgba(99, 179, 237, 0.15);
+  color: #bfdbfe;
+  border-color: rgba(99, 179, 237, 0.8);
+  transform: scale(1.04);
+}
+
+/* =============================================
+   FORM HIDDEN
+============================================= */
+.sWellness-form-section.hidden {
+  display: none;
+}
+
+/* =============================================
+   EDIT MODE LABEL — LIGHT
+============================================= */
+.sWellness-edit-label {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #4988C4;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding: 8px 14px;
+  background: rgba(73,136,196,0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(73,136,196,0.2);
+  transition: var(--transition);
+}
+.sWellness-edit-label.show { display: flex; }
+
+/* EDIT MODE LABEL — DARK */
+[data-theme="dark"] .sWellness-edit-label {
+  color: #93c5fd;
+  background: rgba(99, 179, 237, 0.08);
+  border-color: rgba(99, 179, 237, 0.2);
+}
+
+/* =============================================
+   BUTTON ROW
+============================================= */
+.sWellness-btn-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* =============================================
+   CANCEL BUTTON — LIGHT + DARK
+============================================= */
+.sWellness-cancel-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.sWellness-cancel-btn:hover {
+  background: var(--bg-soft);
+}
+[data-theme="dark"] .sWellness-cancel-btn:hover {
+  background: var(--hover);
+}
+
+
+.sWellness-btn {
+  width: 100%;
+  padding: 14px;
+  margin-top: 15px;
+  border-radius: 14px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  background: linear-gradient(135deg, #113F67, #4988C4);
+  box-shadow: 0 10px 20px rgba(17, 63, 103, 0.25);
+  transition: 0.2s ease;
+}
+
+.sWellness-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(17, 63, 103, 0.35);
+}
+
+.sWellness-btn:active {
+  transform: scale(0.98);
+}
+
+/* =============================================
+   CARD — DARK MODE
+============================================= */
+[data-theme="dark"] .sWellness-card {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* =============================================
+   MOOD BUTTONS — DARK MODE
+============================================= */
+[data-theme="dark"] .sWellness-mood-btn {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--border);
+  color: var(--text);
+}
+[data-theme="dark"] .sWellness-mood-btn:hover {
+  background: rgba(99, 179, 237, 0.15);
+  color: #fff;
+}
+[data-theme="dark"] .sWellness-mood-btn.active {
+  background: linear-gradient(135deg, #113F67, #4988C4);
+  color: #fff;
+  border-color: #4988C4;
+  box-shadow: 0 4px 14px rgba(73,136,196,0.35);
+}
+
+/* =============================================
+   FORM INPUTS — DARK MODE
+============================================= */
+[data-theme="dark"] .sWellness-form-group input,
+[data-theme="dark"] .sWellness-form-group select {
+  background: rgba(255,255,255,0.05);
+  border-color: var(--border);
+  color: var(--text);
+}
+[data-theme="dark"] .sWellness-form-group input:focus,
+[data-theme="dark"] .sWellness-form-group select:focus {
+  border-color: #4988C4;
+  box-shadow: 0 0 0 4px rgba(73,136,196,0.2);
+}
+[data-theme="dark"] .sWellness-form-group select option {
+  background: #0f172a;
+  color: var(--text);
+}
+
+/* =============================================
+   RANGE SLIDER — DARK
+============================================= */
+[data-theme="dark"] input[type="range"] {
+  accent-color: #4988C4;
+}
+
+/* =============================================
+   TEXT — DARK
+============================================= */
+[data-theme="dark"] .sWellness-mood-display,
+[data-theme="dark"] .sWellness-stress-display,
+[data-theme="dark"] .sWellness-card h2,
+[data-theme="dark"] .sWellness-form-group label {
+  color: var(--text);
+}
+
+[data-theme="dark"] .sWellness-btn {
+  background: linear-gradient(135deg, #0d3254, #3a7ab8);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .sWellness-btn:hover {
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
 }
 
 .sReferral-main {
@@ -6115,7 +6764,6 @@ html {
   scroll-behavior: smooth;
 }
 
-[data-theme="dark"] .sBooking-card,
 [data-theme="dark"] .sConcern-card,
 [data-theme="dark"] .card-emergency,
 [data-theme="dark"] .sWellness-card,
@@ -6134,19 +6782,4 @@ html {
 [data-theme="dark"] .cStudentModal-container {
   background: var(--card);
   border-color: var(--border);
-}
-
-/* Fix any hardcoded white input/form backgrounds inside cards */
-[data-theme="dark"] .sBooking-grid input,
-[data-theme="dark"] .sBooking-grid select,
-[data-theme="dark"] .sBooking-grid textarea,
-[data-theme="dark"] .sConcern-formGroup input,
-[data-theme="dark"] .sConcern-formGroup textarea,
-[data-theme="dark"] .sWellness-form-group input,
-[data-theme="dark"] .sWellness-form-group select,
-[data-theme="dark"] .sWellness-mood-btn,
-[data-theme="dark"] .sBooking-slotBtn {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: var(--border);
-  color: var(--text);
 }
