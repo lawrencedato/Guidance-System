@@ -85,7 +85,7 @@ while ($row = $studentsRes->fetch_assoc()) $students[] = $row;
 ?>
 
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -128,7 +128,7 @@ while ($row = $studentsRes->fetch_assoc()) $students[] = $row;
 
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
-    <a href="cavailability.php"><i class="fa fa-clock"></i> My Availability</a>
+    <a href="cavailability.php"><i class="fa fa-clock"></i> Time Availability</a>
     <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
     <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
 
@@ -298,6 +298,11 @@ while ($row = $studentsRes->fetch_assoc()) $students[] = $row;
 </div>
 
 <script>
+(function() {
+    const saved = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", saved);
+})();
+
 function applyFilters() {
   const program = document.getElementById("filterProgram").value.toLowerCase();
   const year = document.getElementById("filterYear").value.toLowerCase();
@@ -420,12 +425,10 @@ function toggleSettings() {
 }
 
 function toggleTheme() {
-  document.documentElement.setAttribute(
-    "data-theme",
-    document.documentElement.getAttribute("data-theme") === "dark"
-      ? "light"
-      : "dark"
-  );
+    const html = document.documentElement;
+    const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+    html.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
 }
 
 function logout() {

@@ -86,335 +86,14 @@ while ($r = $avRes->fetch_assoc()) {
 $dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Availability – UNITYCARE</title>
+<title>Time Availability – UNITYCARE</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<style>
-/* ── Page layout ── */
-.cAvail-main {
-  margin-left: 280px;
-  padding: var(--spacing-xxl);
-  background: var(--bg);
-  min-height: 100vh;
-}
-
-/* ── Availability card ── */
-.cAvail-card {
-  position: relative;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(14px);
-  overflow: hidden;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-.cAvail-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top left, rgba(37,99,235,0.1), transparent 60%);
-  pointer-events: none;
-}
-
-/* ── Info banner ── */
-.cAvail-banner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: rgba(73,136,196,0.08);
-  border: 1px solid rgba(73,136,196,0.2);
-  border-radius: var(--radius);
-  padding: 14px 18px;
-  margin-bottom: 24px;
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.cAvail-banner i {
-  color: var(--primary);
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-/* ── Day grid ── */
-.cAvail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-.cAvail-day {
-  background: rgba(255,255,255,0.55);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  transition: var(--transition);
-}
-
-.cAvail-day:hover {
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-2px);
-}
-
-.cAvail-day h4 {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.cAvail-day h4 i { font-size: 12px; opacity: 0.7; }
-
-/* ── Slot list ── */
-.cAvail-slot-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
-  min-height: 20px;
-}
-
-.cAvail-slot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 7px 10px;
-  border-radius: 8px;
-  background: rgba(73,136,196,0.1);
-  font-size: 13px;
-  color: var(--text);
-  transition: var(--transition-fast);
-}
-
-.cAvail-slot:hover { background: rgba(73,136,196,0.18); }
-
-.cAvail-slot button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #ef4444;
-  font-size: 13px;
-  padding: 0 4px;
-  transition: 0.15s ease;
-  line-height: 1;
-}
-
-.cAvail-slot button:hover { transform: scale(1.2); }
-
-/* ── Add slot row ── */
-.cAvail-add {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-top: 10px;
-}
-
-.cAvail-add input[type="time"] {
-  flex: 1;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--text);
-  font-size: 13px;
-  outline: none;
-  transition: var(--transition-fast);
-}
-
-.cAvail-add input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(73,136,196,0.15);
-}
-
-.cAvail-add button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 8px;
-  background: linear-gradient(135deg,#113F67,#4988C4);
-  color: white;
-  font-size: 13px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: var(--transition-fast);
-}
-
-.cAvail-add button:hover {
-  opacity: 0.88;
-  transform: translateY(-1px);
-}
-
-.cAvail-empty {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-/* ── Slot count badge ── */
-.cAvail-count {
-  margin-left: auto;
-  background: rgba(73,136,196,0.15);
-  color: var(--primary);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 999px;
-}
-
-/* Dark mode overrides */
-[data-theme="dark"] .cAvail-day {
-  background: rgba(255,255,255,0.04);
-}
-[data-theme="dark"] .cAvail-slot {
-  background: rgba(73,136,196,0.15);
-}
-[data-theme="dark"] .cAvail-add input[type="time"] {
-  background: rgba(255,255,255,0.06);
-  color: var(--text);
-  border-color: var(--border);
-}
-
-/* ═══════════════════════════════════════════
-   CUSTOM MODAL (replaces alert / confirm)
-═══════════════════════════════════════════ */
-.avail-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(17, 63, 103, 0.25);
-  backdrop-filter: blur(6px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 99999;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.22s ease;
-}
-
-.avail-modal-overlay.show {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.avail-modal-box {
-  position: relative;
-  width: 92%;
-  max-width: 400px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 32px 28px 24px;
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(18px);
-  text-align: center;
-  transform: scale(0.94);
-  transition: transform 0.22s ease;
-}
-
-.avail-modal-overlay.show .avail-modal-box {
-  transform: scale(1);
-}
-
-.avail-modal-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  margin-bottom: 14px;
-}
-
-.avail-modal-icon.warning {
-  background: rgba(239, 68, 68, 0.12);
-  color: #ef4444;
-}
-
-.avail-modal-icon.info {
-  background: rgba(73,136,196,0.12);
-  color: var(--primary);
-}
-
-.avail-modal-title {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-
-.avail-modal-msg {
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.6;
-  margin-bottom: 22px;
-}
-
-.avail-modal-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
-
-.avail-modal-btn {
-  padding: 10px 22px;
-  border-radius: var(--radius);
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.avail-modal-btn.cancel {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
-}
-
-.avail-modal-btn.cancel:hover {
-  background: var(--hover);
-}
-
-.avail-modal-btn.confirm {
-  background: linear-gradient(135deg,#ef4444,#b91c1c);
-  color: white;
-  box-shadow: 0 6px 16px rgba(239,68,68,0.3);
-}
-
-.avail-modal-btn.confirm:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(239,68,68,0.4);
-}
-
-.avail-modal-btn.ok {
-  background: linear-gradient(135deg,#113F67,#4988C4);
-  color: white;
-  box-shadow: 0 6px 16px rgba(73,136,196,0.3);
-}
-
-.avail-modal-btn.ok:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(73,136,196,0.4);
-}
-
-/* dark mode modal */
-[data-theme="dark"] .avail-modal-box {
-  background: rgba(15, 23, 42, 0.92);
-  border-color: var(--border);
-}
-</style>
 </head>
 <body class="body">
 
@@ -441,7 +120,7 @@ $dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturd
     <a href="counselor.php"><i class="fa fa-gauge"></i> Dashboard</a>
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
-    <a href="cavailability.php" class="active"><i class="fa fa-clock"></i> My Availability</a>
+    <a href="cavailability.php" class="active"><i class="fa fa-clock"></i> Time Availability</a>
     <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
     <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
     <p class="sidebar-title">STUDENTS</p>
@@ -457,7 +136,7 @@ $dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturd
 <!-- ══════════════════ TOPBAR ══════════════════ -->
 <header class="topbar">
   <div class="topbar-left">
-    <h2>My Availability</h2>
+    <h2>Time Availability</h2>
   </div>
   <div class="topbar-right">
     <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
@@ -587,6 +266,11 @@ $dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturd
 </div>
 
 <script>
+
+(function() {
+    const saved = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", saved);
+})();
 // ── Theme / settings ────────────────────────────────────────────────────────
 function toggleSettingsMenu(e) {
     e.stopPropagation();
@@ -599,7 +283,9 @@ document.addEventListener("click", e => {
 });
 function toggleTheme() {
     const html = document.documentElement;
-    html.setAttribute("data-theme", html.getAttribute("data-theme") === "light" ? "dark" : "light");
+    const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+    html.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
 }
 function logout()      { document.getElementById('logoutOverlay').classList.add('show'); }
 function closeLogout() { document.getElementById('logoutOverlay').classList.remove('show'); }

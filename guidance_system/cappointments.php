@@ -183,7 +183,7 @@ $approvedAppointments = [];
 while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -193,312 +193,7 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
 
-/* ══════════════════════════════════════════════
-   TABS  —  all cAppointment-*
-══════════════════════════════════════════════ */
-.cAppointment-tabs {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 24px;
-    border-bottom: 2px solid var(--border);
-}
-.cAppointment-tab {
-    padding: 10px 24px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    background: none;
-    color: var(--text-muted);
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    transition: color 0.2s, border-color 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.cAppointment-tab:hover { color: var(--primary); }
-.cAppointment-tab.active {
-    color: var(--primary);
-    border-bottom-color: var(--primary);
-}
-.cAppointment-tabBadge {
-    background: var(--primary);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 1px 7px;
-    border-radius: 999px;
-    min-width: 20px;
-    text-align: center;
-}
 
-/* ══════════════════════════════════════════════
-   TAB PANELS
-══════════════════════════════════════════════ */
-.cAppointment-panel { display: none; }
-.cAppointment-panel.active { display: block; }
-
-/* ══════════════════════════════════════════════
-   AUTO-COMPLETE NOTICE BANNER
-══════════════════════════════════════════════ */
-.cAppointment-noticeBanner {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #fffbeb;
-    border: 1px solid #fde68a;
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    margin-bottom: 20px;
-    font-size: 13px;
-    color: #92400e;
-    animation: cAppointment-fadeIn 0.35s ease;
-}
-.cAppointment-noticeBanner i {
-    font-size: 16px;
-    color: #f59e0b;
-    flex-shrink: 0;
-}
-.cAppointment-noticeBanner strong { color: #78350f; }
-
-[data-theme="dark"] .cAppointment-noticeBanner {
-    background: rgba(245,158,11,0.1);
-    border-color: rgba(245,158,11,0.3);
-    color: #fcd34d;
-}
-[data-theme="dark"] .cAppointment-noticeBanner strong { color: #fde68a; }
-
-@keyframes cAppointment-fadeIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ══════════════════════════════════════════════
-   APPROVED CARD GRID
-   (cards reuse .cAppointment-card from style.css)
-══════════════════════════════════════════════ */
-.cAppointment-approvedGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
-}
-
-/* past pill inside card header */
-.cAppointment-pastPill {
-    margin-left: auto;
-    font-size: 11px;
-    background: #fef3c7;
-    color: #92400e;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-weight: 600;
-}
-
-/* action row inside approved card */
-.cAppointment-approvedActions {
-    display: flex;
-    gap: 8px;
-    margin-top: 14px;
-}
-.cAppointment-approvedBtn {
-    flex: 1;
-    padding: 8px 0;
-    border: none;
-    border-radius: var(--radius);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-.cAppointment-approvedBtn:hover  { opacity: 0.82; }
-.cAppointment-approvedBtn:active { transform: scale(0.97); }
-.cAppointment-approvedBtn.complete { background: #d1fae5; color: #065f46; }
-.cAppointment-approvedBtn.cancel   { background: #fee2e2; color: #991b1b; }
-
-/* status badge that replaces the action row after acting */
-.cAppointment-statusBadge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 12px;
-    padding: 6px 12px;
-    border-radius: var(--radius);
-    font-size: 12px;
-    font-weight: 600;
-    width: 100%;
-    box-sizing: border-box;
-}
-.cAppointment-statusBadge.completed { background: #d1fae5; color: #065f46; }
-.cAppointment-statusBadge.cancelled { background: #fee2e2; color: #991b1b; }
-
-/* ══════════════════════════════════════════════
-   SHARED MODAL  —  logout-style
-   (Reject + Cancel both use this)
-══════════════════════════════════════════════ */
-.cAppointment-modalOverlay {
-    visibility: hidden;
-    opacity: 0;
-    position: fixed;
-    inset: 0;
-    background: rgba(17, 63, 103, 0.25);
-    backdrop-filter: blur(6px);
-    z-index: 99999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
-}
-.cAppointment-modalOverlay.show {
-    visibility: visible;
-    opacity: 1;
-}
-.cAppointment-modalBox {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-xxl);
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-    box-shadow: var(--shadow-lg);
-    animation: cAppointment-modalPop 0.25s ease;
-}
-@keyframes cAppointment-modalPop {
-    from { opacity: 0; transform: scale(0.95); }
-    to   { opacity: 1; transform: scale(1); }
-}
-
-/* icon circle */
-.cAppointment-modalIcon {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: rgba(239, 68, 68, 0.1);
-    color: #e53e3e;
-    font-size: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto var(--spacing-lg);
-}
-
-.cAppointment-modalBox h3 {
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: var(--spacing-sm);
-    color: var(--text);
-}
-.cAppointment-modalBox > p {
-    font-size: 14px;
-    color: var(--text-muted);
-    margin-bottom: var(--spacing-xl);
-    line-height: 1.6;
-}
-
-/* cancel reason type — radio pills */
-.cAppointment-cancelWho {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 14px;
-    justify-content: center;
-}
-.cAppointment-cancelWho label {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 10px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--bg-soft);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: 0.18s ease;
-}
-.cAppointment-cancelWho input[type="radio"] { display: none; }
-.cAppointment-cancelWho input[type="radio"]:checked + span {
-    /* handled via JS adding .selected to label */
-}
-.cAppointment-cancelWho label.selected {
-    background: rgba(239,68,68,0.1);
-    border-color: #ef4444;
-    color: #c53030;
-}
-
-/* shared textarea + select */
-.cAppointment-modalBox textarea,
-.cAppointment-modalBox select {
-    width: 100%;
-    padding: 10px 14px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text);
-    font-size: 13px;
-    font-family: inherit;
-    outline: none;
-    box-sizing: border-box;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    margin-bottom: 0;
-}
-.cAppointment-modalBox textarea {
-    resize: vertical;
-    min-height: 80px;
-}
-.cAppointment-modalBox textarea:focus,
-.cAppointment-modalBox select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(73,136,196,0.15);
-}
-
-.cAppointment-modalError {
-    font-size: 12px;
-    color: #ef4444;
-    margin-top: 6px;
-    text-align: left;
-    display: none;
-}
-
-/* action buttons — full-width row like logout */
-.cAppointment-modalActions {
-    display: flex;
-    gap: var(--spacing-md);
-    margin-top: var(--spacing-xl);
-}
-.cAppointment-modalBtn {
-    flex: 1;
-    padding: 12px;
-    border-radius: var(--radius);
-    border: none;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-}
-.cAppointment-modalBtn.back {
-    background: var(--bg-soft);
-    color: var(--text);
-    border: 1px solid var(--border);
-}
-.cAppointment-modalBtn.back:hover { background: var(--border); }
-.cAppointment-modalBtn.confirm {
-    background: linear-gradient(135deg, #c53030, #e53e3e);
-    color: #fff;
-    box-shadow: 0 10px 20px rgba(229,62,62,0.25);
-}
-.cAppointment-modalBtn.confirm:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 28px rgba(229,62,62,0.35);
-}
 </style>
 </head>
 <body class="body">
@@ -526,7 +221,7 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
     <a href="counselor.php"><i class="fa fa-gauge"></i> Dashboard</a>
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.php" class="active"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
-    <a href="cavailability.php"><i class="fa fa-clock"></i> My Availability</a>
+    <a href="cavailability.php"><i class="fa fa-clock"></i> Time Availability</a>
     <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
     <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
     <p class="sidebar-title">STUDENTS</p>
@@ -768,6 +463,12 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
 </div>
 
 <script>
+
+(function() {
+    const saved = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", saved);
+})();
+
 // ── Settings / theme ──────────────────────────────────────────────────────────
 function toggleSettingsMenu(e) {
     e.stopPropagation();
@@ -780,7 +481,9 @@ document.addEventListener("click", e => {
 });
 function toggleTheme() {
     const html = document.documentElement;
-    html.setAttribute("data-theme", html.getAttribute("data-theme") === "light" ? "dark" : "light");
+    const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+    html.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
 }
 
 // ── Logout ────────────────────────────────────────────────────────────────────

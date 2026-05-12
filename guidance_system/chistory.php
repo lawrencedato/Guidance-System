@@ -98,7 +98,7 @@ function safeTime($t) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -275,7 +275,7 @@ function safeTime($t) {
 
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
-    <a href="cavailability.php"><i class="fa fa-clock"></i> My Availability</a>
+    <a href="cavailability.php"><i class="fa fa-clock"></i> Time Availability</a>
     <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
     <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
 
@@ -635,6 +635,11 @@ function safeTime($t) {
 </div>
 
 <script>
+(function() {
+    const saved = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", saved);
+})();
+
 /* ═══════════════ TAB SWITCHING ═══════════════ */
 let currentTab = 'sessions';
 
@@ -811,9 +816,10 @@ function toggleSettingsMenu(e) {
 }
 
 function toggleTheme() {
-  const html = document.documentElement;
-  html.setAttribute('data-theme',
-    html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    const html = document.documentElement;
+    const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+    html.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
 }
 
 function logout()       { document.getElementById('logoutOverlay').classList.add('show'); }

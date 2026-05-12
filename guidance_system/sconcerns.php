@@ -153,7 +153,6 @@ while ($row = $res->fetch_assoc()) $concerns[] = $row;
   box-shadow: 0 0 6px rgba(147, 197, 253, 0.5);
   backdrop-filter: blur(4px);
 }
-
 </style>
 </head>
 <body class="body">

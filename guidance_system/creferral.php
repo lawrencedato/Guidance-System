@@ -323,7 +323,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
 
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
-    <a href="cavailability.php"><i class="fa fa-clock"></i> My Availability</a>
+    <a href="cavailability.php"><i class="fa fa-clock"></i> Time Availability</a>
     <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
     <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
 
@@ -569,11 +569,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
 
 <!-- ========================= SCRIPT ========================= -->
 <script>
-
-// ── Theme (persist) ──────────────────────────────────────────────────────────
-(function () {
-  const saved = localStorage.getItem('theme') || 'light';
-  document.documentElement.setAttribute('data-theme', saved);
+(function() {
+    const saved = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", saved);
 })();
 
 // ── Student ID lookup ────────────────────────────────────────────────────────
@@ -744,10 +742,10 @@ document.addEventListener('click', e => {
 
 // ── Theme toggle ──────────────────────────────────────────────────────────────
 function toggleTheme() {
-  const html     = document.documentElement;
-  const newTheme = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-  html.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
+    const html = document.documentElement;
+    const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+    html.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
 }
 
 // ── Logout ────────────────────────────────────────────────────────────────────

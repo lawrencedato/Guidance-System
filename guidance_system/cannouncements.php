@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'counselor') {
 }
 
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
-$cid  = (int)$_SESSION['user_id'];  // cast to int — fixes delete type mismatch
+$cid  = (int)$_SESSION['user_id'];
 
 $counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id=$cid LIMIT 1");
 $counselor    = $counselorRes->fetch_assoc();
@@ -63,11 +63,9 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete_announcement') {
     $aid = (int)($_POST['announcement_id'] ?? 0);
     if (!$aid) { echo json_encode(['success' => false, 'message' => 'Invalid ID.']); exit; }
 
-    // Extra safety: only delete if it belongs to this counselor
     $ok = $conn->query(
         "DELETE FROM announcements WHERE announcement_id=$aid AND counselor_id=$cid"
     );
-    // affected_rows = 0 means the row didn't belong to this counselor or didn't exist
     echo json_encode([
         'success' => ($conn->affected_rows > 0),
         'message' => $conn->affected_rows > 0 ? '' : 'Not found or not yours.'
@@ -93,101 +91,14 @@ $annRes = $conn->query("
 while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UNITYCARE | Announcements</title>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="logout.css">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<style>
-.cAnn-list { display:flex; flex-direction:column; gap:16px; margin-top:20px; }
-
-.cAnn-item {
-  display:flex; gap:16px; align-items:flex-start;
-  background:var(--card); border:1px solid var(--border);
-  border-radius:16px; padding:18px 20px;
-  box-shadow:var(--shadow-sm); transition:0.2s ease;
-}
-.cAnn-item:hover { box-shadow:var(--shadow); }
-
-.cAnn-thumb {
-  width:72px; height:72px; border-radius:12px; flex-shrink:0;
-  background:linear-gradient(135deg,#113f67,#34699a);
-  display:flex; align-items:center; justify-content:center;
-  color:rgba(255,255,255,0.45); font-size:1.6rem; overflow:hidden;
-}
-.cAnn-thumb img { width:100%; height:100%; object-fit:cover; border-radius:12px; }
-
-.cAnn-body { flex:1; min-width:0; }
-.cAnn-body h4 {
-  font-size:15px; font-weight:700; color:var(--text);
-  margin:0 0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-.cAnn-body p {
-  font-size:13px; color:var(--text-muted); margin:0 0 8px;
-  display:-webkit-box; -webkit-line-clamp:2;
-  -webkit-box-orient:vertical; overflow:hidden;
-}
-.cAnn-meta { font-size:11px; color:var(--text-muted); opacity:0.75; display:flex; gap:14px; flex-wrap:wrap; }
-
-.cAnn-actions { display:flex; flex-direction:column; gap:8px; flex-shrink:0; }
-.cAnn-btn-view {
-  padding:7px 14px; border-radius:10px;
-  border:1px solid var(--primary); background:transparent;
-  color:var(--primary); font-size:12px; font-weight:600;
-  cursor:pointer; transition:0.2s ease; white-space:nowrap;
-}
-.cAnn-btn-view:hover { background:var(--primary); color:#fff; }
-.cAnn-btn-del {
-  padding:7px 14px; border-radius:10px;
-  border:1px solid #e53e3e; background:transparent;
-  color:#e53e3e; font-size:12px; font-weight:600;
-  cursor:pointer; transition:0.2s ease; white-space:nowrap;
-}
-.cAnn-btn-del:hover { background:#e53e3e; color:#fff; }
-.cAnn-empty { text-align:center; padding:2.5rem; color:var(--text-muted); opacity:0.6; }
-
-/* VIEW MODAL */
-.cAnn-modal-overlay {
-  display:none; position:fixed; inset:0;
-  background:rgba(17,63,103,0.25); backdrop-filter:blur(6px);
-  z-index:9999; justify-content:center; align-items:center;
-}
-.cAnn-modal-overlay.show { display:flex; }
-.cAnn-modal-box {
-  background:var(--card); border:1px solid var(--border);
-  border-radius:18px; padding:28px; width:90%; max-width:520px;
-  max-height:85vh; overflow-y:auto; box-shadow:var(--shadow-lg);
-  animation:modalPop 0.22s ease; position:relative;
-}
-.cAnn-modal-close {
-  position:absolute; top:14px; right:14px;
-  width:32px; height:32px; border-radius:8px; border:none;
-  background:var(--bg-soft); cursor:pointer; font-size:16px;
-  color:var(--text-muted); display:flex; align-items:center;
-  justify-content:center; transition:0.2s ease;
-}
-.cAnn-modal-close:hover { background:var(--border); color:var(--text); }
-.cAnn-modal-img {
-  width:100%; border-radius:12px; margin-bottom:16px;
-  max-height:220px; object-fit:cover;
-}
-.cAnn-modal-title {
-  font-size:18px; font-weight:700; color:var(--text);
-  margin:0 0 10px; padding-right:30px;
-}
-.cAnn-modal-message {
-  font-size:14px; color:var(--text-muted);
-  line-height:1.7; margin:0;
-}
-.cAnn-modal-footer {
-  margin-top:16px; padding-top:14px; border-top:1px solid var(--border);
-  font-size:12px; color:var(--text-muted);
-  display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNITYCARE | Announcements</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="logout.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="body">
 
@@ -214,7 +125,7 @@ while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
     <a href="counselor.php"><i class="fa fa-gauge"></i> Dashboard</a>
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
-    <a href="cavailability.php"><i class="fa fa-clock"></i> My Availability</a>
+    <a href="cavailability.php"><i class="fa fa-clock"></i> Time Availability</a>
     <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
     <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
     <p class="sidebar-title">STUDENTS</p>
@@ -271,7 +182,7 @@ while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
     <div id="postResult" style="margin-top:10px; font-size:13px;"></div>
   </div>
 
-<!-- POSTED ANNOUNCEMENTS -->
+  <!-- POSTED ANNOUNCEMENTS -->
   <div class="cAnnouncements-card">
 
     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -285,65 +196,64 @@ while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
     </div>
 
     <div id="postedListWrapper" style="display:none; margin-top:16px;">
-    <p style="font-size:13px; color:var(--text-muted); margin:0 0 12px;">
-      <?= count($myAnnouncements) ?> announcement<?= count($myAnnouncements) !== 1 ? 's' : '' ?> posted
-    </p>
+      <p style="font-size:13px; color:var(--text-muted); margin:0 0 12px;">
+        <?= count($myAnnouncements) ?> announcement<?= count($myAnnouncements) !== 1 ? 's' : '' ?> posted
+      </p>
 
-    <div class="cAnn-list">
-      <?php if (empty($myAnnouncements)): ?>
-        <div class="cAnn-empty">
-          <i class="fa fa-bullhorn" style="font-size:2rem; display:block; margin-bottom:10px;"></i>
-          <p>You haven't posted any announcements yet.</p>
-        </div>
-      <?php else: ?>
-        <?php foreach ($myAnnouncements as $a):
-          // Encode data as JSON for JS — safely handles quotes, special chars, newlines
-          $jsTitle   = json_encode($a['title']);
-          $jsMessage = json_encode($a['message']);
-          $jsFile    = json_encode(!empty($a['file_path']) ? $a['file_path'] : '');
-          $jsDate    = json_encode(date('F d, Y g:i A', strtotime($a['created_at'])));
-          $jsCount   = (int)$a['interested_count'];
-          $jsId      = (int)$a['announcement_id'];
-        ?>
-        <div class="cAnn-item" id="ann-<?= $jsId ?>">
-
-          <div class="cAnn-thumb">
-            <?php if (!empty($a['file_path'])): ?>
-              <img src="<?= htmlspecialchars($a['file_path']) ?>" alt="img"
-                   onerror="this.parentElement.innerHTML='<i class=\'fa fa-bullhorn\'></i>'">
-            <?php else: ?>
-              <i class="fa fa-bullhorn"></i>
-            <?php endif; ?>
+      <div class="cAnnouncements-list">
+        <?php if (empty($myAnnouncements)): ?>
+          <div class="cAnnouncements-empty">
+            <i class="fa fa-bullhorn" style="font-size:2rem; display:block; margin-bottom:10px;"></i>
+            <p>You haven't posted any announcements yet.</p>
           </div>
+        <?php else: ?>
+          <?php foreach ($myAnnouncements as $a):
+            $jsTitle   = json_encode($a['title']);
+            $jsMessage = json_encode($a['message']);
+            $jsFile    = json_encode(!empty($a['file_path']) ? $a['file_path'] : '');
+            $jsDate    = json_encode(date('F d, Y g:i A', strtotime($a['created_at'])));
+            $jsCount   = (int)$a['interested_count'];
+            $jsId      = (int)$a['announcement_id'];
+          ?>
+          <div class="cAnnouncements-item" id="ann-<?= $jsId ?>">
 
-          <div class="cAnn-body">
-            <h4><?= htmlspecialchars($a['title']) ?></h4>
-            <p><?= htmlspecialchars($a['message']) ?></p>
-            <div class="cAnn-meta">
-              <span><i class="fa fa-clock"></i> <?= date('M d, Y g:i A', strtotime($a['created_at'])) ?></span>
-              <span><i class="fa fa-users"></i> <?= $jsCount ?> interested</span>
+            <div class="cAnnouncements-thumb">
+              <?php if (!empty($a['file_path'])): ?>
+                <img src="<?= htmlspecialchars($a['file_path']) ?>" alt="img"
+                     onerror="this.parentElement.innerHTML='<i class=\'fa fa-bullhorn\'></i>'">
+              <?php else: ?>
+                <i class="fa fa-bullhorn"></i>
+              <?php endif; ?>
             </div>
-          </div>
 
-          <div class="cAnn-actions">
-            <button class="cAnn-btn-view"
-              data-id="<?= $jsId ?>"
-              data-title=<?= $jsTitle ?>
-              data-message=<?= $jsMessage ?>
-              data-file=<?= $jsFile ?>
-              data-date=<?= $jsDate ?>
-              data-count="<?= $jsCount ?>"
-              onclick="viewAnnouncement(this)">
-              <i class="fa fa-eye"></i> View
-            </button>
-            <button class="cAnn-btn-del" onclick="deleteAnnouncement(<?= $jsId ?>)">
-              <i class="fa fa-trash"></i> Delete
-            </button>
-          </div>
+            <div class="cAnnouncements-body">
+              <h4><?= htmlspecialchars($a['title']) ?></h4>
+              <p><?= htmlspecialchars($a['message']) ?></p>
+              <div class="cAnnouncements-meta">
+                <span><i class="fa fa-clock"></i> <?= date('M d, Y g:i A', strtotime($a['created_at'])) ?></span>
+                <span><i class="fa fa-users"></i> <?= $jsCount ?> interested</span>
+              </div>
+            </div>
 
-        </div>
-        <?php endforeach; ?>
-      <?php endif; ?>
+            <div class="cAnnouncements-actions">
+              <button class="cAnnouncements-btn-view"
+                data-id="<?= $jsId ?>"
+                data-title=<?= $jsTitle ?>
+                data-message=<?= $jsMessage ?>
+                data-file=<?= $jsFile ?>
+                data-date=<?= $jsDate ?>
+                data-count="<?= $jsCount ?>"
+                onclick="viewAnnouncement(this)">
+                <i class="fa fa-eye"></i> View
+              </button>
+              <button class="cAnnouncements-btn-del" onclick="deleteAnnouncement(<?= $jsId ?>)">
+                <i class="fa fa-trash"></i> Delete
+              </button>
+            </div>
+
+          </div>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </div>
     </div><!-- end postedListWrapper -->
   </div>
@@ -366,13 +276,13 @@ while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
 </main>
 
 <!-- VIEW MODAL -->
-<div class="cAnn-modal-overlay" id="viewModal" onclick="closeViewModal(event)">
-  <div class="cAnn-modal-box">
-    <button class="cAnn-modal-close" onclick="closeViewModalDirect()">&#x2715;</button>
-    <img id="vModalImg" class="cAnn-modal-img" style="display:none;" alt="">
-    <h3 class="cAnn-modal-title" id="vModalTitle"></h3>
-    <p class="cAnn-modal-message" id="vModalMessage"></p>
-    <div class="cAnn-modal-footer">
+<div class="cAnnouncements-modal-overlay" id="viewModal" onclick="closeViewModal(event)">
+  <div class="cAnnouncements-modal-box">
+    <button class="cAnnouncements-modal-close" onclick="closeViewModalDirect()">&#x2715;</button>
+    <img id="vModalImg" class="cAnnouncements-modal-img" style="display:none;" alt="">
+    <h3 class="cAnnouncements-modal-title" id="vModalTitle"></h3>
+    <p class="cAnnouncements-modal-message" id="vModalMessage"></p>
+    <div class="cAnnouncements-modal-footer">
       <span id="vModalDate"></span>
       <span id="vModalCount"></span>
     </div>
@@ -380,18 +290,21 @@ while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
 </div>
 
 <script>
-  // ── TOGGLE POSTED LIST ──
+(function() {
+    const saved = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", saved);
+})();
+
 function togglePostedList() {
   const wrapper  = document.getElementById("postedListWrapper");
   const btn      = document.getElementById("togglePostedBtn");
   const isHidden = wrapper.style.display === "none";
-
   wrapper.style.display = isHidden ? "block" : "none";
   btn.innerHTML = isHidden
     ? '<i class="fa fa-chevron-up"></i> Hide'
     : '<i class="fa fa-chevron-down"></i> Show';
 }
-// ── SETTINGS / THEME / LOGOUT ──
+
 function toggleSettingsMenu(e) {
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
@@ -402,8 +315,10 @@ document.addEventListener("click", e => {
   if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("show");
 });
 function toggleTheme() {
-  const html = document.documentElement;
-  html.setAttribute("data-theme", html.getAttribute("data-theme") === "light" ? "dark" : "light");
+    const html = document.documentElement;
+    const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+    html.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
 }
 function logout()        { document.getElementById('logoutOverlay').classList.add('show'); }
 function closeLogout()   { document.getElementById('logoutOverlay').classList.remove('show'); }
@@ -456,7 +371,6 @@ function postAnnouncement() {
 }
 
 // ── VIEW ANNOUNCEMENT ──
-// Reads data from the button's data-attributes — no inline JS string passing
 function viewAnnouncement(btn) {
   const title   = btn.dataset.title;
   const message = btn.dataset.message;
@@ -465,12 +379,12 @@ function viewAnnouncement(btn) {
   const count   = btn.dataset.count;
 
   document.getElementById("vModalTitle").textContent   = title;
-document.getElementById("vModalMessage").innerHTML = message
-  .replace(/&/g, "&amp;")
-  .replace(/</g, "&lt;")
-  .replace(/>/g, "&gt;")
-  .replace(/\\r\\n|\\r|\\n/g, "<br>")
-  .replace(/\r\n|\r|\n/g, "<br>");
+  document.getElementById("vModalMessage").innerHTML = message
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\\r\\n|\\r|\\n/g, "<br>")
+    .replace(/\r\n|\r|\n/g, "<br>");
   document.getElementById("vModalDate").textContent    = '📅 ' + date;
   document.getElementById("vModalCount").textContent   = '👥 ' + count + ' interested';
 

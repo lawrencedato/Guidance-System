@@ -148,9 +148,7 @@ $pendingCount = (int)$conn->query(
     "SELECT COUNT(*) c FROM appointments WHERE counselor_id='$cid' AND status='Pending'"
 )->fetch_assoc()['c'];
 
-/* ── Load concern list:
-       Show a concern if it is Pending (any counselor can claim it)
-       OR if this counselor was the first to reply (they own it). ── */
+/* ── Load concern list ── */
 $concerns = [];
 $res = $conn->query("
     SELECT c.concern_id, c.subject, c.status, c.created_at,
@@ -172,7 +170,7 @@ $res = $conn->query("
 while ($row = $res->fetch_assoc()) $concerns[] = $row;
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -181,322 +179,6 @@ while ($row = $res->fetch_assoc()) $concerns[] = $row;
 <link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
-.cConcerns-main {
-  display: flex;
-  gap: 0;
-  height: calc(100vh - 70px);
-  overflow: hidden;
-}
-
-/* ══ LEFT PANEL ══ */
-.cc-left {
-  width: 320px;
-  min-width: 260px;
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid var(--border, #e2e8f0);
-  background: var(--sidebar-bg, #fff);
-  overflow: hidden;
-}
-.cc-left-header {
-  padding: 18px 16px 12px;
-  border-bottom: 1px solid var(--border, #e2e8f0);
-  flex-shrink: 0;
-}
-.cc-left-header h3 {
-  font-size: 14px;
-  font-weight: 700;
-  margin: 0 0 10px;
-  color: var(--text, #1a202c);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.cc-search {
-  position: relative;
-}
-.cc-search input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px 12px 8px 34px;
-  border: 1px solid var(--border, #e2e8f0);
-  border-radius: 8px;
-  font-size: 13px;
-  background: var(--input-bg, #f8fafc);
-  color: var(--text, #1a202c);
-  outline: none;
-  transition: border-color .2s;
-}
-.cc-search input:focus { border-color: #113f67; }
-.cc-search i {
-  position: absolute;
-  left: 10px; top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted, #718096);
-  font-size: 12px;
-}
-
-.cc-concern-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 6px 0;
-}
-.cc-concern-item {
-  padding: 12px 16px;
-  cursor: pointer;
-  border-left: 3px solid transparent;
-  transition: background .15s, border-color .15s;
-  position: relative;
-}
-.cc-concern-item:hover  { background: var(--hover-bg, #f7fafc); }
-.cc-concern-item.active { background: #eef4fb; border-left-color: #113f67; }
-.ci-name {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text, #1a202c);
-  margin-bottom: 2px;
-}
-.ci-subject {
-  font-size: 12px;
-  color: var(--text-muted, #718096);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 4px;
-}
-.ci-meta {
-  font-size: 11px;
-  color: var(--text-muted, #718096);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.cc-badge {
-  display: inline-block;
-  padding: 2px 7px;
-  border-radius: 20px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .4px;
-}
-.cc-badge.pending  { background: #fff3cd; color: #856404; }
-.cc-badge.reviewed { background: #dbeafe; color: #1d4ed8; }
-.cc-badge.resolved { background: #d1fae5; color: #065f46; }
-.cc-reply-dot {
-  width: 8px; height: 8px;
-  background: #f59e0b;
-  border-radius: 50%;
-  position: absolute;
-  top: 13px; right: 14px;
-}
-.cc-empty-list {
-  padding: 30px 16px;
-  text-align: center;
-  color: var(--text-muted, #718096);
-  font-size: 13px;
-}
-.cc-empty-list i { font-size: 34px; opacity: .25; display: block; margin-bottom: 10px; }
-
-.cc-filter-tabs {
-  display: flex;
-  gap: 4px;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--border, #e2e8f0);
-  flex-shrink: 0;
-}
-.cc-tab {
-  flex: 1;
-  padding: 5px 0;
-  border: none;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  background: transparent;
-  color: var(--text-muted, #718096);
-  transition: background .15s, color .15s;
-}
-.cc-tab.active { background: #113f67; color: #fff; }
-.cc-tab:hover:not(.active) { background: var(--hover-bg, #f7fafc); }
-
-/* ══ RIGHT PANEL ══ */
-.cc-right {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--main-bg, #f7fafc);
-}
-.cc-placeholder {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted, #718096);
-  gap: 10px;
-  padding: 40px;
-  text-align: center;
-}
-.cc-placeholder i { font-size: 52px; opacity: .2; }
-.cc-placeholder p { font-size: 14px; margin: 0; }
-
-.cc-thread {
-  flex: 1;
-  display: none;
-  flex-direction: column;
-  overflow: hidden;
-}
-.cc-thread.visible { display: flex; }
-
-.cc-thread-header {
-  padding: 14px 20px;
-  background: var(--sidebar-bg, #fff);
-  border-bottom: 1px solid var(--border, #e2e8f0);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.cc-thread-header-left h4 {
-  font-size: 14px;
-  font-weight: 700;
-  margin: 0 0 2px;
-  color: var(--text, #1a202c);
-}
-.cc-thread-header-left p {
-  font-size: 12px;
-  color: var(--text-muted, #718096);
-  margin: 0;
-}
-.cc-thread-header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.cc-resolve-btn {
-  padding: 6px 14px;
-  border: none;
-  border-radius: 8px;
-  background: #d1fae5;
-  color: #065f46;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background .2s;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.cc-resolve-btn:hover { background: #a7f3d0; }
-.cc-resolve-btn:disabled { opacity: .5; cursor: not-allowed; }
-
-.cc-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 18px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.cc-msg {
-  display: flex;
-  flex-direction: column;
-  max-width: 72%;
-}
-.cc-msg.me   { align-self: flex-end;   align-items: flex-end; }
-.cc-msg.them { align-self: flex-start; align-items: flex-start; }
-.cc-msg-bubble {
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-size: 13.5px;
-  line-height: 1.55;
-  word-break: break-word;
-  white-space: pre-wrap;
-}
-.cc-msg.me   .cc-msg-bubble {
-  background: #113f67;
-  color: #fff;
-  border-bottom-right-radius: 4px;
-}
-.cc-msg.them .cc-msg-bubble {
-  background: var(--sidebar-bg, #fff);
-  color: var(--text, #1a202c);
-  border: 1px solid var(--border, #e2e8f0);
-  border-bottom-left-radius: 4px;
-}
-.cc-msg-meta {
-  font-size: 11px;
-  color: var(--text-muted, #718096);
-  margin-top: 3px;
-  padding: 0 4px;
-}
-
-/* Pending claim notice */
-.cc-claim-notice {
-  display: none;
-  margin: 0 16px 10px;
-  padding: 9px 14px;
-  background: #fffbeb; border: 1px solid #fcd34d;
-  border-radius: 8px; font-size: 12px; color: #92400e;
-  align-items: center; gap: 8px;
-}
-.cc-claim-notice.show { display: flex; }
-
-.cc-reply-box {
-  padding: 12px 16px;
-  background: var(--sidebar-bg, #fff);
-  border-top: 1px solid var(--border, #e2e8f0);
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-  flex-shrink: 0;
-}
-.cc-reply-box textarea {
-  flex: 1;
-  resize: none;
-  border: 1px solid var(--border, #e2e8f0);
-  border-radius: 10px;
-  padding: 10px 13px;
-  font-size: 13.5px;
-  font-family: inherit;
-  background: var(--input-bg, #f8fafc);
-  color: var(--text, #1a202c);
-  line-height: 1.5;
-  min-height: 44px;
-  max-height: 130px;
-  outline: none;
-  transition: border-color .2s;
-}
-.cc-reply-box textarea:focus { border-color: #113f67; }
-.cc-send-btn {
-  width: 44px; height: 44px;
-  border: none; border-radius: 10px;
-  background: #113f67; color: #fff;
-  font-size: 16px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  transition: background .2s, opacity .2s;
-}
-.cc-send-btn:hover    { background: #0d3050; }
-.cc-send-btn:disabled { opacity: .5; cursor: not-allowed; }
-
-.cc-concern-list::-webkit-scrollbar,
-.cc-messages::-webkit-scrollbar { width: 4px; }
-.cc-concern-list::-webkit-scrollbar-thumb,
-.cc-messages::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 4px; }
-
-[data-theme="dark"] .cc-left,
-[data-theme="dark"] .cc-thread-header,
-[data-theme="dark"] .cc-reply-box { background: #1e2533; }
-[data-theme="dark"] .cc-concern-item.active { background: #1c2f45; }
-[data-theme="dark"] .cc-msg.them .cc-msg-bubble { background: #1e2533; border-color: #2d3748; }
-[data-theme="dark"] .cc-reply-box textarea { background: #161d2b; border-color: #2d3748; color: #e2e8f0; }
-[data-theme="dark"] .cc-search input { background: #161d2b; border-color: #2d3748; color: #e2e8f0; }
 </style>
 </head>
 <body class="body">
@@ -524,7 +206,7 @@ while ($row = $res->fetch_assoc()) $concerns[] = $row;
     <a href="counselor.php"><i class="fa fa-gauge"></i> Dashboard</a>
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
-    <a href="cavailability.php"><i class="fa fa-clock"></i> My Availability</a>
+    <a href="cavailability.php"><i class="fa fa-clock"></i> Time Availability</a>
     <a href="cconcerns.php" class="active"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
     <a href="cfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
     <p class="sidebar-title">STUDENTS</p>
@@ -568,82 +250,84 @@ while ($row = $res->fetch_assoc()) $concerns[] = $row;
 
 <main class="cConcerns-main">
 
-  <div class="cc-left">
-    <div class="cc-left-header">
+  <!-- ══ LEFT PANEL ══ -->
+  <div class="cConcerns-left">
+    <div class="cConcerns-left-header">
       <h3><i class="fa fa-triangle-exclamation" style="color:#113f67;"></i> Concerns</h3>
-      <div class="cc-search">
+      <div class="cConcerns-search">
         <i class="fa fa-magnifying-glass"></i>
         <input type="text" id="ccSearch" placeholder="Search student or subject…" oninput="filterList()">
       </div>
     </div>
 
-    <div class="cc-filter-tabs">
-      <button class="cc-tab active" data-filter="all"      onclick="setTab(this)">All</button>
-      <button class="cc-tab"        data-filter="Pending"  onclick="setTab(this)">Pending</button>
-      <button class="cc-tab"        data-filter="Reviewed" onclick="setTab(this)">Reviewed</button>
-      <button class="cc-tab"        data-filter="Resolved" onclick="setTab(this)">Resolved</button>
+    <div class="cConcerns-filter-tabs">
+      <button class="cConcerns-tab active" data-filter="all"      onclick="setTab(this)">All</button>
+      <button class="cConcerns-tab"        data-filter="Pending"  onclick="setTab(this)">Pending</button>
+      <button class="cConcerns-tab"        data-filter="Reviewed" onclick="setTab(this)">Reviewed</button>
+      <button class="cConcerns-tab"        data-filter="Resolved" onclick="setTab(this)">Resolved</button>
     </div>
 
-    <div class="cc-concern-list" id="ccConcernList">
+    <div class="cConcerns-list" id="ccConcernList">
       <?php if (empty($concerns)): ?>
-        <div class="cc-empty-list">
+        <div class="cConcerns-empty-list">
           <i class="fa fa-inbox"></i>
           No student concerns yet.
         </div>
       <?php else: foreach ($concerns as $c): ?>
-        <div class="cc-concern-item"
+        <div class="cConcerns-item"
              id="cci-<?= $c['concern_id'] ?>"
              data-status="<?= htmlspecialchars($c['status']) ?>"
              data-name="<?= htmlspecialchars(strtolower($c['first_name'] . ' ' . $c['last_name'])) ?>"
              data-subject="<?= htmlspecialchars(strtolower($c['subject'])) ?>"
              onclick="openThread(<?= $c['concern_id'] ?>, <?= htmlspecialchars(json_encode($c['first_name'] . ' ' . $c['last_name'])) ?>, <?= htmlspecialchars(json_encode($c['subject'])) ?>)">
-          <div class="ci-name"><?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?></div>
-          <div class="ci-subject"><?= htmlspecialchars($c['subject']) ?></div>
-          <div class="ci-meta">
-            <span class="cc-badge <?= strtolower($c['status']) ?>">
+          <div class="cConcerns-item-name"><?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?></div>
+          <div class="cConcerns-item-subject"><?= htmlspecialchars($c['subject']) ?></div>
+          <div class="cConcerns-item-meta">
+            <span class="cConcerns-badge <?= strtolower($c['status']) ?>">
               <?= htmlspecialchars($c['status']) ?>
             </span>
             <span><?= date('M d, Y', strtotime($c['created_at'])) ?></span>
           </div>
           <?php if ($c['student_reply_count'] > 0): ?>
-            <div class="cc-reply-dot" title="Student replied"></div>
+            <div class="cConcerns-reply-dot" title="Student replied"></div>
           <?php endif; ?>
         </div>
       <?php endforeach; endif; ?>
     </div>
   </div>
 
-  <div class="cc-right">
+  <!-- ══ RIGHT PANEL ══ -->
+  <div class="cConcerns-right">
 
-    <div class="cc-placeholder" id="ccPlaceholder">
+    <div class="cConcerns-placeholder" id="ccPlaceholder">
       <i class="fa fa-comments"></i>
       <p>Select a concern from the list<br>to view and respond to the conversation.</p>
     </div>
 
-    <div class="cc-thread" id="ccThread">
+    <div class="cConcerns-thread" id="ccThread">
 
-      <div class="cc-thread-header">
-        <div class="cc-thread-header-left">
+      <div class="cConcerns-thread-header">
+        <div>
           <h4 id="threadStudentName">—</h4>
           <p id="threadSubject">—</p>
         </div>
-        <div class="cc-thread-header-right">
-          <span class="cc-badge pending" id="threadStatus">Pending</span>
-          <button class="cc-resolve-btn" id="resolveBtn" onclick="markResolved()">
+        <div class="cConcerns-thread-header-right">
+          <span class="cConcerns-badge pending" id="threadStatus">Pending</span>
+          <button class="cConcerns-resolve-btn" id="resolveBtn" onclick="markResolved()">
             <i class="fa fa-circle-check"></i> Mark Resolved
           </button>
         </div>
       </div>
 
-      <div class="cc-messages" id="threadMessages"></div>
+      <div class="cConcerns-messages" id="threadMessages"></div>
 
-      <!-- Notice shown when concern is still Pending (unclaimed) -->
-      <div class="cc-claim-notice" id="claimNotice">
+      <!-- Claim notice -->
+      <div class="cConcerns-claim-notice" id="claimNotice">
         <i class="fa fa-circle-info"></i>
         <span>This concern is unclaimed. Sending a reply will assign it to you.</span>
       </div>
 
-      <div class="cc-reply-box">
+      <div class="cConcerns-reply-box">
         <textarea
           id="replyText"
           rows="1"
@@ -651,7 +335,7 @@ while ($row = $res->fetch_assoc()) $concerns[] = $row;
           oninput="autoResize(this)"
           onkeydown="handleReplyKey(event)"
         ></textarea>
-        <button class="cc-send-btn" id="sendBtn" onclick="sendReply()" title="Send reply">
+        <button class="cConcerns-send-btn" id="sendBtn" onclick="sendReply()" title="Send reply">
           <i class="fa fa-paper-plane"></i>
         </button>
       </div>
@@ -683,7 +367,7 @@ let pollTimer       = null;
 let activeFilter    = 'all';
 
 function setTab(btn) {
-  document.querySelectorAll('.cc-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.cConcerns-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
   activeFilter = btn.dataset.filter;
   filterList();
@@ -691,7 +375,7 @@ function setTab(btn) {
 
 function filterList() {
   const q = document.getElementById('ccSearch').value.toLowerCase();
-  document.querySelectorAll('.cc-concern-item').forEach(item => {
+  document.querySelectorAll('.cConcerns-item').forEach(item => {
     const matchFilter = activeFilter === 'all' || item.dataset.status === activeFilter;
     const matchSearch = !q || item.dataset.name.includes(q) || item.dataset.subject.includes(q);
     item.style.display = (matchFilter && matchSearch) ? 'block' : 'none';
@@ -702,7 +386,7 @@ function openThread(concernId, studentName, subject) {
   activeConcernId = concernId;
   clearInterval(pollTimer);
 
-  document.querySelectorAll('.cc-concern-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.cConcerns-item').forEach(el => el.classList.remove('active'));
   const item = document.getElementById('cci-' + concernId);
   if (item) item.classList.add('active');
 
@@ -728,28 +412,23 @@ function fetchThread() {
       const isPending  = data.status === 'Pending';
       const isResolved = data.status === 'Resolved';
 
-      /* Update list item badge + data-status */
       const listItem = document.getElementById('cci-' + activeConcernId);
       if (listItem) {
         listItem.dataset.status = data.status;
-        const lb = listItem.querySelector('.cc-badge');
-        if (lb) { lb.textContent = data.status; lb.className = 'cc-badge ' + data.status.toLowerCase(); }
+        const lb = listItem.querySelector('.cConcerns-badge');
+        if (lb) { lb.textContent = data.status; lb.className = 'cConcerns-badge ' + data.status.toLowerCase(); }
       }
 
-      /* Thread header badge */
       const badge = document.getElementById('threadStatus');
       badge.textContent = data.status;
-      badge.className   = 'cc-badge ' + data.status.toLowerCase();
+      badge.className   = 'cConcerns-badge ' + data.status.toLowerCase();
 
-      /* Resolve button — only shown/enabled when not already resolved */
       const resolveBtn = document.getElementById('resolveBtn');
       resolveBtn.disabled = isResolved;
       resolveBtn.style.display = isResolved ? 'none' : 'flex';
 
-      /* Claim notice — shown only while still Pending */
       document.getElementById('claimNotice').classList.toggle('show', isPending);
 
-      /* Messages */
       const box = document.getElementById('threadMessages');
       const wasAtBottom = (box.scrollHeight - box.scrollTop - box.clientHeight) < 80;
       box.innerHTML = '';
@@ -777,10 +456,10 @@ function fetchThread() {
 function appendMsg(box, m) {
   const isMe = m.sender === 'counselor';
   const div  = document.createElement('div');
-  div.className = 'cc-msg ' + (isMe ? 'me' : 'them');
+  div.className = 'cConcerns-msg ' + (isMe ? 'me' : 'them');
   div.innerHTML = `
-    <div class="cc-msg-bubble">${escHtml(m.message)}</div>
-    <div class="cc-msg-meta">
+    <div class="cConcerns-msg-bubble">${escHtml(m.message)}</div>
+    <div class="cConcerns-msg-meta">
       ${escHtml(isMe ? 'You' : (m.sender_name || 'Student'))}
       &middot; ${fmtTime(m.created_at)}
     </div>`;
@@ -806,12 +485,8 @@ function sendReply() {
       if (json.success) {
         document.getElementById('replyText').value = '';
         autoResize(document.getElementById('replyText'));
-
-        /* If this was a Pending concern, remove it from other counselors' views
-           by updating the list item's data-status so local filter still works */
         const listItem = document.getElementById('cci-' + activeConcernId);
         if (listItem) listItem.dataset.status = 'Reviewed';
-
         fetchThread();
       } else {
         alert(json.message || 'Failed to send reply.');
@@ -851,6 +526,7 @@ function escHtml(str) {
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
 function fmtTime(dt) {
   if (!dt) return '';
   const d    = new Date(dt.replace(' ','T'));
@@ -866,22 +542,27 @@ function toggleSettingsMenu(e) {
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
 }
+
 function toggleTheme() {
   const html = document.documentElement;
   const t = html.getAttribute("data-theme") === "light" ? "dark" : "light";
   html.setAttribute("data-theme", t);
   localStorage.setItem("theme", t);
 }
+
 function toggleDropdown(id, e) {
   e.stopPropagation();
   document.getElementById(id).classList.toggle("show");
 }
+
 function logout()        { document.getElementById('logoutOverlay').classList.add('show'); }
 function closeLogout()   { document.getElementById('logoutOverlay').classList.remove('show'); }
 function confirmLogout() { window.location.href = 'logout.php?role=counselor'; }
+
 document.getElementById('logoutOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeLogout();
 });
+
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
   const btn  = document.querySelector(".sidebar-settingsButton");

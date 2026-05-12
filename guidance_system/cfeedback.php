@@ -55,7 +55,7 @@ $ratingStars = [
 ?>
 
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -97,7 +97,7 @@ $ratingStars = [
 
     <p class="sidebar-title">SESSIONS</p>
     <a href="cappointments.php"><i class="fa fa-calendar-plus"></i> Appointment Requests</a>
-    <a href="cavailability.php"><i class="fa fa-clock"></i> My Availability</a>
+    <a href="cavailability.php"><i class="fa fa-clock"></i> Time Availability</a>
     <a href="cconcerns.php"><i class="fa fa-triangle-exclamation"></i> Student Concerns</a>
     <a href="cfeedback.php" class="active"><i class="fa fa-comment"></i> Session Feedback</a>
 
@@ -202,6 +202,11 @@ $ratingStars = [
 </main>
 
 <script>
+(function() {
+    const saved = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", saved);
+})();
+
 function toggleSettingsMenu(e) {
   e.stopPropagation();
   document.getElementById("settingsMenu").classList.toggle("show");
@@ -210,6 +215,13 @@ function toggleSettingsMenu(e) {
 function toggleDropdown(id, e) {
   e.stopPropagation();
   document.getElementById(id).classList.toggle("show");
+}
+
+function toggleTheme() {
+    const html = document.documentElement;
+    const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+    html.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
 }
 
 document.addEventListener("click", function () {
