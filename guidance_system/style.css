@@ -3523,6 +3523,8 @@ border: 1px solid rgba(0, 0, 0, 0.08);
 
   width: 90%;
   max-width: 520px;
+  max-height: 85vh;        /* ← ADD: caps height to viewport */
+  overflow-y: auto;        /* ← ADD: makes it scrollable instead of clipped */
 
   padding: 28px;
 
