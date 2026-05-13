@@ -70,8 +70,9 @@ $pendingConcerns = $conn->query(
 )->fetch_assoc()['c'] ?? 0;
 
 $pendingAppointments = $conn->query(
-    "SELECT COUNT(*) c FROM appointments WHERE status='Pending'"
-)->fetch_assoc()['c'] ?? 0;
+    "SELECT COUNT(*) c FROM appointments 
+     WHERE counselor_id='$cid' AND status='Pending'"
+)->fetch_assoc()['c'];
 
 // ===== UPCOMING APPOINTMENTS =====
 $upcomingRes = $conn->query(

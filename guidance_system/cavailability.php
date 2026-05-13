@@ -42,8 +42,10 @@ $profileImg = !empty($counselor['profile_image'])
     : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
 
 $pendingCount = (int)$conn->query(
-    "SELECT COUNT(*) c FROM appointments WHERE status='Pending'"
+    "SELECT COUNT(*) c FROM appointments 
+     WHERE counselor_id='$cid' AND status='Pending'"
 )->fetch_assoc()['c'];
+
 
 // ── AJAX: Add availability slot ────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_slot') {
