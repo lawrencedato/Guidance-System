@@ -1,151 +1,414 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Student Dashboard</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Milestone 3 — gcs_db Security & ACID</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; color: #1a1a1a; padding: 32px 24px; }
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  h2 { font-size: 17px; font-weight: 700; margin: 32px 0 14px; color: #1a1a1a; }
+  h3 { font-size: 14px; font-weight: 700; margin: 18px 0 8px; }
+  p  { font-size: 14px; line-height: 1.7; margin-bottom: 10px; color: #333; }
+  .subtitle { font-size: 13px; color: #666; margin-bottom: 28px; }
+  .card { background: #fff; border-radius: 10px; border: 1px solid #e0e0e0; padding: 24px; margin-bottom: 28px; }
+  code { background: #f0f0f0; border-radius: 4px; padding: 2px 6px; font-size: 12px; font-family: monospace; color: #c7254e; }
+  pre  { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 16px; font-size: 12px; line-height: 1.6; overflow-x: auto; margin: 10px 0 16px; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; margin-right: 6px; }
+  .tag-green  { background: #d4edda; color: #1a5e2a; }
+  .tag-red    { background: #fde8e8; color: #8b1a1a; }
+  .tag-blue   { background: #dbeafe; color: #1e3a8a; }
+  .tag-purple { background: #ede9fe; color: #4c1d95; }
+  .tag-gray   { background: #f0f0f0; color: #444; }
 
-<link rel="stylesheet" href="style.css">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  /* --- Flowchart SVG wrapper --- */
+  .chart-wrap { overflow-x: auto; }
+
+  /* --- Deadlock table --- */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+  th { background: #f0f0f0; text-align: left; padding: 9px 12px; border-bottom: 2px solid #ddd; }
+  td { padding: 8px 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+
+  /* --- scenario boxes --- */
+  .scenario { border-left: 4px solid #e24b4a; background: #fff8f8; padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 12px; }
+  .scenario.fix { border-left-color: #1d9e75; background: #f0faf6; }
+</style>
 </head>
-
 <body>
 
-<!-- SIDEBAR (UNCHANGED) -->
-<nav class="sidebar">
+<h1>Milestone 3 — Security &amp; ACID</h1>
+<p class="subtitle">gcs_db · Guidance Counseling System · Transaction Flowcharts &amp; Deadlock Prevention Plan</p>
 
-  <div class="logo-bar">
+<!-- ══════════════════════════════════════════════
+     SECTION 1 — TRANSACTION FLOWCHARTS
+═══════════════════════════════════════════════ -->
+<h2>A. Transaction Flowcharts</h2>
 
-    <div class="logo">
-      <img src="logo.png" alt="logo">
-      <h3>UNITYCARE</h3>
-    </div>
+<!-- FLOWCHART 1: Appointment Booking -->
+<div class="card">
+  <h3>Transaction 1 — Book an appointment <span class="tag tag-blue">appointments + counselor_availability</span></h3>
+  <p>All four steps must succeed together. If any step fails, the entire operation is rolled back so no ghost booking is created.</p>
+  <div class="chart-wrap">
+  <svg width="100%" viewBox="0 0 720 900" xmlns="http://www.w3.org/2000/svg" style="min-width:420px">
+    <defs>
+      <marker id="arr1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M2 2L8 5L2 8" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"/>
+      </marker>
+      <marker id="arr-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M2 2L8 5L2 8" fill="none" stroke="#c0392b" stroke-width="1.5" stroke-linecap="round"/>
+      </marker>
+      <marker id="arr-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M2 2L8 5L2 8" fill="none" stroke="#1a5e2a" stroke-width="1.5" stroke-linecap="round"/>
+      </marker>
+    </defs>
 
-    <div class="settings-wrapper">
+    <!-- START -->
+    <rect x="230" y="20" width="200" height="38" rx="19" fill="#e8e8e8" stroke="#aaa" stroke-width="1"/>
+    <text x="330" y="44" text-anchor="middle" font-size="13" font-weight="700" fill="#333">User requests booking</text>
 
-      <button class="settings-icon">
-        <i class="fa fa-gear"></i>
-      </button>
+    <line x1="330" y1="58" x2="330" y2="86" stroke="#555" stroke-width="1.2" marker-end="url(#arr1)"/>
 
-    </div>
+    <!-- BEGIN -->
+    <rect x="215" y="86" width="230" height="46" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.2"/>
+    <text x="330" y="106" text-anchor="middle" font-size="13" font-weight="700" fill="#4c1d95">BEGIN TRANSACTION</text>
+    <text x="330" y="122" text-anchor="middle" font-size="11" fill="#6d28d9">Locks acquired; changes not yet permanent</text>
 
+    <line x1="330" y1="132" x2="330" y2="162" stroke="#555" stroke-width="1.2" marker-end="url(#arr1)"/>
+
+    <!-- STEP 1 -->
+    <rect x="190" y="162" width="280" height="54" rx="8" fill="#dbeafe" stroke="#1e40af" stroke-width="1"/>
+    <text x="330" y="183" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">Step 1 — Check availability</text>
+    <text x="330" y="200" text-anchor="middle" font-size="11" fill="#1e40af">SELECT … FOR UPDATE on counselor_availability</text>
+
+    <line x1="330" y1="216" x2="330" y2="246" stroke="#555" stroke-width="1.2" marker-end="url(#arr1)"/>
+
+    <!-- Diamond 1 -->
+    <polygon points="330,246 430,276 330,306 230,276" fill="#fffbeb" stroke="#b45309" stroke-width="1"/>
+    <text x="330" y="280" text-anchor="middle" font-size="12" font-weight="700" fill="#78350f">Slot available?</text>
+
+    <!-- Yes down -->
+    <line x1="330" y1="306" x2="330" y2="338" stroke="#555" stroke-width="1.2" marker-end="url(#arr1)"/>
+    <text x="342" y="327" font-size="11" fill="#1a5e2a" font-weight="700">Yes</text>
+
+    <!-- No right -->
+    <line x1="430" y1="276" x2="570" y2="276" stroke="#c0392b" stroke-width="1.2" marker-end="url(#arr-red)"/>
+    <text x="497" y="268" text-anchor="middle" font-size="11" fill="#c0392b" font-weight="700">No</text>
+
+    <!-- STEP 2 -->
+    <rect x="190" y="338" width="280" height="54" rx="8" fill="#dbeafe" stroke="#1e40af" stroke-width="1"/>
+    <text x="330" y="359" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">Step 2 — Insert appointment</text>
+    <text x="330" y="376" text-anchor="middle" font-size="11" fill="#1e40af">INSERT INTO appointments (student_id, counselor_id …)</text>
+
+    <line x1="330" y1="392" x2="330" y2="422" stroke="#555" stroke-width="1.2" marker-end="url(#arr1)"/>
+
+    <!-- Diamond 2 -->
+    <polygon points="330,422 430,452 330,482 230,452" fill="#fffbeb" stroke="#b45309" stroke-width="1"/>
+    <text x="330" y="456" text-anchor="middle" font-size="12" font-weight="700" fill="#78350f">Insert OK?</text>
+
+    <line x1="330" y1="482" x2="330" y2="514" stroke="#555" stroke-width="1.2" marker-end="url(#arr1)"/>
+    <text x="342" y="503" font-size="11" fill="#1a5e2a" font-weight="700">Yes</text>
+
+    <line x1="430" y1="452" x2="570" y2="452" stroke="#c0392b" stroke-width="1.2" marker-end="url(#arr-red)"/>
+    <text x="497" y="444" text-anchor="middle" font-size="11" fill="#c0392b" font-weight="700">No</text>
+
+    <!-- STEP 3 -->
+    <rect x="175" y="514" width="310" height="54" rx="8" fill="#dbeafe" stroke="#1e40af" stroke-width="1"/>
+    <text x="330" y="535" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">Step 3 — Mark slot as booked</text>
+    <text x="330" y="552" text-anchor="middle" font-size="11" fill="#1e40af">UPDATE counselor_availability SET is_booked=1</text>
+
+    <line x1="330" y1="568" x2="330" y2="598" stroke="#555" stroke-width="1.2" marker-end="url(#arr1)"/>
+
+    <!-- Diamond 3 -->
+    <polygon points="330,598 430,628 330,658 230,628" fill="#fffbeb" stroke="#b45309" stroke-width="1"/>
+    <text x="330" y="632" text-anchor="middle" font-size="12" font-weight="700" fill="#78350f">Update OK?</text>
+
+    <line x1="330" y1="658" x2="330" y2="690" stroke="#555" stroke-width="1.2" marker-end="url(#arr1)"/>
+    <text x="342" y="679" font-size="11" fill="#1a5e2a" font-weight="700">Yes</text>
+
+    <line x1="430" y1="628" x2="570" y2="628" stroke="#c0392b" stroke-width="1.2" marker-end="url(#arr-red)"/>
+    <text x="497" y="620" text-anchor="middle" font-size="11" fill="#c0392b" font-weight="700">No</text>
+
+    <!-- STEP 4 -->
+    <rect x="190" y="690" width="280" height="54" rx="8" fill="#dbeafe" stroke="#1e40af" stroke-width="1"/>
+    <text x="330" y="711" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">Step 4 — Write audit log</text>
+    <text x="330" y="728" text-anchor="middle" font-size="11" fill="#1e40af">INSERT INTO audit_log (action='BOOKING', …)</text>
+
+    <line x1="330" y1="744" x2="330" y2="778" stroke="#555" stroke-width="1.2" marker-end="url(#arr1)"/>
+
+    <!-- COMMIT -->
+    <rect x="220" y="778" width="220" height="50" rx="8" fill="#d4edda" stroke="#1a5e2a" stroke-width="1.5"/>
+    <text x="330" y="799" text-anchor="middle" font-size="14" font-weight="700" fill="#1a5e2a">COMMIT</text>
+    <text x="330" y="817" text-anchor="middle" font-size="11" fill="#1a5e2a">Booking confirmed ✓ — all changes permanent</text>
+
+    <line x1="330" y1="828" x2="330" y2="858" stroke="#1a5e2a" stroke-width="1.2" marker-end="url(#arr-green)"/>
+
+    <!-- END -->
+    <rect x="240" y="858" width="180" height="34" rx="17" fill="#e8e8e8" stroke="#aaa" stroke-width="1"/>
+    <text x="330" y="880" text-anchor="middle" font-size="12" font-weight="700" fill="#333">Appointment saved</text>
+
+    <!-- ── ROLLBACK column ── -->
+    <!-- Vertical rail on right -->
+    <line x1="600" y1="276" x2="600" y2="452" stroke="#c0392b" stroke-width="1" stroke-dasharray="4 3"/>
+    <line x1="600" y1="452" x2="600" y2="628" stroke="#c0392b" stroke-width="1" stroke-dasharray="4 3"/>
+    <line x1="600" y1="628" x2="600" y2="730" stroke="#c0392b" stroke-width="1.2" marker-end="url(#arr-red)"/>
+
+    <!-- ROLLBACK box -->
+    <rect x="549" y="730" width="120" height="50" rx="8" fill="#fde8e8" stroke="#c0392b" stroke-width="1.5"/>
+    <text x="609" y="750" text-anchor="middle" font-size="13" font-weight="700" fill="#8b1a1a">ROLLBACK</text>
+    <text x="609" y="768" text-anchor="middle" font-size="11" fill="#c0392b">No changes saved</text>
+  </svg>
+  </div>
+</div>
+
+<!-- FLOWCHART 2: Student Activation -->
+<div class="card">
+  <h3>Transaction 2 — Activate a student account <span class="tag tag-purple">students + activated_students</span></h3>
+  <p>When a counselor activates a student, two things must happen atomically: the student must exist in <code>students</code>, then a credential row is inserted into <code>activated_students</code>. If the INSERT fails, nothing is created.</p>
+  <div class="chart-wrap">
+  <svg width="100%" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg" style="min-width:360px">
+    <defs>
+      <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M2 2L8 5L2 8" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"/>
+      </marker>
+      <marker id="arr2r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M2 2L8 5L2 8" fill="none" stroke="#c0392b" stroke-width="1.5" stroke-linecap="round"/>
+      </marker>
+      <marker id="arr2g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M2 2L8 5L2 8" fill="none" stroke="#1a5e2a" stroke-width="1.5" stroke-linecap="round"/>
+      </marker>
+    </defs>
+    <!-- START -->
+    <rect x="205" y="20" width="200" height="36" rx="18" fill="#e8e8e8" stroke="#aaa" stroke-width="1"/>
+    <text x="305" y="43" text-anchor="middle" font-size="13" font-weight="700" fill="#333">Admin triggers activation</text>
+    <line x1="305" y1="56" x2="305" y2="82" stroke="#555" stroke-width="1.2" marker-end="url(#arr2)"/>
+    <!-- BEGIN -->
+    <rect x="195" y="82" width="220" height="44" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.2"/>
+    <text x="305" y="100" text-anchor="middle" font-size="13" font-weight="700" fill="#4c1d95">BEGIN TRANSACTION</text>
+    <text x="305" y="116" text-anchor="middle" font-size="11" fill="#6d28d9">CALL activate_student(p_id, p_pass)</text>
+    <line x1="305" y1="126" x2="305" y2="156" stroke="#555" stroke-width="1.2" marker-end="url(#arr2)"/>
+    <!-- STEP 1 -->
+    <rect x="175" y="156" width="260" height="52" rx="8" fill="#dbeafe" stroke="#1e40af" stroke-width="1"/>
+    <text x="305" y="176" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">Step 1 — Verify student exists</text>
+    <text x="305" y="193" text-anchor="middle" font-size="11" fill="#1e40af">SELECT student_id FROM students WHERE id=p_id</text>
+    <line x1="305" y1="208" x2="305" y2="238" stroke="#555" stroke-width="1.2" marker-end="url(#arr2)"/>
+    <!-- Diamond 1 -->
+    <polygon points="305,238 415,268 305,298 195,268" fill="#fffbeb" stroke="#b45309" stroke-width="1"/>
+    <text x="305" y="272" text-anchor="middle" font-size="12" font-weight="700" fill="#78350f">Student found?</text>
+    <line x1="305" y1="298" x2="305" y2="330" stroke="#555" stroke-width="1.2" marker-end="url(#arr2)"/>
+    <text x="317" y="320" font-size="11" fill="#1a5e2a" font-weight="700">Yes</text>
+    <line x1="415" y1="268" x2="530" y2="268" stroke="#c0392b" stroke-width="1.2" marker-end="url(#arr2r)"/>
+    <text x="471" y="260" text-anchor="middle" font-size="11" fill="#c0392b" font-weight="700">No</text>
+    <!-- STEP 2 -->
+    <rect x="165" y="330" width="280" height="52" rx="8" fill="#dbeafe" stroke="#1e40af" stroke-width="1"/>
+    <text x="305" y="350" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">Step 2 — Create credentials</text>
+    <text x="305" y="367" text-anchor="middle" font-size="11" fill="#1e40af">INSERT INTO activated_students (SHA2 password …)</text>
+    <line x1="305" y1="382" x2="305" y2="412" stroke="#555" stroke-width="1.2" marker-end="url(#arr2)"/>
+    <!-- Diamond 2 -->
+    <polygon points="305,412 415,442 305,472 195,442" fill="#fffbeb" stroke="#b45309" stroke-width="1"/>
+    <text x="305" y="446" text-anchor="middle" font-size="12" font-weight="700" fill="#78350f">Insert OK?</text>
+    <line x1="305" y1="472" x2="305" y2="504" stroke="#555" stroke-width="1.2" marker-end="url(#arr2)"/>
+    <text x="317" y="494" font-size="11" fill="#1a5e2a" font-weight="700">Yes</text>
+    <line x1="415" y1="442" x2="530" y2="442" stroke="#c0392b" stroke-width="1.2" marker-end="url(#arr2r)"/>
+    <text x="471" y="434" text-anchor="middle" font-size="11" fill="#c0392b" font-weight="700">No</text>
+    <!-- COMMIT -->
+    <rect x="210" y="504" width="190" height="48" rx="8" fill="#d4edda" stroke="#1a5e2a" stroke-width="1.5"/>
+    <text x="305" y="524" text-anchor="middle" font-size="14" font-weight="700" fill="#1a5e2a">COMMIT</text>
+    <text x="305" y="542" text-anchor="middle" font-size="11" fill="#1a5e2a">Account active ✓ — student can now log in</text>
+    <line x1="305" y1="552" x2="305" y2="578" stroke="#1a5e2a" stroke-width="1.2" marker-end="url(#arr2g)"/>
+    <!-- END -->
+    <rect x="215" y="578" width="180" height="34" rx="17" fill="#e8e8e8" stroke="#aaa" stroke-width="1"/>
+    <text x="305" y="600" text-anchor="middle" font-size="12" font-weight="700" fill="#333">Student activated</text>
+    <!-- ROLLBACK -->
+    <line x1="530" y1="268" x2="555" y2="268" stroke="#c0392b" stroke-width="1"/>
+    <line x1="555" y1="268" x2="555" y2="442" stroke="#c0392b" stroke-width="1" stroke-dasharray="4 3"/>
+    <line x1="555" y1="442" x2="555" y2="510" stroke="#c0392b" stroke-width="1.2" marker-end="url(#arr2r)"/>
+    <rect x="505" y="510" width="110" height="48" rx="8" fill="#fde8e8" stroke="#c0392b" stroke-width="1.5"/>
+    <text x="560" y="530" text-anchor="middle" font-size="13" font-weight="700" fill="#8b1a1a">ROLLBACK</text>
+    <text x="560" y="548" text-anchor="middle" font-size="11" fill="#c0392b">No account created</text>
+  </svg>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SECTION 2 — DEADLOCK PREVENTION
+═══════════════════════════════════════════════ -->
+<h2>B. Concurrency Control &amp; Deadlock Prevention Plan</h2>
+
+<!-- What is a deadlock -->
+<div class="card">
+  <h3>What a deadlock looks like in gcs_db</h3>
+  <div class="scenario">
+    <strong>The problem scenario:</strong><br/>
+    User A books an appointment → locks <code>appointments</code> row, then tries to lock <code>counselor_availability</code><br/>
+    User B updates availability → locks <code>counselor_availability</code> row, then tries to lock <code>appointments</code><br/>
+    <strong>Result:</strong> Both wait forever. Neither can proceed.
   </div>
 
-  <div class="menu">
+  <table>
+    <tr><th>Time</th><th>User A (booking)</th><th>User B (updating availability)</th></tr>
+    <tr><td>T1</td><td>🔒 Locks appointments row #45</td><td></td></tr>
+    <tr><td>T2</td><td></td><td>🔒 Locks counselor_availability row #12</td></tr>
+    <tr><td>T3</td><td>⏳ Waits for counselor_availability #12</td><td></td></tr>
+    <tr><td>T4</td><td></td><td>⏳ Waits for appointments #45</td></tr>
+    <tr><td>T5</td><td colspan="2" style="text-align:center;color:#c0392b;font-weight:700">💀 DEADLOCK — InnoDB kills one transaction and rolls it back</td></tr>
+  </table>
+</div>
 
-    <a href="dashboard.html" class="active">
-      <i class="fa fa-th-large"></i> Dashboard
-    </a>
+<!-- Strategy 1 -->
+<div class="card">
+  <h3>Strategy 1 — Consistent table access order <span class="tag tag-green">Primary defense</span></h3>
+  <p>Every transaction in the application must always lock tables in the <strong>same fixed order</strong>. This eliminates the circular wait condition entirely.</p>
+  <p><strong>Our fixed order for gcs_db:</strong></p>
+  <table>
+    <tr><th>#</th><th>Table</th><th>Why this position</th></tr>
+    <tr><td>1</td><td><code>students</code></td><td>All operations start from a student record</td></tr>
+    <tr><td>2</td><td><code>counselors</code></td><td>Counselor is referenced after student is confirmed</td></tr>
+    <tr><td>3</td><td><code>counselor_availability</code></td><td>Slot is checked before booking is created</td></tr>
+    <tr><td>4</td><td><code>appointments</code></td><td>Booking row is written after slot is verified</td></tr>
+    <tr><td>5</td><td><code>audit_log</code></td><td>Always written last — never locks anything else</td></tr>
+  </table>
+  <p style="margin-top:12px">If User A and User B both follow this order, User B will block at step 3 waiting for User A to finish — no circular wait, no deadlock.</p>
+</div>
 
-    <p class="menu-title">SERVICES</p>
+<!-- Strategy 2 -->
+<div class="card">
+  <h3>Strategy 2 — Row-level locking with <code>SELECT … FOR UPDATE</code> <span class="tag tag-blue">Concurrency control</span></h3>
+  <p>Instead of locking the whole table, we lock only the specific row we need. This allows multiple users to book appointments with different counselors at the same time.</p>
+  <pre>-- Booking transaction: lock ONLY the specific slot needed
+START TRANSACTION;
 
-    <a href="booking.html">
-      <i class="fa fa-calendar"></i> Book Appointment
-    </a>
+-- Lock just this one availability row (not the whole table)
+SELECT availability_id, is_booked
+FROM counselor_availability
+WHERE counselor_id = 3
+  AND day_of_week = 'Monday'
+  AND slot_time = '10:00:00'
+FOR UPDATE;
 
-    <a href="concerns.html">
-      <i class="fa fa-exclamation-triangle"></i> Submit Concern
-    </a>
+-- If is_booked = 0, proceed
+INSERT INTO appointments (student_id, counselor_id, appointment_date, status)
+VALUES (250001, 3, '2026-05-19', 'Pending');
 
-    <a href="wellness.html">
-      <i class="fa fa-heart"></i> Wellness Check
-    </a>
+UPDATE counselor_availability
+SET is_booked = 1
+WHERE counselor_id = 3
+  AND day_of_week = 'Monday'
+  AND slot_time = '10:00:00';
 
-    <a href="referral.html">
-      <i class="fa fa-route"></i> Referral
-    </a>
+INSERT INTO audit_log (action, performed_by, details)
+VALUES ('BOOKING_CREATED', 250001, 'Appointment with counselor 3');
 
-    <p class="menu-title">UPDATES</p>
+COMMIT;</pre>
+  <p>Two students booking different counselors simultaneously will each lock a different <code>counselor_availability</code> row — they never block each other.</p>
+</div>
 
-    <a href="announcements.html">
-      <i class="fa fa-bullhorn"></i> Announcements
-    </a>
-
-    <p class="menu-title">RECORDS</p>
-
-    <a href="history.html">
-      <i class="fa fa-clock"></i> Session History
-    </a>
-
-    <a href="documents.html">
-      <i class="fa fa-file"></i> Documents
-    </a>
-
-    <a href="ticket.html">
-      <i class="fa fa-ticket"></i> Tickets
-    </a>
-
-    <p class="menu-title">SYSTEM</p>
-
-    <a href="feedback.html">
-      <i class="fa fa-comment"></i> Session Feedback
-    </a>
-
+<!-- Strategy 3 -->
+<div class="card">
+  <h3>Strategy 3 — Keep transactions short <span class="tag tag-purple">Lock duration</span></h3>
+  <p>The longer a transaction holds a lock, the higher the chance another user bumps into it. Our rule: <strong>no user input happens inside a transaction</strong>.</p>
+  <div class="scenario" style="border-left-color:#b45309;background:#fffbeb">
+    <strong>❌ Wrong — lock held while waiting for user:</strong><br/>
+    <code>START TRANSACTION → show confirmation dialog → wait for user to click → COMMIT</code><br/>
+    The lock is held for seconds or minutes while the user reads the screen.
   </div>
-
-</nav>
-
-<!-- MAIN -->
-<main class="main">
-
-  <div class="topbar">
-    <h2>Welcome back, Student 👋</h2>
+  <div class="scenario fix">
+    <strong>✅ Correct — all data collected first, then transaction runs:</strong><br/>
+    Gather all input → validate in PHP → <code>START TRANSACTION → INSERT → UPDATE → INSERT → COMMIT</code><br/>
+    The transaction runs in milliseconds with no waiting.
   </div>
+</div>
 
-  <!-- STATS -->
-  <div class="grid">
+<!-- Strategy 4 -->
+<div class="card">
+  <h3>Strategy 4 — InnoDB automatic deadlock detection <span class="tag tag-gray">Last resort</span></h3>
+  <p>MariaDB InnoDB (which all your tables use) automatically detects deadlocks and resolves them by rolling back the transaction that has done the least work. Your application must handle this error and retry.</p>
+  <pre>// PHP application code — retry on deadlock
+function bookAppointment($pdo, $studentId, $counselorId, $slotId) {
+    $maxRetries = 3;
+    for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+        try {
+            $pdo->beginTransaction();
 
-    <div class="card stat-card">
-      <div class="stat-icon">
-        <i class="fa fa-calendar"></i>
-      </div>
-      <div>
-        <h3>0</h3>
-        <p>Upcoming Sessions</p>
-      </div>
-    </div>
+            // Lock the specific availability slot
+            $check = $pdo->prepare(
+                "SELECT is_booked FROM counselor_availability
+                 WHERE availability_id = ? FOR UPDATE"
+            );
+            $check->execute([$slotId]);
+            $row = $check->fetch();
 
-    <div class="card stat-card">
-      <div class="stat-icon">
-        <i class="fa fa-ticket"></i>
-      </div>
-      <div>
-        <h3>1</h3>
-        <p>Open Tickets</p>
-      </div>
-    </div>
+            if ($row['is_booked']) {
+                $pdo->rollBack();
+                return ['success' => false, 'reason' => 'Slot already taken'];
+            }
 
-    <div class="card stat-card">
-      <div class="stat-icon">
-        <i class="fa fa-heart"></i>
-      </div>
-      <div>
-        <h3>😊</h3>
-        <p>Last Mood</p>
-      </div>
-    </div>
+            // Insert booking
+            $pdo->prepare(
+                "INSERT INTO appointments
+                 (student_id, counselor_id, status)
+                 VALUES (?, ?, 'Pending')"
+            )->execute([$studentId, $counselorId]);
 
-  </div>
+            // Mark slot booked
+            $pdo->prepare(
+                "UPDATE counselor_availability
+                 SET is_booked = 1
+                 WHERE availability_id = ?"
+            )->execute([$slotId]);
 
-  <!-- CARDS -->
-  <div class="grid">
+            // Audit log
+            $pdo->prepare(
+                "INSERT INTO audit_log (action, performed_by)
+                 VALUES ('BOOKING_CREATED', ?)"
+            )->execute([$studentId]);
 
-    <div class="card">
-      <h3><i class="fa fa-bullhorn"></i> Announcement</h3>
-      <p><b>Seminar Scheduled</b></p>
-      <p>Friday 2PM - Main Hall</p>
-    </div>
+            $pdo->commit();
+            return ['success' => true];
 
-    <div class="card">
-      <h3><i class="fa fa-clock"></i> Recent Activity</h3>
-      <p>✔ Session booked</p>
-      <p>✔ Wellness check submitted</p>
-      <p>✔ Profile updated</p>
-    </div>
+        } catch (PDOException $e) {
+            $pdo->rollBack();
+            // Error 1213 = deadlock, error 1205 = lock wait timeout
+            if (in_array($e->getCode(), ['40001', '1213', '1205'])) {
+                usleep(100000 * ($attempt + 1)); // wait 100ms, 200ms, 300ms
+                continue; // retry
+            }
+            throw $e; // other errors: re-throw
+        }
+    }
+    return ['success' => false, 'reason' => 'Could not complete after retries'];
+}</pre>
+</div>
 
-  </div>
+<!-- Summary table -->
+<div class="card">
+  <h3>Summary — all four strategies at a glance</h3>
+  <table>
+    <tr><th>Strategy</th><th>How it prevents deadlocks</th><th>Where it applies</th></tr>
+    <tr>
+      <td><strong>1. Fixed table order</strong></td>
+      <td>No circular waits — everyone lines up in the same queue</td>
+      <td>All multi-table transactions</td>
+    </tr>
+    <tr>
+      <td><strong>2. SELECT … FOR UPDATE</strong></td>
+      <td>Row-level locks only — concurrent bookings for different counselors never block each other</td>
+      <td>Booking, availability update</td>
+    </tr>
+    <tr>
+      <td><strong>3. Short transactions</strong></td>
+      <td>Locks held for milliseconds, not seconds — tiny collision window</td>
+      <td>All transactions</td>
+    </tr>
+    <tr>
+      <td><strong>4. Retry on deadlock</strong></td>
+      <td>InnoDB detects &amp; resolves; app retries up to 3 times transparently</td>
+      <td>Application layer (PHP)</td>
+    </tr>
+  </table>
+</div>
 
-</main>
-
+<p style="font-size:12px;color:#999;margin-top:24px">gcs_db Milestone 3 — Security &amp; ACID · Generated for academic submission</p>
 </body>
 </html>
