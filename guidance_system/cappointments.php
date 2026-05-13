@@ -23,7 +23,7 @@ $conn->query("
       AND CONCAT(appointment_date, ' ', appointment_time) < NOW()
 ");
 
-// ── COUNT THEN AUTO-COMPLETE PAST APPROVED APPOINTMENTS (counselor forgot to mark) ──
+// ── COUNT THEN AUTO-COMPLETE PAST APPROVED APPOINTMENTS ──
 $autoCompletedRes   = $conn->query("
     SELECT COUNT(*) c FROM appointments
     WHERE status = 'Approved'
@@ -156,13 +156,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_stu
     exit;
 }
 
-// ── LOAD PENDING APPOINTMENTS ──
+// ── LOAD PENDING APPOINTMENTS (with file) ──
 $apptRes = $conn->query("
     SELECT a.appointment_id, a.appointment_date, a.appointment_time,
            a.priority, a.message,
-           s.student_id, s.first_name, s.last_name, s.course, s.year_level
+           s.student_id, s.first_name, s.last_name, s.course, s.year_level,
+           af.file_name, af.file_path
     FROM appointments a
     JOIN students s ON s.student_id = a.student_id
+    LEFT JOIN appointment_files af ON af.appointment_id = a.appointment_id
     WHERE a.status = 'Pending'
       AND a.counselor_id = '$cid'
       AND CONCAT(a.appointment_date, ' ', a.appointment_time) >= NOW()
@@ -171,13 +173,15 @@ $apptRes = $conn->query("
 $appointments = [];
 while ($row = $apptRes->fetch_assoc()) $appointments[] = $row;
 
-// ── LOAD ALL APPROVED APPOINTMENTS (this counselor only) ──
+// ── LOAD ALL APPROVED APPOINTMENTS (with file) ──
 $approvedRes = $conn->query("
     SELECT a.appointment_id, a.appointment_date, a.appointment_time,
            a.priority, a.message,
-           s.first_name, s.last_name, s.course, s.year_level
+           s.first_name, s.last_name, s.course, s.year_level,
+           af.file_name, af.file_path
     FROM appointments a
     JOIN students s ON s.student_id = a.student_id
+    LEFT JOIN appointment_files af ON af.appointment_id = a.appointment_id
     WHERE a.counselor_id = '$cid'
       AND a.status = 'Approved'
     ORDER BY a.appointment_date ASC, a.appointment_time ASC
@@ -194,6 +198,27 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="logout.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+  .cAppointment-downloadBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 6px 14px;
+    background: rgba(73,136,196,0.10);
+    border: 1px solid rgba(73,136,196,0.35);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #113f67;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .cAppointment-downloadBtn:hover {
+    background: rgba(73,136,196,0.20);
+  }
+</style>
 </head>
 <body class="body">
 
@@ -312,6 +337,7 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
         <?php foreach ($appointments as $appt):
           $sName  = htmlspecialchars($appt['first_name'] . ' ' . $appt['last_name']);
           $apptId = (int)$appt['appointment_id'];
+          $hasFile = !empty($appt['file_path']);
         ?>
         <div class="cAppointment-card"
              data-id="<?= $apptId ?>"
@@ -324,6 +350,14 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
           <p><b>Date:</b> <?= date('F d, Y', strtotime($appt['appointment_date'])) ?></p>
           <p><b>Time:</b> <?= date('g:i A', strtotime($appt['appointment_time'])) ?></p>
           <p><b>Priority:</b> <?= htmlspecialchars($appt['priority']) ?></p>
+          <?php if ($hasFile): ?>
+            <a href="<?= htmlspecialchars($appt['file_path']) ?>"
+               download="<?= htmlspecialchars($appt['file_name']) ?>"
+               class="cAppointment-downloadBtn">
+              <i class="fa fa-file-arrow-down"></i>
+              <?= htmlspecialchars($appt['file_name']) ?>
+            </a>
+          <?php endif; ?>
           <div class="cAppointment-actions">
             <button class="cAppointment-btn approve" onclick="approveAppointment(<?= $apptId ?>, this)">
               <i class="fa fa-check"></i> Approve
@@ -369,7 +403,8 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
         <?php foreach ($approvedAppointments as $appt):
           $sName  = htmlspecialchars($appt['first_name'] . ' ' . $appt['last_name']);
           $apptId = (int)$appt['appointment_id'];
-          $isPast = strtotime($appt['appointment_date'] . ' ' . $appt['appointment_time']) < time();
+          $isPast  = strtotime($appt['appointment_date'] . ' ' . $appt['appointment_time']) < time();
+          $hasFile = !empty($appt['file_path']);
         ?>
         <div class="cAppointment-card" id="cAppointment-approvedCard-<?= $apptId ?>">
           <h3>
@@ -383,6 +418,14 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
           <p><b>Date:</b> <?= date('F d, Y', strtotime($appt['appointment_date'])) ?></p>
           <p><b>Time:</b> <?= date('g:i A', strtotime($appt['appointment_time'])) ?></p>
           <p><b>Priority:</b> <?= htmlspecialchars($appt['priority']) ?></p>
+          <?php if ($hasFile): ?>
+            <a href="<?= htmlspecialchars($appt['file_path']) ?>"
+               download="<?= htmlspecialchars($appt['file_name']) ?>"
+               class="cAppointment-downloadBtn">
+              <i class="fa fa-file-arrow-down"></i>
+              <?= htmlspecialchars($appt['file_name']) ?>
+            </a>
+          <?php endif; ?>
           <div class="cAppointment-approvedActions" id="cAppointment-approvedActions-<?= $apptId ?>">
             <button class="cAppointment-approvedBtn complete" onclick="markComplete(<?= $apptId ?>)">
               <i class="fa fa-check"></i> Complete
@@ -425,9 +468,7 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
-     REJECT REASON MODAL
-══════════════════════════════════════════════ -->
+<!-- REJECT MODAL -->
 <div class="cAppointment-modalOverlay" id="rejectModal">
   <div class="cAppointment-modalBox">
     <h3><i class="fa fa-times-circle"></i> Decline Appointment</h3>
@@ -443,9 +484,7 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
-     CANCEL REASON MODAL
-══════════════════════════════════════════════ -->
+<!-- CANCEL MODAL -->
 <div class="cAppointment-modalOverlay" id="cancelModal">
   <div class="cAppointment-modalBox">
     <h3><i class="fa fa-ban"></i> Cancel Appointment</h3>
@@ -461,9 +500,7 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
   </div>
 </div>
 
-<!-- ══ APPROVAL RECEIPT MODAL ══ -->
-<!-- REPLACE the entire receiptModal div in cappointments.php with this -->
-
+<!-- APPROVAL RECEIPT MODAL -->
 <div class="cAppointment-modalOverlay" id="receiptModal" style="z-index:99999;">
   <div style="
     background: #ffffff;
@@ -475,7 +512,6 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
     animation: cAppointment-modalPop 0.25s ease;
   " id="receiptCard">
 
-    <!-- ── GRADIENT HEADER (keep as-is) ── -->
     <div style="
       background: linear-gradient(135deg, #113F67, #4988C4);
       color: #fff;
@@ -487,53 +523,37 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
       <div style="font-size:10px; opacity:0.55; margin-top:5px;">Guidance &amp; Counseling Services</div>
     </div>
 
-    <!-- ── DASHED SEPARATOR ── -->
     <div style="border-top:2px dashed #b0cde8; margin:14px 20px 0;"></div>
 
-    <!-- ── TICKET ROWS ── -->
     <div style="padding:10px 24px 8px;">
-
-      <!-- Ticket No. -->
       <div style="display:table; width:100%; padding:7px 0; border-bottom:1px dashed #dce8f0;">
         <span style="display:table-cell; font-size:11px; color:#64748b; width:90px; vertical-align:middle;">Ticket No.</span>
         <span style="display:table-cell; font-size:13px; font-weight:700; color:#113f67; text-align:right; vertical-align:middle;" id="rt-id">—</span>
       </div>
-
-      <!-- Student -->
       <div style="display:table; width:100%; padding:7px 0; border-bottom:1px dashed #dce8f0;">
         <span style="display:table-cell; font-size:11px; color:#64748b; width:90px; vertical-align:middle;">Student</span>
         <span style="display:table-cell; font-size:12px; color:#0f172a; text-align:right; vertical-align:middle;" id="rt-name">—</span>
       </div>
-
-      <!-- Program -->
       <div style="display:table; width:100%; padding:7px 0; border-bottom:1px dashed #dce8f0;">
         <span style="display:table-cell; font-size:11px; color:#64748b; width:90px; vertical-align:middle;">Program</span>
         <span style="display:table-cell; font-size:12px; color:#0f172a; text-align:right; vertical-align:middle;" id="rt-program">—</span>
       </div>
-
-      <!-- Date -->
       <div style="display:table; width:100%; padding:7px 0; border-bottom:1px dashed #dce8f0;">
         <span style="display:table-cell; font-size:11px; color:#64748b; width:90px; vertical-align:middle;">Date</span>
         <span style="display:table-cell; font-size:12px; color:#0f172a; text-align:right; vertical-align:middle;" id="rt-date">—</span>
       </div>
-
-      <!-- Time -->
       <div style="display:table; width:100%; padding:7px 0; border-bottom:1px dashed #dce8f0;">
         <span style="display:table-cell; font-size:11px; color:#64748b; width:90px; vertical-align:middle;">Time</span>
         <span style="display:table-cell; font-size:12px; color:#0f172a; text-align:right; vertical-align:middle;" id="rt-time">—</span>
       </div>
-
-      <!-- Priority -->
       <div style="display:table; width:100%; padding:7px 0;">
         <span style="display:table-cell; font-size:11px; color:#64748b; width:90px; vertical-align:middle;">Priority</span>
         <span style="display:table-cell; text-align:right; vertical-align:middle;">
           <span id="rt-priority" style="font-size:10px; font-weight:600; padding:3px 14px; border-radius:999px; display:inline-block;">—</span>
         </span>
       </div>
-
     </div>
 
-    <!-- ── STATUS SECTION ── -->
     <div style="border-top:2px dashed #b0cde8; border-bottom:2px dashed #b0cde8; margin:4px 20px; padding:12px 0; text-align:center;">
       <div style="font-size:9px; color:#94a3b8; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:7px;">STATUS</div>
       <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(34,197,94,0.12); border:1px solid rgba(34,197,94,0.35); color:#15803d; font-size:12px; font-weight:700; padding:6px 22px; border-radius:999px; letter-spacing:1px;">
@@ -541,24 +561,20 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
       </div>
     </div>
 
-    <!-- ── REASON ── -->
     <div style="border-bottom:2px dashed #b0cde8; margin:0 20px; padding:12px 0 14px;">
       <div style="font-size:9px; color:#94a3b8; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:5px;">REASON</div>
       <div style="font-size:11.5px; color:#0f172a; line-height:1.6;" id="rt-reason">—</div>
     </div>
 
-    <!-- ── BARCODE ── -->
     <div style="text-align:center; padding:12px 0 6px;">
       <div style="font-size:14px; letter-spacing:5px; color:#94a3b8; font-family:'Courier New',monospace;">||||| ||||| || |||||</div>
       <div style="font-size:9px; color:#94a3b8; letter-spacing:1.5px; margin-top:3px;" id="rt-barcode">APPT-0 &bull; 2026</div>
     </div>
 
-    <!-- ── THANK YOU ── -->
     <div style="background:#f0f4f8; text-align:center; padding:10px; font-size:9px; color:#94a3b8; letter-spacing:3px; text-transform:uppercase; border-top:1px solid #dce8f0;">
       THANK YOU
     </div>
 
-    <!-- ── CLOSE BUTTON ── -->
     <div style="padding:14px 20px;">
       <button onclick="closeReceiptModal()" style="
         width:100%; padding:11px;
@@ -578,19 +594,12 @@ while ($row = $approvedRes->fetch_assoc()) $approvedAppointments[] = $row;
   </div>
 </div>
 
-
-
-
-
-
 <script>
-
 (function() {
     const saved = localStorage.getItem("theme") || "light";
     document.documentElement.setAttribute("data-theme", saved);
 })();
 
-// ── Settings / theme ──────────────────────────────────────────────────────────
 function toggleSettingsMenu(e) {
     e.stopPropagation();
     document.getElementById("settingsDropdown").classList.toggle("show");
@@ -607,7 +616,6 @@ function toggleTheme() {
     localStorage.setItem("theme", newTheme);
 }
 
-// ── Logout ────────────────────────────────────────────────────────────────────
 function logout()      { document.getElementById('logoutOverlay').classList.add('show'); }
 function closeLogout() { document.getElementById('logoutOverlay').classList.remove('show'); }
 function confirmLogout() { window.location.href = 'logout.php?role=counselor'; }
@@ -615,7 +623,6 @@ document.getElementById('logoutOverlay').addEventListener('click', function(e) {
     if (e.target === this) closeLogout();
 });
 
-// ── Notification dropdown ─────────────────────────────────────────────────────
 function toggleDropdown(id, e) {
     e.stopPropagation();
     document.getElementById(id).classList.toggle("show");
@@ -625,7 +632,6 @@ document.addEventListener("click", e => {
     if (notif && !notif.contains(e.target)) notif.classList.remove("show");
 });
 
-// ── Tabs ──────────────────────────────────────────────────────────────────────
 function switchTab(name, btn) {
     document.querySelectorAll('.cAppointment-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.cAppointment-panel').forEach(p => p.classList.remove('active'));
@@ -633,7 +639,6 @@ function switchTab(name, btn) {
     document.getElementById('panel-' + name).classList.add('active');
 }
 
-// ── Filter (Pending tab) ──────────────────────────────────────────────────────
 function toggleFilterBox() {
     document.getElementById("filterBox").classList.toggle("show");
 }
@@ -657,7 +662,6 @@ function clearFilter() {
     document.getElementById("noResultsMsg").style.display = "none";
 }
 
-// ── Search ────────────────────────────────────────────────────────────────────
 document.getElementById('searchInput').addEventListener("input", function() {
     const q       = this.value.toLowerCase();
     let   visible = 0;
@@ -669,7 +673,6 @@ document.getElementById('searchInput').addEventListener("input", function() {
     document.getElementById("noResultsMsg").style.display = visible === 0 ? "block" : "none";
 });
 
-// ── APPROVE ───────────────────────────────────────────────────────────────────
 function approveAppointment(apptId, btn) {
     if (!confirm('Approve this appointment?')) return;
     const card = btn.closest('.cAppointment-card');
@@ -682,7 +685,6 @@ function approveAppointment(apptId, btn) {
         .then(r => r.json())
         .then(json => {
             if (json.success) {
-                // Pull data from card paragraphs
                 let reason = '', program = '', time = '';
                 card.querySelectorAll('p').forEach(p => {
                     const t = p.textContent.trim();
@@ -694,7 +696,6 @@ function approveAppointment(apptId, btn) {
                 const rawDate  = card.dataset.date;
                 const priority = (card.dataset.priority || '').toLowerCase();
 
-                // ── Fill receipt rows ──
                 document.getElementById('rt-id').textContent      = 'APPT-' + apptId;
                 document.getElementById('rt-name').textContent    = rawName;
                 document.getElementById('rt-program').textContent = program;
@@ -705,7 +706,6 @@ function approveAppointment(apptId, btn) {
                 document.getElementById('rt-barcode').textContent =
                     'APPT-' + apptId + ' \u2022 ' + new Date().getFullYear();
 
-                // ── Priority pill ──
                 const pBadge = document.getElementById('rt-priority');
                 pBadge.textContent = priority.charAt(0).toUpperCase() + priority.slice(1);
                 const pMap = {
@@ -727,14 +727,11 @@ function approveAppointment(apptId, btn) {
 function closeReceiptModal() {
     document.getElementById('receiptModal').classList.remove('show');
 }
-
 document.getElementById('receiptModal').addEventListener('click', function(e) {
     if (e.target === this) closeReceiptModal();
 });
 
-// ── REJECT MODAL ──────────────────────────────────────────────────────────────
 let _rejectApptId = null;
-
 function openRejectModal(apptId) {
     _rejectApptId = apptId;
     document.getElementById('rejectReason').value = '';
@@ -748,19 +745,16 @@ function closeRejectModal() {
 document.getElementById('rejectModal').addEventListener('click', function(e) {
     if (e.target === this) closeRejectModal();
 });
-
 function confirmReject() {
     const reason = document.getElementById('rejectReason').value.trim();
     const errEl  = document.getElementById('rejectError');
     if (!reason) { errEl.style.display = 'block'; return; }
     errEl.style.display = 'none';
-
     const fd = new FormData();
     fd.append('action',           'update_status');
     fd.append('appointment_id',   _rejectApptId);
     fd.append('status',           'Rejected');
     fd.append('rejection_reason', reason);
-
     fetch('cappointments.php', { method: 'POST', body: fd })
         .then(r => r.json())
         .then(json => {
@@ -776,7 +770,6 @@ function confirmReject() {
         .catch(() => alert('Something went wrong.'));
 }
 
-// ── COMPLETE ──────────────────────────────────────────────────────────────────
 function markComplete(apptId) {
     if (!confirm('Mark this appointment as Completed?')) return;
     const fd = new FormData();
@@ -795,9 +788,7 @@ function markComplete(apptId) {
         .catch(() => alert('Something went wrong.'));
 }
 
-// ── CANCEL MODAL ──────────────────────────────────────────────────────────────
 let _cancelApptId = null;
-
 function openCancelModal(apptId) {
     _cancelApptId = apptId;
     document.getElementById('cancelReason').value = '';
@@ -811,19 +802,16 @@ function closeCancelModal() {
 document.getElementById('cancelModal').addEventListener('click', function(e) {
     if (e.target === this) closeCancelModal();
 });
-
 function confirmCancel() {
     const reason = document.getElementById('cancelReason').value.trim();
     const errEl  = document.getElementById('cancelError');
     if (!reason) { errEl.style.display = 'block'; return; }
     errEl.style.display = 'none';
-
     const fd = new FormData();
     fd.append('action',         'mark_appointment');
     fd.append('appointment_id', _cancelApptId);
     fd.append('result',         'cancelled');
     fd.append('reason',         reason);
-
     fetch('cappointments.php', { method: 'POST', body: fd })
         .then(r => r.json())
         .then(json => {
@@ -838,7 +826,6 @@ function confirmCancel() {
         .catch(() => alert('Something went wrong.'));
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function removeCardWithFade(card, badgeSelector) {
     card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
     card.style.opacity    = '0';
@@ -854,7 +841,7 @@ function replaceActionsWithBadge(apptId, status) {
     const el = document.getElementById('cAppointment-approvedActions-' + apptId);
     if (!el) return;
     const icon  = status === 'completed' ? 'fa-check' : 'fa-ban';
-    const label = status === 'completed' ? 'Completed'  : 'Cancelled';
+    const label = status === 'completed' ? 'Completed' : 'Cancelled';
     el.outerHTML = `
         <div class="cAppointment-statusBadge ${status}" id="cAppointment-approvedActions-${apptId}">
             <i class="fa ${icon}"></i> ${label}
@@ -863,7 +850,6 @@ function replaceActionsWithBadge(apptId, status) {
     if (badge) badge.textContent = Math.max(0, parseInt(badge.textContent) - 1);
 }
 
-// ── Student profile modal ─────────────────────────────────────────────────────
 function openStudentModal(apptId) {
     document.getElementById("studentModal").classList.add("show");
     const body = document.getElementById("studentModalBody");

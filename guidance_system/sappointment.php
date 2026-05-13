@@ -28,6 +28,7 @@ if ($conn->connect_error) {
 $conn->set_charset("utf8mb4");
 $sid = $conn->real_escape_string((string)$_SESSION['user_id']);
 require_once 'scheck_reports_badge.php';
+
 // ── Load student info ──
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
 $student    = $studentRes ? $studentRes->fetch_assoc() : [];
@@ -105,6 +106,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book'
         exit;
     }
 
+    // ── Handle optional file upload ──
+    $destPath = null;
+    if (!empty($_FILES['document']['name'])) {
+        $allowedTypes = ['application/pdf','application/msword',
+                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                         'image/jpeg','image/png','image/gif','image/webp'];
+        $maxSize = 10 * 1024 * 1024; // 10 MB
+
+        $fileType = mime_content_type($_FILES['document']['tmp_name']);
+        $fileSize = $_FILES['document']['size'];
+
+        if (!in_array($fileType, $allowedTypes)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid file type. Allowed: PDF, Word, JPG, PNG, GIF, WEBP.']);
+            exit;
+        }
+        if ($fileSize > $maxSize) {
+            echo json_encode(['success' => false, 'message' => 'File is too large. Maximum size is 10 MB.']);
+            exit;
+        }
+
+        $uploadDir = 'uploads/appointment_docs/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0775, true);
+        }
+
+        $ext      = strtolower(pathinfo($_FILES['document']['name'], PATHINFO_EXTENSION));
+        $filename = 'appt_' . $sid . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+        $destPath = $uploadDir . $filename;
+
+        if (!move_uploaded_file($_FILES['document']['tmp_name'], $destPath)) {
+            echo json_encode(['success' => false, 'message' => 'File upload failed. Please try again.']);
+            exit;
+        }
+    }
+
     $conn->begin_transaction();
     try {
         $lock = $conn->query("
@@ -127,10 +163,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book'
         ");
         if (!$ok) throw new Exception('Booking failed. Please try again.');
 
+        $newAppointmentId = $conn->insert_id;
+
+        // ── Insert file record into appointment_files if a file was uploaded ──
+        if (!empty($destPath)) {
+            $safeFileName = $conn->real_escape_string(basename($destPath));
+            $safeFilePath = $conn->real_escape_string($destPath);
+            $fileOk = $conn->query("
+                INSERT INTO appointment_files (appointment_id, file_name, file_path)
+                VALUES ($newAppointmentId, '$safeFileName', '$safeFilePath')
+            ");
+            if (!$fileOk) throw new Exception('File record could not be saved. Please try again.');
+        }
+
         $conn->commit();
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
         $conn->rollback();
+        // Remove uploaded file if transaction failed
+        if (!empty($destPath) && file_exists($destPath)) {
+            unlink($destPath);
+        }
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
     exit;
@@ -171,6 +224,71 @@ if ($counselorRes) while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
       flex-shrink: 0;
       box-shadow: 0 0 6px rgba(147, 197, 253, 0.5);
       backdrop-filter: blur(4px);
+    }
+
+    /* ── Upload zone inside booking card ── */
+    .sBooking-upload-zone {
+      border: 2px dashed var(--border, #d1d5db);
+      border-radius: 10px;
+      padding: 18px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--bg-soft, #f8fafc);
+      position: relative;
+    }
+    .sBooking-upload-zone:hover,
+    .sBooking-upload-zone.dragover {
+      border-color: #4988C4;
+      background: rgba(73,136,196,0.06);
+    }
+    .sBooking-upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .sBooking-upload-zone i {
+      font-size: 22px;
+      color: #4988C4;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .sBooking-upload-zone p {
+      font-size: 12px;
+      color: var(--text-muted, #64748b);
+      margin: 0;
+    }
+    .sBooking-upload-zone .upload-filename {
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #113f67;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .sBooking-upload-zone .upload-filename.visible {
+      display: flex;
+    }
+    .sBooking-upload-zone .upload-clear {
+      background: none;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 0;
+      line-height: 1;
+    }
+    .sBooking-upload-label {
+      font-size: 11px;
+      color: var(--text-muted, #64748b);
+      margin-top: 6px;
+      display: block;
+      text-align: center;
     }
   </style>
 </head>
@@ -258,11 +376,6 @@ $_totalReportUnseen = $_totalReportUnseen ?? 0;
             $cDept      = htmlspecialchars($c['department'] ?? '');
             $cFallback  = 'https://ui-avatars.com/api/?name=' . urlencode($cName) . '&background=113f67&color=fff&size=128';
 
-            // Build image src based on what's stored in DB:
-            // - NULL/empty             → fallback avatar
-            // - starts with http       → external URL, use as-is
-            // - contains slash         → already a path like uploads/profiles/file.jpg, use as-is
-            // - bare filename (c_2.jpg)→ use as-is, onerror handles broken paths
             if (!empty($c['profile_image'])) {
                 $cImg = htmlspecialchars(trim($c['profile_image']));
             } else {
@@ -332,6 +445,35 @@ $_totalReportUnseen = $_totalReportUnseen ?? 0;
           <textarea id="message" placeholder="Describe your concern..."></textarea>
         </div>
 
+        <!-- ── Optional Document Upload ── -->
+        <div class="sBooking-field">
+          <label>
+            Supporting Document
+            <span style="font-size:10px; font-weight:400; color:var(--text-muted,#64748b); margin-left:4px;">(optional)</span>
+          </label>
+          <div class="sBooking-upload-zone"
+               id="uploadZone"
+               ondragover="handleDragOver(event)"
+               ondragleave="handleDragLeave(event)"
+               ondrop="handleDrop(event)">
+            <input type="file"
+                   id="documentFile"
+                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp"
+                   onchange="handleFileSelect(this)">
+            <i class="fa fa-cloud-arrow-up"></i>
+            <p>Click to browse or drag &amp; drop</p>
+            <p style="margin-top:3px; font-size:11px;">PDF, Word, JPG, PNG · Max 10 MB</p>
+          </div>
+          <div class="upload-filename" id="uploadFilename">
+            <i class="fa fa-file" style="color:#4988C4; font-size:13px;"></i>
+            <span id="uploadFileLabel"></span>
+            <button class="upload-clear" onclick="clearFile()" title="Remove file">
+              <i class="fa fa-times-circle"></i>
+            </button>
+          </div>
+          <span class="sBooking-upload-label" id="uploadHint" style="display:none;"></span>
+        </div>
+
         <button class="sBooking-submit" onclick="bookAppointment()">
           <i class="fa fa-calendar-check" style="margin-right:6px;"></i> Confirm Booking
         </button>
@@ -339,15 +481,6 @@ $_totalReportUnseen = $_totalReportUnseen ?? 0;
       </div>
 
     </div>
-  </div>
-
-  <!-- Upload Card -->
-  <div class="sBooking-upload-card">
-    <h3>Upload Documents</h3>
-    <p>You may upload supporting documents for your appointment.</p>
-    <input type="file" id="fileInput" onchange="document.getElementById('fileName').textContent = this.files[0]?.name || ''">
-    <p id="fileName" style="font-size:12px; margin-top:8px;"></p>
-    <button class="sBooking-upload-btn" onclick="handleUpload()">Upload File</button>
   </div>
 
 </div>
@@ -482,6 +615,40 @@ function formatTime(t) {
     return `${disp}:${min} ${ampm}`;
 }
 
+// ── File upload helpers ──
+function handleFileSelect(input) {
+    if (input.files && input.files[0]) {
+        showFileName(input.files[0].name);
+    }
+}
+function showFileName(name) {
+    document.getElementById('uploadFileLabel').textContent = name;
+    document.getElementById('uploadFilename').classList.add('visible');
+}
+function clearFile() {
+    document.getElementById('documentFile').value = '';
+    document.getElementById('uploadFilename').classList.remove('visible');
+    document.getElementById('uploadFileLabel').textContent = '';
+}
+function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('uploadZone').classList.add('dragover');
+}
+function handleDragLeave(e) {
+    document.getElementById('uploadZone').classList.remove('dragover');
+}
+function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('uploadZone').classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('documentFile').files = dt.files;
+    showFileName(file.name);
+}
+
+// ── Book appointment ──
 function bookAppointment() {
     const d        = document.getElementById('date').value;
     const t        = document.getElementById('time').value;
@@ -500,7 +667,10 @@ function bookAppointment() {
     }
 
     const submitBtn = document.querySelector('.sBooking-submit');
-    if (submitBtn) submitBtn.disabled = true;
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i> Submitting…';
+    }
 
     const fd = new FormData();
     fd.append('action',       'book');
@@ -510,13 +680,21 @@ function bookAppointment() {
     fd.append('message',      msg);
     fd.append('priority',     priority);
 
+    const fileInput = document.getElementById('documentFile');
+    if (fileInput.files && fileInput.files[0]) {
+        fd.append('document', fileInput.files[0]);
+    }
+
     fetch('sappointment.php', { method: 'POST', body: fd })
         .then(r => {
             if (!r.ok) throw new Error('Server error');
             return r.json();
         })
         .then(json => {
-            if (submitBtn) submitBtn.disabled = false;
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-calendar-check" style="margin-right:6px;"></i> Confirm Booking';
+            }
             result.innerHTML = json.success
                 ? "<span style='color:var(--success,#15803d);'>✔ Appointment submitted successfully!</span>"
                 : "<span style='color:var(--error,#e53e3e);'>❌ " + (json.message || 'Failed. Please try again.') + "</span>";
@@ -531,22 +709,17 @@ function bookAppointment() {
                 document.getElementById('slotsWrap').innerHTML =
                     '<p class="sBooking-slots-hint">Select a counselor and date to see available slots.</p>';
                 document.getElementById('noSlots').style.display = 'none';
+                clearFile();
                 setTimeout(() => result.innerHTML = '', 5000);
             }
         })
         .catch(() => {
-            if (submitBtn) submitBtn.disabled = false;
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-calendar-check" style="margin-right:6px;"></i> Confirm Booking';
+            }
             result.innerHTML = "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong. Please try again.</span>";
         });
-}
-
-function handleUpload() {
-    const input = document.getElementById('fileInput');
-    if (!input.files || !input.files[0]) {
-        alert('Please select a file first.');
-        return;
-    }
-    alert('Upload functionality: connect to your upload endpoint here.');
 }
 
 async function checkReferralBadge() {
@@ -559,7 +732,7 @@ async function checkReferralBadge() {
 }
 
 checkReferralBadge();
-setInterval(checkReferralBadge, 60000); 
+setInterval(checkReferralBadge, 60000);
 </script>
 </body>
 </html>
