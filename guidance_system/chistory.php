@@ -63,14 +63,14 @@ if ($res) while ($row = $res->fetch_assoc()) $concerns[] = $row;
 /* ── HELPERS ── */
 function statusBadge($status) {
     $map = [
-        'Completed' => 'background:#d1fae5;color:#065f46',
-        'Rejected'  => 'background:#fee2e2;color:#991b1b',
-        'Expired'   => 'background:#fef3c7;color:#92400e',
-        'Resolved'  => 'background:#dbeafe;color:#1e40af',
-        'Pending'   => 'background:#f3e8ff;color:#6b21a8',
+        'Completed' => 'cHistory-status-completed',
+        'Rejected'  => 'cHistory-status-rejected',
+        'Expired'   => 'cHistory-status-expired',
+        'Resolved'  => 'cHistory-status-resolved',
+        'Pending'   => 'cHistory-status-pending',
     ];
-    $style = $map[$status] ?? 'background:#f3f4f6;color:#374151';
-    return "<span style='{$style};padding:3px 11px;border-radius:999px;font-size:.72rem;font-weight:600;white-space:nowrap;'>"
+    $cls = $map[$status] ?? '';
+    return "<span class='cHistory-status {$cls}'>"
          . htmlspecialchars($status ?? '—') . "</span>";
 }
 
@@ -592,16 +592,15 @@ function stars(rating) {
 }
 
 function badge(status) {
-  const map = {
-    Completed : 'background:#d1fae5;color:#065f46',
-    Rejected  : 'background:#fee2e2;color:#991b1b',
-    Expired   : 'background:#fef3c7;color:#92400e',
-    Resolved  : 'background:#dbeafe;color:#1e40af',
-    Pending   : 'background:#f3e8ff;color:#6b21a8',
-  };
-  const s = map[status] || 'background:#f3f4f6;color:#374151';
-  return `<span style="${s};padding:3px 11px;border-radius:999px;font-size:.72rem;font-weight:600;">
-    ${status || '—'}</span>`;
+    const map = {
+        Completed : 'cHistory-status-completed',
+        Rejected  : 'cHistory-status-rejected',
+        Expired   : 'cHistory-status-expired',
+        Resolved  : 'cHistory-status-resolved',
+        Pending   : 'cHistory-status-pending',
+    };
+    const cls = map[status] || '';
+    return `<span class="cHistory-status ${cls}">${status || '—'}</span>`;
 }
 
 function openModal(id)  { document.getElementById(id).classList.add('show'); }

@@ -19,6 +19,7 @@ $conn->query("
     SET status = 'Rejected',
         rejection_reason = 'Appointment date has passed without counselor action.'
     WHERE status = 'Pending'
+      AND counselor_id = '$cid'
       AND CONCAT(appointment_date, ' ', appointment_time) < NOW()
 ");
 
@@ -50,7 +51,8 @@ $profileImg = !empty($counselor['profile_image'])
     : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
 
 $pendingCount = (int)$conn->query(
-    "SELECT COUNT(*) c FROM appointments WHERE status='Pending'"
+    "SELECT COUNT(*) c FROM appointments 
+     WHERE counselor_id='$cid' AND status='Pending'"
 )->fetch_assoc()['c'];
 
 // ── HANDLE APPROVE / REJECT (Pending tab) ──
@@ -162,6 +164,7 @@ $apptRes = $conn->query("
     FROM appointments a
     JOIN students s ON s.student_id = a.student_id
     WHERE a.status = 'Pending'
+      AND a.counselor_id = '$cid'
       AND CONCAT(a.appointment_date, ' ', a.appointment_time) >= NOW()
     ORDER BY a.appointment_date ASC, a.appointment_time ASC
 ");

@@ -7316,6 +7316,394 @@ textarea.sReports-notesBox {
   color: var(--text-muted);
 }
 
+/* =========================
+   STUDENT LIST — ID BADGE
+========================= */
+.cStudentList-id-badge {
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  color: var(--text-muted);
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .cStudentList-id-badge {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.1);
+  color: #6e8ea8;
+}
+
+/* =========================
+   STUDENT LIST — EMPTY STATE
+========================= */
+.cStudentList-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 3rem;
+}
+
+/* =========================
+   SEARCH MODE SELECT
+========================= */
+.cStudentList-search-mode {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 8px 0 4px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  margin-right: 4px;
+}
+
+[data-theme="dark"] .cStudentList-search-mode {
+  color: #6e8ea8;
+  border-right-color: rgba(255,255,255,0.1);
+}
+
+[data-theme="dark"] .cStudentList-search-mode option {
+  background: #0f1829;
+  color: #dce8f5;
+}
+
+/* =========================
+   MODAL LOADING / ERROR TEXT
+========================= */
+.cStudentModal-loading {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+}
+
+/* =========================
+   MODAL WELLNESS BOX SPACING
+========================= */
+.cStudentModal-box--wellness {
+  margin-top: 12px;
+}
+
+/* =========================
+   PAGINATION — cStudentList
+========================= */
+.cStudentList-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.cStudentList-pagination-info {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.cStudentList-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cStudentList-page-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.cStudentList-page-btn:hover:not(:disabled) {
+  background: var(--hover);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.cStudentList-page-btn.active {
+  background: linear-gradient(135deg, #113F67, #4988C4);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(17,63,103,0.28);
+}
+
+.cStudentList-page-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cStudentList-page-btn.prev-next {
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.cStudentList-page-ellipsis {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 0 4px;
+  user-select: none;
+}
+
+.cStudentList-per-page {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.cStudentList-per-page select {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cStudentList-per-page select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(73,136,196,0.15);
+}
+
+[data-theme="dark"] .cStudentList-pagination {
+  border-top-color: rgba(255,255,255,0.07);
+}
+
+[data-theme="dark"] .cStudentList-pagination-info {
+  color: #6e8ea8;
+}
+
+[data-theme="dark"] .cStudentList-page-btn {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.1);
+  color: #dce8f5;
+}
+
+[data-theme="dark"] .cStudentList-page-btn:hover:not(:disabled) {
+  background: rgba(73,136,196,0.15);
+  border-color: #4988C4;
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .cStudentList-page-btn.active {
+  background: linear-gradient(135deg, #0d3254, #3a7ab8);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+}
+
+[data-theme="dark"] .cStudentList-page-btn:disabled {
+  opacity: 0.3;
+}
+
+[data-theme="dark"] .cStudentList-page-ellipsis {
+  color: #4a6680;
+}
+
+[data-theme="dark"] .cStudentList-per-page {
+  color: #6e8ea8;
+}
+
+[data-theme="dark"] .cStudentList-per-page select {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.1);
+  color: #dce8f5;
+}
+
+[data-theme="dark"] .cStudentList-per-page select:focus {
+  border-color: #4988C4;
+  box-shadow: 0 0 0 3px rgba(73,136,196,0.2);
+}
+
+/* =========================
+   FILTER BUTTON — active state & count badge
+========================= */
+.cStudentList-filter-count {
+  display: none;
+  background: #fff;
+  color: #113F67;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 6px;
+  margin-left: 4px;
+  line-height: 1.6;
+}
+
+.cStudentList-filter-count.show {
+  display: inline-block;
+}
+
+.cStudentList-filter-active {
+  background: linear-gradient(135deg, #0d3254, #2e6da4);
+  box-shadow: 0 8px 20px rgba(17,63,103,0.4);
+}
+
+[data-theme="dark"] .cStudentList-filter-count {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+}
+
+
+.cStudentList-filter-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+/* =========================
+   FILTER DROPDOWN BOX
+========================= */
+.cStudentList-filter-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+#cStudentList-filterBox {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 240px;
+  z-index: 9999;
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: 0 18px 45px rgba(0,0,0,0.15);
+  flex-direction: column;
+  gap: 10px;
+}
+
+#cStudentList-filterBox.show { display: flex; }
+
+#cStudentList-filterBox label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+  display: block;
+}
+
+#cStudentList-filterBox select,
+#cStudentList-filterBox input[type="date"] {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+#cStudentList-filterBox select:focus,
+#cStudentList-filterBox input[type="date"]:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(73,136,196,0.15);
+}
+
+#cStudentList-filterBox .filter-field { display: flex; flex-direction: column; gap: 4px; }
+
+#cStudentList-filterBox .filter-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+#cStudentList-filterBox .btn-apply {
+  flex: 1;
+  padding: 9px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #113F67, #4988C4);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#cStudentList-filterBox .btn-clear {
+  flex: 1;
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#cStudentList-filterBox .btn-apply:hover { opacity: 0.85; }
+#cStudentList-filterBox .btn-clear:hover  { background: var(--hover); }
+
+[data-theme="dark"] #cStudentList-filterBox {
+  background: rgba(10,18,35,0.97);
+  border-color: rgba(255,255,255,0.09);
+  box-shadow: 0 18px 45px rgba(0,0,0,0.5);
+}
+
+[data-theme="dark"] #cStudentList-filterBox select,
+[data-theme="dark"] #cStudentList-filterBox input[type="date"] {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.1);
+  color: #dce8f5;
+  color-scheme: dark;
+}
+
+[data-theme="dark"] #cStudentList-filterBox label { color: #6e8ea8; }
+
+/* mood status tag in card */
+.cStudentList-status-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.cStudentList-status-tag.stable   { background: rgba(34,197,94,0.15);  color: #16a34a; }
+.cStudentList-status-tag.at-risk  { background: rgba(255,152,0,0.15);  color: #b45309; }
+.cStudentList-status-tag.critical { background: rgba(239,68,68,0.15);  color: #b91c1c; }
+.cStudentList-status-tag.info     { background: rgba(73,136,196,0.12); color: #113F67; }
+
+[data-theme="dark"] .cStudentList-status-tag.stable   { color: #4ade80; }
+[data-theme="dark"] .cStudentList-status-tag.at-risk  { color: #fbbf24; }
+[data-theme="dark"] .cStudentList-status-tag.critical { color: #fca5a5; }
+[data-theme="dark"] .cStudentList-status-tag.info     { color: #93c5fd; }
+
 .btn-small {
   padding: 6px 12px;
 
@@ -8012,7 +8400,8 @@ body:has(.cStudentModal.show) .sidebar {
   margin: 0 0 8px;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  line-clamp: 2;          
+  -webkit-line-clamp: 2; 
   -webkit-box-orient: vertical;
 }
 
@@ -8428,8 +8817,8 @@ body:has(.cStudentModal.show) .sidebar {
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  line-clamp: 2;          /* standard */
-  -webkit-line-clamp: 2;  /* fallback */
+  line-clamp: 2;          
+  -webkit-line-clamp: 2;  
 }
 .cAnnouncements-meta {
   font-size: 11px;
@@ -9919,6 +10308,9 @@ body:has(.cStudentModal.show) .sidebar {
   font-size: 13px;
 }
 
+/* ══════════════════════════════════════
+   cHISTORY — MAIN LAYOUT
+══════════════════════════════════════ */
 .cHistory-main {
   margin-left: 280px;
   padding: 40px 28px;
@@ -9929,6 +10321,7 @@ body:has(.cStudentModal.show) .sidebar {
   gap: 18px;
 }
 
+/* ── TOPBAR ROW ── */
 .cHistory-topbarRow {
   display: flex;
   align-items: center;
@@ -9936,6 +10329,7 @@ body:has(.cStudentModal.show) .sidebar {
   position: relative;
 }
 
+/* ── TABS ── */
 .cHistory-tabs {
   display: flex;
   gap: 10px;
@@ -9951,6 +10345,7 @@ body:has(.cStudentModal.show) .sidebar {
   cursor: pointer;
   font-weight: 600;
   color: #555;
+  transition: background 0.2s, color 0.2s;
 }
 
 .cHistory-tabs button:hover {
@@ -9963,38 +10358,7 @@ body:has(.cStudentModal.show) .sidebar {
   color: #fff;
 }
 
-.cHistory-filterBar {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-
-  background: #fff;
-  padding: 14px;
-  border-radius: 14px;
-  border: 1px solid #e3e8ef;
-}
-
-.cHistory-filterBar input,
-.cHistory-filterBar select {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 2px solid #e3e8ef;
-  outline: none;
-}
-
-.cHistory-filterBar input:focus,
-.cHistory-filterBar select:focus {
-  border-color: #113F67;
-  box-shadow: 0 0 0 3px rgba(17,63,103,0.15);
-}
-
-.cHistory-tabContent {
-  background: #fff;
-  border: 1px solid #e3e8ef;
-  border-radius: 16px;
-  overflow: hidden;
-}
-
+/* ── FILTER BAR ── */
 .cHistory-filterBar {
   display: flex;
   gap: 12px;
@@ -10004,6 +10368,7 @@ body:has(.cStudentModal.show) .sidebar {
   border-radius: 14px;
   border: 1px solid #e3e8ef;
 }
+
 .cHistory-filterBar input,
 .cHistory-filterBar select {
   padding: 10px 12px;
@@ -10011,16 +10376,23 @@ body:has(.cStudentModal.show) .sidebar {
   border: 2px solid #e3e8ef;
   outline: none;
   font-size: .875rem;
-  background: var(--card-bg, #fff);
-  color: var(--text, #111);
+  background: #fff;
+  color: #111;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
+
 .cHistory-filterBar input:focus,
 .cHistory-filterBar select:focus {
   border-color: #113F67;
-  box-shadow: 0 0 0 3px rgba(17,63,103,.15);
+  box-shadow: 0 0 0 3px rgba(17, 63, 103, 0.15);
 }
-.cHistory-filterBar .cHistory-filter-search { flex: 1; min-width: 160px; }
 
+.cHistory-filter-search {
+  flex: 1;
+  min-width: 160px;
+}
+
+/* ── FILTER BUTTONS ── */
 .cHistory-btn-apply,
 .cHistory-btn-clear {
   padding: 10px 18px;
@@ -10030,10 +10402,19 @@ body:has(.cStudentModal.show) .sidebar {
   font-weight: 600;
   font-size: .875rem;
   white-space: nowrap;
+  transition: background 0.2s, opacity 0.2s;
 }
-.cHistory-btn-apply { background: #113F67; color: #fff; }
+
+.cHistory-btn-apply {
+  background: #113F67;
+  color: #fff;
+}
 .cHistory-btn-apply:hover { background: #0d3054; }
-.cHistory-btn-clear { background: #f3f4f6; color: #374151; }
+
+.cHistory-btn-clear {
+  background: #f3f4f6;
+  color: #374151;
+}
 .cHistory-btn-clear:hover { background: #e5e7eb; }
 
 /* ── TAB CONTENT WRAPPER ── */
@@ -10076,11 +10457,11 @@ body:has(.cStudentModal.show) .sidebar {
   padding: 14px 16px;
   text-align: left;
   font-size: .875rem;
-  color: var(--text, #111);
+  color: #111;
   vertical-align: middle;
 }
 
-.cHistory-table .cHistory-empty {
+.cHistory-empty {
   text-align: center;
   padding: 30px;
   color: #888;
@@ -10092,6 +10473,7 @@ body:has(.cStudentModal.show) .sidebar {
   color: #6b7280;
   margin-top: 2px;
 }
+
 .cHistory-td-truncate {
   max-width: 200px;
   white-space: nowrap;
@@ -10110,6 +10492,7 @@ body:has(.cStudentModal.show) .sidebar {
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  transition: background 0.2s;
 }
 .cHistory-btn-view:hover { background: #dce8fb; }
 
@@ -10117,7 +10500,22 @@ body:has(.cStudentModal.show) .sidebar {
 .cHistory-reach-interested   { color: #10b981; font-weight: 700; }
 .cHistory-reach-uninterested { color: #ef4444; font-weight: 700; }
 
-/* ── DETAIL MODAL ── */
+/* ── STATUS BADGES ── */
+.cHistory-status {
+  padding: 3px 11px;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  display: inline-block;
+}
+.cHistory-status-completed { background: #d1fae5; color: #065f46; }
+.cHistory-status-rejected  { background: #fee2e2; color: #991b1b; }
+.cHistory-status-expired   { background: #fef3c7; color: #92400e; }
+.cHistory-status-resolved  { background: #dbeafe; color: #1e40af; }
+.cHistory-status-pending   { background: #f3e8ff; color: #6b21a8; }
+
+/* ── DETAIL MODAL OVERLAY ── */
 .cHistory-modal-overlay {
   display: none;
   position: fixed;
@@ -10130,41 +10528,56 @@ body:has(.cStudentModal.show) .sidebar {
 }
 .cHistory-modal-overlay.show { display: flex; }
 
+/* ── DETAIL MODAL ── */
 .cHistory-modal {
-  background: var(--card);
-  color: var(--text, #111);
+  background: #fff;
+  color: #111;
   border-radius: 16px;
   padding: 2rem;
   width: min(520px, 94vw);
   max-height: 88vh;
   overflow-y: auto;
   position: relative;
-  box-shadow: 0 24px 64px rgba(0,0,0,.22);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, .22);
 }
+
 .cHistory-modal h3 {
   margin: 0 0 1.5rem;
   font-size: 1.05rem;
   color: #113F67;
 }
+
 .cHistory-modal-close {
   position: absolute;
-  top: 1.1rem; right: 1.1rem;
+  top: 1.1rem;
+  right: 1.1rem;
   background: none;
   border: none;
   font-size: 1.1rem;
   cursor: pointer;
   color: #6b7280;
   line-height: 1;
+  transition: color 0.2s;
 }
 .cHistory-modal-close:hover { color: #111; }
 
+/* ── MODAL DETAIL GRID ── */
 .cHistory-detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: .75rem 1.4rem;
 }
-.cHistory-detail-row { display: flex; flex-direction: column; gap: .18rem; }
-.cHistory-detail-row.full { grid-column: 1 / -1; }
+
+.cHistory-detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: .18rem;
+}
+
+.cHistory-detail-row.full {
+  grid-column: 1 / -1;
+}
+
 .cHistory-detail-label {
   font-size: .7rem;
   text-transform: uppercase;
@@ -10172,12 +10585,31 @@ body:has(.cStudentModal.show) .sidebar {
   color: #9ca3af;
   font-weight: 700;
 }
-.cHistory-detail-value { font-size: .9rem; line-height: 1.5; word-break: break-word; }
+
+.cHistory-detail-value {
+  font-size: .9rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
 
 /* ══════════════════════════════════════
    DARK MODE
 ══════════════════════════════════════ */
 
+/* ── TABS ── */
+[data-theme="dark"] .cHistory-tabs button {
+  color: #94a3b8;
+}
+[data-theme="dark"] .cHistory-tabs button:hover {
+  background: rgba(73, 136, 196, 0.1);
+  color: #e2e8f0;
+}
+[data-theme="dark"] .cHistory-tabs button.active {
+  background: #1a56a0;
+  color: #fff;
+}
+
+/* ── FILTER BAR ── */
 [data-theme="dark"] .cHistory-filterBar {
   background: #1e293b;
   border-color: #334155;
@@ -10191,52 +10623,54 @@ body:has(.cStudentModal.show) .sidebar {
 [data-theme="dark"] .cHistory-filterBar input:focus,
 [data-theme="dark"] .cHistory-filterBar select:focus {
   border-color: #4988C4;
-  box-shadow: 0 0 0 3px rgba(73,136,196,.2);
+  box-shadow: 0 0 0 3px rgba(73, 136, 196, .2);
 }
 
+/* ── FILTER BUTTONS ── */
 [data-theme="dark"] .cHistory-btn-apply {
   background: linear-gradient(135deg, #0d3254, #3a7ab8);
 }
-[data-theme="dark"] .cHistory-btn-apply:hover {
-  opacity: .9;
-}
+[data-theme="dark"] .cHistory-btn-apply:hover { opacity: .9; }
+
 [data-theme="dark"] .cHistory-btn-clear {
   background: #334155;
   color: #cbd5e1;
 }
-[data-theme="dark"] .cHistory-btn-clear:hover {
-  background: #475569;
-}
+[data-theme="dark"] .cHistory-btn-clear:hover { background: #475569; }
 
+/* ── TAB CONTENT ── */
 [data-theme="dark"] .cHistory-tabContent {
   background: #1e293b;
-  border-color: rgba(255,255,255,0.08);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
+/* ── TABLE ── */
 [data-theme="dark"] .cHistory-table thead {
   background: transparent;
 }
 [data-theme="dark"] .cHistory-table th {
   color: #60a5fa;
-  border-bottom-color: rgba(255,255,255,0.07);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
 }
 [data-theme="dark"] .cHistory-table tbody tr {
-  border-top-color: rgba(255,255,255,0.05);
+  border-top-color: rgba(255, 255, 255, 0.05);
 }
 [data-theme="dark"] .cHistory-table tbody tr:hover {
-  background: rgba(73,136,196,0.07);
+  background: rgba(73, 136, 196, 0.07);
 }
 [data-theme="dark"] .cHistory-table td {
   color: #cbd5e1;
 }
-[data-theme="dark"] .cHistory-table .cHistory-empty {
+[data-theme="dark"] .cHistory-empty {
   color: #6e8ea8;
 }
 
+/* ── TABLE CELL HELPERS ── */
 [data-theme="dark"] .cHistory-td-sub {
   color: #6e8ea8;
 }
 
+/* ── VIEW BUTTON ── */
 [data-theme="dark"] .cHistory-btn-view {
   background: #1e3a5f;
   color: #93c5fd;
@@ -10246,10 +10680,28 @@ body:has(.cStudentModal.show) .sidebar {
   color: #fff;
 }
 
+/* ── REACH COLORS ── */
+[data-theme="dark"] .cHistory-reach-interested   { color: #4ade80; }
+[data-theme="dark"] .cHistory-reach-uninterested { color: #fca5a5; }
+
+/* ── STATUS BADGES ── */
+[data-theme="dark"] .cHistory-status-completed { background: rgba(34,  197, 94,  0.15); color: #4ade80; }
+[data-theme="dark"] .cHistory-status-rejected  { background: rgba(239, 68,  68,  0.15); color: #fca5a5; }
+[data-theme="dark"] .cHistory-status-expired   { background: rgba(245, 158, 11,  0.15); color: #fbbf24; }
+[data-theme="dark"] .cHistory-status-resolved  { background: rgba(59,  130, 246, 0.15); color: #60a5fa; }
+[data-theme="dark"] .cHistory-status-pending   { background: rgba(167, 139, 250, 0.15); color: #c4b5fd; }
+
+/* ── MODAL OVERLAY ── */
+[data-theme="dark"] .cHistory-modal-overlay {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* ── MODAL ── */
 [data-theme="dark"] .cHistory-modal {
   background: #1e293b;
   color: #f1f5f9;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, .5);
 }
 [data-theme="dark"] .cHistory-modal h3 {
   color: #60a5fa;
@@ -10260,23 +10712,13 @@ body:has(.cStudentModal.show) .sidebar {
 [data-theme="dark"] .cHistory-modal-close:hover {
   color: #f1f5f9;
 }
+
+/* ── MODAL DETAIL GRID ── */
 [data-theme="dark"] .cHistory-detail-label {
   color: #475569;
 }
 [data-theme="dark"] .cHistory-detail-value {
   color: #e2e8f0;
-}
-
-[data-theme="dark"] .cHistory-tabs button {
-  color: #94a3b8;
-}
-[data-theme="dark"] .cHistory-tabs button:hover {
-  background: rgba(73,136,196,0.1);
-  color: #e2e8f0;
-}
-[data-theme="dark"] .cHistory-tabs button.active {
-  background: #1a56a0;
-  color: #fff;
 }
 
 .hidden {

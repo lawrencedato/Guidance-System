@@ -210,11 +210,16 @@ $ratingStars = [
 function toggleSettingsMenu(e) {
   e.stopPropagation();
   document.getElementById("settingsMenu").classList.toggle("show");
+  document.getElementById("notifDropdown").classList.remove("show");
 }
 
 function toggleDropdown(id, e) {
   e.stopPropagation();
-  document.getElementById(id).classList.toggle("show");
+  const target = document.getElementById(id);
+  const isOpen = target.classList.contains("show");
+  document.getElementById("settingsMenu").classList.remove("show");
+  document.getElementById("notifDropdown").classList.remove("show");
+  if (!isOpen) target.classList.add("show");
 }
 
 function toggleTheme() {
@@ -224,14 +229,10 @@ function toggleTheme() {
     localStorage.setItem("theme", newTheme);
 }
 
+// single click-outside handler — only classList, no style.display
 document.addEventListener("click", function () {
   document.getElementById("settingsMenu").classList.remove("show");
   document.getElementById("notifDropdown").classList.remove("show");
-});
-
-document.addEventListener("click", function () {
-  document.getElementById("settingsMenu").style.display = "none";
-  document.getElementById("notifDropdown").style.display = "none";
 });
 
 function logout() {
@@ -246,7 +247,6 @@ function confirmLogout() {
 document.getElementById('logoutOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeLogout();
 });
-
 </script>
 
 </body>
