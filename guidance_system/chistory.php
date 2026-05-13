@@ -108,144 +108,6 @@ function safeTime($t) {
 <link rel="stylesheet" href="logout.css">
 <link rel="stylesheet" href="history.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
-<style>
-/* ── FILTER BAR ── */
-.cHistory-filterBar {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  background: #fff;
-  padding: 14px;
-  border-radius: 14px;
-  border: 1px solid #e3e8ef;
-}
-.cHistory-filterBar input,
-.cHistory-filterBar select {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 2px solid #e3e8ef;
-  outline: none;
-  font-size: .875rem;
-  background: var(--card-bg, #fff);
-  color: var(--text, #111);
-}
-.cHistory-filterBar input:focus,
-.cHistory-filterBar select:focus {
-  border-color: #113F67;
-  box-shadow: 0 0 0 3px rgba(17,63,103,.15);
-}
-.cHistory-filterBar .filter-search { flex: 1; min-width: 160px; }
-
-.btn-apply,
-.btn-clear {
-  padding: 10px 18px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: .875rem;
-  white-space: nowrap;
-}
-.btn-apply { background: #113F67; color: #fff; }
-.btn-apply:hover { background: #0d3054; }
-.btn-clear { background: #f3f4f6; color: #374151; }
-.btn-clear:hover { background: #e5e7eb; }
-
-/* ── TABLE ADDITIONS ── */
-.td-sub {
-  font-size: .78rem;
-  color: #6b7280;
-  margin-top: 2px;
-}
-.td-truncate {
-  max-width: 200px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.btn-view {
-  background: #f0f5ff;
-  color: #113F67;
-  border: none;
-  padding: 5px 13px;
-  border-radius: 8px;
-  font-size: .8rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.btn-view:hover { background: #dce8fb; }
-
-.reach-interested   { color: #10b981; font-weight: 700; }
-.reach-uninterested { color: #ef4444; font-weight: 700; }
-
-/* ── DETAIL MODAL ── */
-.ch-modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(17, 63, 103, 0.25);
-  backdrop-filter: blur(6px);
-  z-index: 99999;
-  align-items: center;
-  justify-content: center;
-}
-.ch-modal-overlay.show { display: flex; }
-
-.ch-modal {
-  background: var(--card);
-  color: var(--text, #111);
-  border-radius: 16px;
-  padding: 2rem;
-  width: min(520px, 94vw);
-  max-height: 88vh;
-  overflow-y: auto;
-  position: relative;
-  box-shadow: 0 24px 64px rgba(0,0,0,.22);
-}
-.ch-modal h3 {
-  margin: 0 0 1.5rem;
-  font-size: 1.05rem;
-  color: #113F67;
-}
-.ch-modal-close {
-  position: absolute;
-  top: 1.1rem; right: 1.1rem;
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  cursor: pointer;
-  color: #6b7280;
-  line-height: 1;
-}
-.ch-modal-close:hover { color: #111; }
-
-.ch-detail-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: .75rem 1.4rem;
-}
-.ch-detail-row { display: flex; flex-direction: column; gap: .18rem; }
-.ch-detail-row.full { grid-column: 1 / -1; }
-.ch-detail-label {
-  font-size: .7rem;
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  color: #9ca3af;
-  font-weight: 700;
-}
-.ch-detail-value { font-size: .9rem; line-height: 1.5; word-break: break-word; }
-
-/* dark mode */
-[data-theme="dark"] .cHistory-filterBar { background: #1e293b; border-color: #334155; }
-[data-theme="dark"] .cHistory-filterBar input,
-[data-theme="dark"] .cHistory-filterBar select { background: #0f172a; color: #f1f5f9; border-color: #334155; }
-[data-theme="dark"] .ch-modal  { background: #1e293b; color: #f1f5f9; }
-[data-theme="dark"] .btn-view  { background: #1e3a5f; color: #93c5fd; }
-[data-theme="dark"] .btn-view:hover { background: #1d4ed8; color: #fff; }
-[data-theme="dark"] .btn-clear { background: #334155; color: #cbd5e1; }
-</style>
 </head>
 
 <body class="body">
@@ -369,21 +231,21 @@ function safeTime($t) {
 
     <input type="date" id="filterDate" title="Filter by date">
 
-    <input type="text" id="filterSearch" class="filter-search"
+    <input type="text" id="filterSearch" class="cHistory-filter-search"
            placeholder="Search by name, subject…"
            oninput="applyFilter()">
 
-    <button class="btn-apply" onclick="applyFilter()">
+    <button class="cHistory-btn-apply" onclick="applyFilter()">
       <i class="fa fa-filter"></i> Apply
     </button>
-    <button class="btn-clear" onclick="clearFilter()">
+    <button class="cHistory-btn-clear" onclick="clearFilter()">
       <i class="fa fa-xmark"></i> Clear
     </button>
   </div>
 
   <!-- ══ TAB: PAST SESSIONS ══ -->
   <div id="sessions" class="cHistory-tabContent">
-    <table>
+    <table class="cHistory-table">
       <thead>
         <tr>
           <th>Student</th>
@@ -397,7 +259,7 @@ function safeTime($t) {
       </thead>
       <tbody>
         <?php if (empty($sessions)): ?>
-          <tr><td colspan="7" class="empty">No past sessions found</td></tr>
+          <tr><td colspan="7" class="cHistory-empty">No past sessions found</td></tr>
         <?php else: foreach ($sessions as $s): ?>
           <tr
             data-year="<?= htmlspecialchars(strtolower($s['year_level'] ?? '')) ?>"
@@ -408,7 +270,7 @@ function safeTime($t) {
           >
             <td>
               <div><?= htmlspecialchars($s['student_name'] ?? '—') ?></div>
-              <div class="td-sub">
+              <div class="cHistory-td-sub"
                 <?= htmlspecialchars($s['course'] ?? '') ?>
                 &middot; <?= htmlspecialchars($s['year_level'] ?? '') ?>
               </div>
@@ -419,7 +281,7 @@ function safeTime($t) {
             <td><?= statusBadge($s['status']) ?></td>
             <td><?= renderStars($s['feedback_rating']) ?></td>
             <td>
-              <button class="btn-view"
+              <button class="cHistory-btn-view"
                 onclick="openSessionModal(<?= htmlspecialchars(json_encode($s), ENT_QUOTES) ?>)">
                 View
               </button>
@@ -432,20 +294,18 @@ function safeTime($t) {
 
   <!-- ══ TAB: ANNOUNCEMENTS ══ -->
   <div id="announcements" class="cHistory-tabContent hidden">
-    <table>
+    <table class="cHistory-table">
       <thead>
         <tr>
           <th>Title</th>
           <th>Posted</th>
-          <th>Total Responses</th>
           <th>Interested</th>
-          <th>Not Interested</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
         <?php if (empty($announcements)): ?>
-          <tr><td colspan="6" class="empty">No past announcements found</td></tr>
+          <tr><td colspan="6" class="cHistory-empty">No past announcements found</td></tr>
         <?php else: foreach ($announcements as $a): ?>
           <tr
             data-year="all"
@@ -454,15 +314,13 @@ function safeTime($t) {
             data-date="<?= htmlspecialchars(date('Y-m-d', strtotime($a['created_at'] ?? 'now'))) ?>"
             data-search="<?= htmlspecialchars(strtolower($a['title'] ?? '')) ?>"
           >
-            <td class="td-truncate" title="<?= htmlspecialchars($a['title'] ?? '') ?>">
+            <td class="cHistory-td-truncate" title="<?= htmlspecialchars($a['title'] ?? '') ?>">
               <?= htmlspecialchars($a['title'] ?? '—') ?>
             </td>
             <td><?= safeDate($a['created_at']) ?></td>
-            <td><?= (int)($a['total_responses'] ?? 0) ?></td>
-            <td><span class="reach-interested"><?= (int)($a['interested_count'] ?? 0) ?> ✓</span></td>
-            <td><span class="reach-uninterested"><?= (int)($a['not_interested_count'] ?? 0) ?> ✗</span></td>
+            <td><span class="cHistory-reach-interested"><?= (int)($a['interested_count'] ?? 0) ?> ✓</span></td>
             <td>
-              <button class="btn-view"
+              <button class="cHistory-btn-view"
                 onclick="openAnnouncementModal(<?= htmlspecialchars(json_encode($a), ENT_QUOTES) ?>)">
                 View
               </button>
@@ -475,7 +333,7 @@ function safeTime($t) {
 
   <!-- ══ TAB: REFERRALS ══ -->
   <div id="referrals" class="cHistory-tabContent hidden">
-    <table>
+    <table class="cHistory-table">
       <thead>
         <tr>
           <th>Student</th>
@@ -487,7 +345,7 @@ function safeTime($t) {
       </thead>
       <tbody>
         <?php if (empty($referrals)): ?>
-          <tr><td colspan="5" class="empty">No past referrals found</td></tr>
+          <tr><td colspan="5" class="cHistory-empty">No past referrals found</td></tr>
         <?php else: foreach ($referrals as $r): ?>
           <tr
             data-year="<?= htmlspecialchars(strtolower($r['year_level'] ?? '')) ?>"
@@ -498,22 +356,22 @@ function safeTime($t) {
           >
             <td>
               <div><?= htmlspecialchars($r['student_name'] ?? '—') ?></div>
-              <div class="td-sub">
+              <div class="cHistory-td-sub">
                 <?= htmlspecialchars($r['course'] ?? '') ?>
                 &middot; <?= htmlspecialchars($r['year_level'] ?? '') ?>
               </div>
             </td>
             <td><?= safeDate($r['referral_date']) ?></td>
-            <td class="td-truncate" title="<?= htmlspecialchars($r['reason'] ?? '') ?>">
+            <td class="cHistory-td-truncate" title="<?= htmlspecialchars($r['reason'] ?? '') ?>">
               <?= htmlspecialchars($r['reason'] ?? '—') ?>
             </td>
-            <td class="td-truncate" title="<?= htmlspecialchars($r['counselor_remarks'] ?? '') ?>">
+            <td class="cHistory-td-truncate" title="<?= htmlspecialchars($r['counselor_remarks'] ?? '') ?>">
               <?= !empty($r['counselor_remarks'])
                     ? htmlspecialchars($r['counselor_remarks'])
                     : '<span style="color:#9ca3af;">—</span>' ?>
             </td>
             <td>
-              <button class="btn-view"
+              <button class="cHistory-btn-view"
                 onclick="openReferralModal(<?= htmlspecialchars(json_encode($r), ENT_QUOTES) ?>)">
                 View
               </button>
@@ -526,7 +384,7 @@ function safeTime($t) {
 
   <!-- ══ TAB: CONCERNS HANDLED ══ -->
   <div id="concerns" class="cHistory-tabContent hidden">
-    <table>
+    <table class="cHistory-table">
       <thead>
         <tr>
           <th>Student</th>
@@ -539,7 +397,7 @@ function safeTime($t) {
       </thead>
       <tbody>
         <?php if (empty($concerns)): ?>
-          <tr><td colspan="6" class="empty">No concerns handled yet</td></tr>
+          <tr><td colspan="6" class="cHistory-empty">No concerns handled yet</td></tr>
         <?php else: foreach ($concerns as $c): ?>
           <tr
             data-year="<?= htmlspecialchars(strtolower($c['year_level'] ?? '')) ?>"
@@ -550,19 +408,19 @@ function safeTime($t) {
           >
             <td>
               <div><?= htmlspecialchars($c['student_name'] ?? '—') ?></div>
-              <div class="td-sub">
+              <div class="cHistory-td-sub">
                 <?= htmlspecialchars($c['course'] ?? '') ?>
                 &middot; <?= htmlspecialchars($c['year_level'] ?? '') ?>
               </div>
             </td>
-            <td class="td-truncate" title="<?= htmlspecialchars($c['subject'] ?? '') ?>">
+            <td class="cHistory-td-truncate" title="<?= htmlspecialchars($c['subject'] ?? '') ?>">
               <?= htmlspecialchars($c['subject'] ?? '—') ?>
             </td>
             <td><?= safeDate($c['concern_date']) ?></td>
             <td><?= !empty($c['replied_at']) ? safeDate($c['replied_at'], 'M d, Y g:i A') : '—' ?></td>
             <td><?= statusBadge($c['concern_status'] ?? 'Pending') ?></td>
             <td>
-              <button class="btn-view"
+              <button class="cHistory-btn-view"
                 onclick="openConcernModal(<?= htmlspecialchars(json_encode($c), ENT_QUOTES) ?>)">
                 View
               </button>
@@ -578,46 +436,46 @@ function safeTime($t) {
 <!-- ══ MODALS ══ -->
 
 <!-- Session Modal -->
-<div class="ch-modal-overlay" id="sessionModal">
-  <div class="ch-modal">
-    <button class="ch-modal-close" onclick="closeModal('sessionModal')">
+<div class="cHistory-modal-overlay" id="sessionModal">
+  <div class="cHistory-modal">
+    <button class="cHistory-modal-close" onclick="closeModal('sessionModal')">
       <i class="fa fa-xmark"></i>
     </button>
     <h3><i class="fa fa-calendar-check" style="margin-right:.4rem;"></i>Session Details</h3>
-    <div class="ch-detail-grid" id="sessionModalBody"></div>
+    <div class="cHistory-detail-grid" id="sessionModalBody"></div>
   </div>
 </div>
 
 <!-- Announcement Modal -->
-<div class="ch-modal-overlay" id="announcementModal">
-  <div class="ch-modal">
-    <button class="ch-modal-close" onclick="closeModal('announcementModal')">
+<div class="cHistory-modal-overlay" id="announcementModal">
+  <div class="cHistory-modal">
+    <button class="cHistory-modal-close" onclick="closeModal('announcementModal')">
       <i class="fa fa-xmark"></i>
     </button>
     <h3><i class="fa fa-bullhorn" style="margin-right:.4rem;"></i>Announcement Details</h3>
-    <div class="ch-detail-grid" id="announcementModalBody"></div>
+    <div class="cHistory-detail-grid" id="announcementModalBody"></div>
   </div>
 </div>
 
 <!-- Referral Modal -->
-<div class="ch-modal-overlay" id="referralModal">
-  <div class="ch-modal">
-    <button class="ch-modal-close" onclick="closeModal('referralModal')">
+<div class="cHistory-modal-overlay" id="referralModal">
+  <div class="cHistory-modal">
+    <button class="cHistory-modal-close" onclick="closeModal('referralModal')">
       <i class="fa fa-xmark"></i>
     </button>
     <h3><i class="fa fa-route" style="margin-right:.4rem;"></i>Referral Details</h3>
-    <div class="ch-detail-grid" id="referralModalBody"></div>
+    <div class="cHistory-detail-grid" id="referralModalBody"></div>
   </div>
 </div>
 
 <!-- Concern Modal -->
-<div class="ch-modal-overlay" id="concernModal">
-  <div class="ch-modal">
-    <button class="ch-modal-close" onclick="closeModal('concernModal')">
+<div class="cHistory-modal-overlay" id="concernModal">
+  <div class="cHistory-modal">
+    <button class="cHistory-modal-close" onclick="closeModal('concernModal')">
       <i class="fa fa-xmark"></i>
     </button>
     <h3><i class="fa fa-triangle-exclamation" style="margin-right:.4rem;"></i>Concern Details</h3>
-    <div class="ch-detail-grid" id="concernModalBody"></div>
+    <div class="cHistory-detail-grid" id="concernModalBody"></div>
   </div>
 </div>
 
@@ -776,9 +634,7 @@ function openAnnouncementModal(d) {
   document.getElementById('announcementModalBody').innerHTML =
     row('Title',           d.title, true) +
     row('Posted On',       fmtDate(d.created_at)) +
-    row('Total Responses', d.total_responses) +
     row('Interested',      `<span style="color:#10b981;font-weight:700;">${d.interested_count} ✓</span>`) +
-    row('Not Interested',  `<span style="color:#ef4444;font-weight:700;">${d.not_interested_count} ✗</span>`) +
     row('Attachment',      attachment, true) +
     row('Message',         d.message || '—', true);
   openModal('announcementModal');

@@ -62,7 +62,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete_announcement') {
     header('Content-Type: application/json');
     $aid = (int)($_POST['announcement_id'] ?? 0);
     if (!$aid) { echo json_encode(['success' => false, 'message' => 'Invalid ID.']); exit; }
-
     $ok = $conn->query(
         "DELETE FROM announcements WHERE announcement_id=$aid AND counselor_id=$cid"
     );
@@ -73,7 +72,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete_announcement') {
     exit;
 }
 
-// ── LOAD THIS COUNSELOR'S ANNOUNCEMENTS ──
+// ── LOAD ANNOUNCEMENTS ──
 $myAnnouncements = [];
 $annRes = $conn->query("
     SELECT a.announcement_id, a.title, a.message, a.file_path, a.created_at,
@@ -91,15 +90,16 @@ $annRes = $conn->query("
 while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UNITYCARE | Announcements</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="logout.css">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNITYCARE | Announcements</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="logout.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
+
 <body class="body">
 
 <!-- SIDEBAR -->
@@ -170,109 +170,97 @@ while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
 
 <!-- MAIN -->
 <main class="cAnnouncements-main">
-<div style="display:flex; flex-direction:column; gap:24px; width:100%; max-width:900px; margin:0 auto;">
+  <div class="cAnnouncements-center">
 
-  <!-- CREATE FORM -->
-  <div class="cAnnouncements-card">
-    <h2>Create Announcement</h2>
-    <input id="ann-title" placeholder="Announcement Title" class="cAnnouncements-input">
-    <textarea id="ann-message" placeholder="Write announcement..." class="cAnnouncements-textarea"></textarea>
-    <input type="file" id="imageFile" accept="image/*" class="cAnnouncements-input">
-    <button class="cAnnouncements-btn" onclick="postAnnouncement()">Post Announcement</button>
-    <div id="postResult" style="margin-top:10px; font-size:13px;"></div>
-  </div>
-
-  <!-- POSTED ANNOUNCEMENTS -->
-  <div class="cAnnouncements-card">
-
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">My Posted Announcements</h2>
-      <button onclick="togglePostedList()" id="togglePostedBtn"
-        style="padding:8px 16px; border-radius:10px; border:1px solid var(--primary);
-               background:transparent; color:var(--primary); font-size:13px;
-               font-weight:600; cursor:pointer; transition:0.2s ease; white-space:nowrap;">
-        <i class="fa fa-chevron-down" id="togglePostedIcon"></i> Show
+    <!-- ── CARD 1: CREATE ── -->
+    <div class="cAnnouncements-card">
+      <h2>Create Announcement</h2>
+      <input id="ann-title"   placeholder="Announcement Title" class="cAnnouncements-input">
+      <textarea id="ann-message" placeholder="Write announcement..." class="cAnnouncements-textarea"></textarea>
+      <input type="file" id="imageFile" accept="image/*" class="cAnnouncements-input">
+      <button class="cAnnouncements-btn" onclick="postAnnouncement()">
+        <i class="fa fa-bullhorn"></i> Post Announcement
       </button>
+      <div class="cAnnouncements-result" id="postResult"></div>
     </div>
 
-    <div id="postedListWrapper" style="display:none; margin-top:16px;">
-      <p style="font-size:13px; color:var(--text-muted); margin:0 0 12px;">
-        <?= count($myAnnouncements) ?> announcement<?= count($myAnnouncements) !== 1 ? 's' : '' ?> posted
-      </p>
+    <!-- ── CARD 2: POSTED LIST ── -->
+    <div class="cAnnouncements-card">
 
-      <div class="cAnnouncements-list">
-        <?php if (empty($myAnnouncements)): ?>
-          <div class="cAnnouncements-empty">
-            <i class="fa fa-bullhorn" style="font-size:2rem; display:block; margin-bottom:10px;"></i>
-            <p>You haven't posted any announcements yet.</p>
-          </div>
-        <?php else: ?>
-          <?php foreach ($myAnnouncements as $a):
-            $jsTitle   = json_encode($a['title']);
-            $jsMessage = json_encode($a['message']);
-            $jsFile    = json_encode(!empty($a['file_path']) ? $a['file_path'] : '');
-            $jsDate    = json_encode(date('F d, Y g:i A', strtotime($a['created_at'])));
-            $jsCount   = (int)$a['interested_count'];
-            $jsId      = (int)$a['announcement_id'];
-          ?>
-          <div class="cAnnouncements-item" id="ann-<?= $jsId ?>">
+      <div class="cAnnouncements-card-header">
+        <h2>My Posted Announcements</h2>
+        <button class="cAnnouncements-toggle-btn" id="togglePostedBtn" onclick="togglePostedList()">
+          <i class="fa fa-chevron-down"></i> Show
+        </button>
+      </div>
 
-            <div class="cAnnouncements-thumb">
-              <?php if (!empty($a['file_path'])): ?>
-                <img src="<?= htmlspecialchars($a['file_path']) ?>" alt="img"
-                     onerror="this.parentElement.innerHTML='<i class=\'fa fa-bullhorn\'></i>'">
-              <?php else: ?>
-                <i class="fa fa-bullhorn"></i>
-              <?php endif; ?>
+      <div class="cAnnouncements-list-wrapper" id="postedListWrapper">
+
+        <p class="cAnnouncements-count">
+          <?= count($myAnnouncements) ?> announcement<?= count($myAnnouncements) !== 1 ? 's' : '' ?> posted
+        </p>
+
+        <div class="cAnnouncements-list">
+          <?php if (empty($myAnnouncements)): ?>
+            <div class="cAnnouncements-empty">
+              <i class="fa fa-bullhorn"></i>
+              <p>You haven't posted any announcements yet.</p>
             </div>
+          <?php else: ?>
+            <?php foreach ($myAnnouncements as $a):
+              $jsTitle   = json_encode($a['title']);
+              $jsMessage = json_encode($a['message']);
+              $jsFile    = json_encode(!empty($a['file_path']) ? $a['file_path'] : '');
+              $jsDate    = json_encode(date('F d, Y g:i A', strtotime($a['created_at'])));
+              $jsCount   = (int)$a['interested_count'];
+              $jsId      = (int)$a['announcement_id'];
+            ?>
+            <div class="cAnnouncements-item" id="ann-<?= $jsId ?>">
 
-            <div class="cAnnouncements-body">
-              <h4><?= htmlspecialchars($a['title']) ?></h4>
-              <p><?= htmlspecialchars($a['message']) ?></p>
-              <div class="cAnnouncements-meta">
-                <span><i class="fa fa-clock"></i> <?= date('M d, Y g:i A', strtotime($a['created_at'])) ?></span>
-                <span><i class="fa fa-users"></i> <?= $jsCount ?> interested</span>
+              <div class="cAnnouncements-thumb">
+                <?php if (!empty($a['file_path'])): ?>
+                  <img src="<?= htmlspecialchars($a['file_path']) ?>" alt="img"
+                       onerror="this.parentElement.innerHTML='<i class=\'fa fa-bullhorn\'></i>'">
+                <?php else: ?>
+                  <i class="fa fa-bullhorn"></i>
+                <?php endif; ?>
               </div>
+
+              <div class="cAnnouncements-body">
+                <h4><?= htmlspecialchars($a['title']) ?></h4>
+                <p><?= htmlspecialchars($a['message']) ?></p>
+                <div class="cAnnouncements-meta">
+                  <span><i class="fa fa-clock"></i> <?= date('M d, Y g:i A', strtotime($a['created_at'])) ?></span>
+                  <span><i class="fa fa-users"></i> <?= $jsCount ?> interested</span>
+                </div>
+              </div>
+
+              <div class="cAnnouncements-actions">
+                <button class="cAnnouncements-btn-view"
+                  data-id="<?= $jsId ?>"
+                  data-title=<?= $jsTitle ?>
+                  data-message=<?= $jsMessage ?>
+                  data-file=<?= $jsFile ?>
+                  data-date=<?= $jsDate ?>
+                  data-count="<?= $jsCount ?>"
+                  onclick="viewAnnouncement(this)">
+                  <i class="fa fa-eye"></i> View
+                </button>
+                <button class="cAnnouncements-btn-del" onclick="deleteAnnouncement(<?= $jsId ?>)">
+                  <i class="fa fa-trash"></i> Delete
+                </button>
+              </div>
+
             </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </div>
 
-            <div class="cAnnouncements-actions">
-              <button class="cAnnouncements-btn-view"
-                data-id="<?= $jsId ?>"
-                data-title=<?= $jsTitle ?>
-                data-message=<?= $jsMessage ?>
-                data-file=<?= $jsFile ?>
-                data-date=<?= $jsDate ?>
-                data-count="<?= $jsCount ?>"
-                onclick="viewAnnouncement(this)">
-                <i class="fa fa-eye"></i> View
-              </button>
-              <button class="cAnnouncements-btn-del" onclick="deleteAnnouncement(<?= $jsId ?>)">
-                <i class="fa fa-trash"></i> Delete
-              </button>
-            </div>
-
-          </div>
-          <?php endforeach; ?>
-        <?php endif; ?>
-      </div>
-    </div><!-- end postedListWrapper -->
-  </div>
-
-</div><!-- end column wrapper -->
-
-  <!-- LOGOUT MODAL -->
-  <div class="logout-overlay" id="logoutOverlay">
-    <div class="logout-modal">
-      <div class="logout-icon"><i class="fa fa-right-from-bracket"></i></div>
-      <h3>Logout</h3>
-      <p>Are you sure you want to logout?</p>
-      <div class="logout-actions">
-        <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
-        <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
       </div>
     </div>
-  </div>
+    <!-- END CARD 2 -->
 
+  </div>
 </main>
 
 <!-- VIEW MODAL -->
@@ -280,8 +268,8 @@ while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
   <div class="cAnnouncements-modal-box">
     <button class="cAnnouncements-modal-close" onclick="closeViewModalDirect()">&#x2715;</button>
     <img id="vModalImg" class="cAnnouncements-modal-img" style="display:none;" alt="">
-    <h3 class="cAnnouncements-modal-title" id="vModalTitle"></h3>
-    <p class="cAnnouncements-modal-message" id="vModalMessage"></p>
+    <h3 class="cAnnouncements-modal-title"   id="vModalTitle"></h3>
+    <p  class="cAnnouncements-modal-message" id="vModalMessage"></p>
     <div class="cAnnouncements-modal-footer">
       <span id="vModalDate"></span>
       <span id="vModalCount"></span>
@@ -289,22 +277,37 @@ while ($row = $annRes->fetch_assoc()) $myAnnouncements[] = $row;
   </div>
 </div>
 
+<!-- LOGOUT MODAL -->
+<div class="logout-overlay" id="logoutOverlay">
+  <div class="logout-modal">
+    <div class="logout-icon"><i class="fa fa-right-from-bracket"></i></div>
+    <h3>Logout</h3>
+    <p>Are you sure you want to logout?</p>
+    <div class="logout-actions">
+      <button class="logout-btn logout-btn--cancel" onclick="closeLogout()">Cancel</button>
+      <button class="logout-btn logout-btn--confirm" onclick="confirmLogout()">Yes, Logout</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function() {
-    const saved = localStorage.getItem("theme") || "light";
-    document.documentElement.setAttribute("data-theme", saved);
+  const saved = localStorage.getItem("theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
 })();
 
+// ── Toggle posted list ──
 function togglePostedList() {
   const wrapper  = document.getElementById("postedListWrapper");
   const btn      = document.getElementById("togglePostedBtn");
-  const isHidden = wrapper.style.display === "none";
-  wrapper.style.display = isHidden ? "block" : "none";
+  const isHidden = !wrapper.classList.contains("visible");
+  wrapper.classList.toggle("visible", isHidden);
   btn.innerHTML = isHidden
     ? '<i class="fa fa-chevron-up"></i> Hide'
     : '<i class="fa fa-chevron-down"></i> Show';
 }
 
+// ── Settings dropdown ──
 function toggleSettingsMenu(e) {
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
@@ -314,18 +317,16 @@ document.addEventListener("click", e => {
   const btn  = document.querySelector(".sidebar-settingsButton");
   if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("show");
 });
+
+// ── Theme ──
 function toggleTheme() {
-    const html = document.documentElement;
-    const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
-    html.setAttribute("data-theme", newTheme);
-    localStorage.setItem("theme", newTheme);
+  const html     = document.documentElement;
+  const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+  html.setAttribute("data-theme", newTheme);
+  localStorage.setItem("theme", newTheme);
 }
-function logout()        { document.getElementById('logoutOverlay').classList.add('show'); }
-function closeLogout()   { document.getElementById('logoutOverlay').classList.remove('show'); }
-function confirmLogout() { window.location.href = 'logout.php?role=counselor'; }
-document.getElementById('logoutOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeLogout();
-});
+
+// ── Notification dropdown ──
 function toggleDropdown(id, e) {
   e.stopPropagation();
   document.getElementById(id).classList.toggle("show");
@@ -335,7 +336,15 @@ document.addEventListener("click", e => {
   if (dd && !dd.contains(e.target)) dd.classList.remove("show");
 });
 
-// ── POST ANNOUNCEMENT ──
+// ── Logout ──
+function logout()        { document.getElementById('logoutOverlay').classList.add('show'); }
+function closeLogout()   { document.getElementById('logoutOverlay').classList.remove('show'); }
+function confirmLogout() { window.location.href = 'logout.php?role=counselor'; }
+document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeLogout();
+});
+
+// ── Post announcement ──
 function postAnnouncement() {
   const title   = document.getElementById("ann-title").value.trim();
   const message = document.getElementById("ann-message").value.trim();
@@ -343,7 +352,8 @@ function postAnnouncement() {
   const result  = document.getElementById("postResult");
 
   if (!title || !message) {
-    result.innerHTML = "<span style='color:#e53e3e;'>⚠ Please fill in the title and message.</span>";
+    result.textContent = "⚠ Please fill in the title and message.";
+    result.className   = "cAnnouncements-result err";
     return;
   }
 
@@ -353,24 +363,28 @@ function postAnnouncement() {
   fd.append("message", message);
   if (file) fd.append("image", file);
 
-  result.innerHTML = "<span style='color:var(--text-muted);'>Posting...</span>";
+  result.textContent = "Posting...";
+  result.className   = "cAnnouncements-result";
 
   fetch("cannouncements.php", { method: "POST", body: fd })
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        result.innerHTML = "<span style='color:#15803d;'>✔ Announcement posted!</span>";
+        result.textContent = "✔ Announcement posted!";
+        result.className   = "cAnnouncements-result ok";
         setTimeout(() => location.reload(), 900);
       } else {
-        result.innerHTML = "<span style='color:#e53e3e;'>❌ " + (data.message || "Failed to post.") + "</span>";
+        result.textContent = "❌ " + (data.message || "Failed to post.");
+        result.className   = "cAnnouncements-result err";
       }
     })
     .catch(() => {
-      result.innerHTML = "<span style='color:#e53e3e;'>❌ Something went wrong.</span>";
+      result.textContent = "❌ Something went wrong.";
+      result.className   = "cAnnouncements-result err";
     });
 }
 
-// ── VIEW ANNOUNCEMENT ──
+// ── View announcement ──
 function viewAnnouncement(btn) {
   const title   = btn.dataset.title;
   const message = btn.dataset.message;
@@ -378,15 +392,15 @@ function viewAnnouncement(btn) {
   const date    = btn.dataset.date;
   const count   = btn.dataset.count;
 
-  document.getElementById("vModalTitle").textContent   = title;
+  document.getElementById("vModalTitle").textContent = title;
   document.getElementById("vModalMessage").innerHTML = message
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/\\r\\n|\\r|\\n/g, "<br>")
     .replace(/\r\n|\r|\n/g, "<br>");
-  document.getElementById("vModalDate").textContent    = '📅 ' + date;
-  document.getElementById("vModalCount").textContent   = '👥 ' + count + ' interested';
+  document.getElementById("vModalDate").textContent  = '📅 ' + date;
+  document.getElementById("vModalCount").textContent = '👥 ' + count + ' interested';
 
   const img = document.getElementById("vModalImg");
   if (imgPath && imgPath.trim() !== '') {
@@ -398,6 +412,7 @@ function viewAnnouncement(btn) {
 
   document.getElementById("viewModal").classList.add("show");
 }
+
 function closeViewModalDirect() {
   document.getElementById("viewModal").classList.remove("show");
 }
@@ -405,7 +420,7 @@ function closeViewModal(e) {
   if (e.target === document.getElementById("viewModal")) closeViewModalDirect();
 }
 
-// ── DELETE ANNOUNCEMENT ──
+// ── Delete announcement ──
 function deleteAnnouncement(id) {
   if (!confirm("Delete this announcement? This cannot be undone.")) return;
 
@@ -430,6 +445,5 @@ function deleteAnnouncement(id) {
     .catch(() => alert("Network error. Please try again."));
 }
 </script>
-
 </body>
 </html>
