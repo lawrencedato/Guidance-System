@@ -343,6 +343,117 @@ $profileImg = !empty($profile['profile_image'])
         @media (max-width: 500px) {
             .reset-box, .success-box { width: 90% !important; padding: 20px !important; }
         }
+
+        /* ══════════════════════════════════════
+   DARK MODE — RESET & SUCCESS MODALS
+══════════════════════════════════════ */
+
+/* Overlay */
+[data-theme="dark"] .page-block-overlay,
+[data-theme="dark"] .success-modal {
+    background: rgba(2, 6, 23, 0.72);
+    backdrop-filter: blur(8px);
+}
+
+/* Modal Box */
+[data-theme="dark"] .reset-box,
+[data-theme="dark"] .success-box {
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+}
+
+/* Titles */
+[data-theme="dark"] .reset-box h2,
+[data-theme="dark"] .success-box h2 {
+    color: #f8fafc;
+}
+
+/* Paragraphs */
+[data-theme="dark"] .reset-box p,
+[data-theme="dark"] .success-box p,
+[data-theme="dark"] .redirect-note {
+    color: #94a3b8;
+}
+
+/* Labels */
+[data-theme="dark"] .reset-box .field-label {
+    color: #e2e8f0;
+}
+
+/* Inputs */
+[data-theme="dark"] .pw-wrapper input {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .pw-wrapper input::placeholder {
+    color: #64748b;
+}
+
+[data-theme="dark"] .pw-wrapper input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96,165,250,0.18);
+}
+
+/* Eye Toggle */
+[data-theme="dark"] .pw-toggle {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .pw-toggle:hover {
+    color: #60a5fa;
+}
+
+/* Password Strength */
+[data-theme="dark"] .strength-wrap {
+    background: rgba(255,255,255,0.08);
+}
+
+/* Requirements */
+[data-theme="dark"] .pw-reqs li {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .dot-req {
+    background: rgba(255,255,255,0.12);
+}
+
+[data-theme="dark"] .pw-reqs li.met {
+    color: #4ade80;
+}
+
+[data-theme="dark"] .pw-reqs li.met .dot-req {
+    background: #4ade80;
+}
+
+/* Error */
+[data-theme="dark"] #resetError {
+    color: #f87171;
+}
+
+/* Buttons */
+[data-theme="dark"] .reset-box .save-btn,
+[data-theme="dark"] .success-box .login-btn {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(37,99,235,0.28);
+}
+
+[data-theme="dark"] .reset-box .save-btn:hover,
+[data-theme="dark"] .success-box .login-btn:hover {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    transform: translateY(-1px);
+}
+
+/* Success Icon */
+[data-theme="dark"] .success-icon {
+    background: rgba(34,197,94,0.12);
+    border: 1px solid rgba(34,197,94,0.25);
+}
+
+
     </style>
 </head>
 <body class="body">
