@@ -925,13 +925,20 @@ function togglePw(inputId, btn) {
 }
 
 // ── SETTINGS / THEME / LOGOUT ──
+(function() {
+  const saved = localStorage.getItem("theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
+})();
+
 function toggleSettingsMenu(e) {
     e.stopPropagation();
     document.getElementById('settingsDropdown').classList.toggle('show');
 }
 function toggleTheme() {
-    const html = document.documentElement;
-    html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+  const html = document.documentElement;
+  const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+  html.setAttribute("data-theme", newTheme);
+  localStorage.setItem("theme", newTheme);
 }
 function logout() { document.getElementById('logoutOverlay').classList.add('show'); }
 function closeLogout() { document.getElementById('logoutOverlay').classList.remove('show'); }

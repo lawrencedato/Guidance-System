@@ -206,18 +206,22 @@ $conn->close();
 <!-- ================= SCRIPT ================= -->
 <script>
 
+(function() {
+  const saved = localStorage.getItem("theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
+})();
+
 // ================= SETTINGS =================
 function toggleSettingsMenu(e){
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
 }
 
-function toggleTheme(){
+function toggleTheme() {
   const html = document.documentElement;
-  html.setAttribute(
-    "data-theme",
-    html.getAttribute("data-theme") === "light" ? "dark" : "light"
-  );
+  const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+  html.setAttribute("data-theme", newTheme);
+  localStorage.setItem("theme", newTheme);
 }
 
 function logout() {
