@@ -12520,7 +12520,7 @@ html {
 }
 
 body {
-  font-family: "Poppins", system-ui, sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
   line-height: 1.5;
 
@@ -23635,6 +23635,103 @@ th {
   .aUsers-tabs {
     flex-direction: column;
   }
+}
+
+/* =========================
+   aUsers — DARK MODE FIXES
+========================= */
+
+/* Main background */
+[data-theme="dark"] .aUsers-main {
+  background: var(--bg);
+}
+
+/* Tab buttons */
+[data-theme="dark"] .aUsers-tabs button {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .aUsers-tabs button:hover {
+  background: rgba(73, 136, 196, 0.1);
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .aUsers-tabs button.active {
+  background: linear-gradient(135deg, #0d3254, #3a7ab8);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* Card */
+[data-theme="dark"] .aUsers-card {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+}
+
+/* Header text */
+[data-theme="dark"] .aUsers-header h3 {
+  color: #e2eaf4;
+}
+
+[data-theme="dark"] .aUsers-header .muted {
+  color: #8ba4be;
+}
+
+/* Export button */
+[data-theme="dark"] .btn-export {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #dce8f5;
+}
+
+[data-theme="dark"] .btn-export:hover {
+  background: rgba(73, 136, 196, 0.15);
+  border-color: #4988C4;
+  color: #fff;
+}
+
+/* Table */
+[data-theme="dark"] .aUsers-card table thead,
+[data-theme="dark"] .aUsers-card table thead tr {
+  background: transparent;
+}
+
+[data-theme="dark"] .aUsers-card table th {
+  background: transparent;
+  color: #60a5fa;
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+[data-theme="dark"] .aUsers-card table td {
+  color: #cbd5e1;
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .aUsers-card table tbody tr:hover {
+  background: rgba(73, 136, 196, 0.07);
+}
+
+[data-theme="dark"] .aUsers-card table td[colspan] {
+  color: #6e8ea8;
+}
+
+/* Badges */
+[data-theme="dark"] .aBadge-success {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.aBadge-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+}
+
+[data-theme="dark"] .aBadge-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
 }
 
 .aStudents-main {
