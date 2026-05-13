@@ -258,6 +258,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
+    // ---------- PROMOTE SELECTED STUDENTS ----------
+    if ($action === 'promote_selected') {
+        $ids_raw = $_POST['student_ids'] ?? '';
+        $ids = array_filter(array_map('intval', explode(',', $ids_raw)));
+
+        if (empty($ids)) {
+            echo json_encode(["success" => false, "message" => "No students selected."]);
+            exit;
+        }
+
+        $ids_str = implode(',', $ids);
+        $conn->begin_transaction();
+
+        try {
+            // Graduate selected 4th year students
+            $conn->query("
+                UPDATE students
+                SET archived = 1, graduated_at = NOW()
+                WHERE student_id IN ($ids_str)
+                AND year_level = '4th Year'
+                AND archived = 0
+            ");
+            $graduated = $conn->affected_rows;
+
+            // Promote 3rd → 4th
+            $conn->query("UPDATE students SET year_level = '4th Year' WHERE student_id IN ($ids_str) AND year_level = '3rd Year' AND archived = 0");
+            // Promote 2nd → 3rd
+            $conn->query("UPDATE students SET year_level = '3rd Year' WHERE student_id IN ($ids_str) AND year_level = '2nd Year' AND archived = 0");
+            // Promote 1st → 2nd
+            $conn->query("UPDATE students SET year_level = '2nd Year' WHERE student_id IN ($ids_str) AND year_level = '1st Year' AND archived = 0");
+
+            $conn->commit();
+
+            $total = count($ids);
+            echo json_encode([
+                "success"   => true,
+                "message"   => "Done! {$graduated} student(s) graduated & archived. " . ($total - $graduated) . " student(s) promoted to next year.",
+                "graduated" => $graduated
+            ]);
+
+        } catch (Exception $e) {
+            $conn->rollback();
+            echo json_encode(["success" => false, "message" => "Promotion failed: " . $e->getMessage()]);
+        }
+        exit;
+    }
+
     // ---------- ARCHIVE SINGLE STUDENT ----------
     if ($action === 'archive_student') {
         $student_id = intval($_POST['student_id']);
@@ -424,7 +471,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         .aStudents-table-empty   { text-align: center; padding: 20px; color: #888; }
         .aStudents-table-error   { text-align: center; padding: 20px; color: red; }
 
-        /* ── Archive header button (matches acounselors style) ── */
+        /* ── Archive header button ── */
         .aStudents-archive-btn {
             background: #f3f4f6;
             color: #6b7280;
@@ -468,7 +515,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         }
         .aStudents-promote-btn:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(21,128,61,0.25); }
 
-        /* ── Add button (matches acounselors) ── */
+        /* ── Add button ── */
         .aStudents-add-btn {
             background: linear-gradient(135deg, #113F67, #4988C4);
             color: #fff;
@@ -485,7 +532,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         }
         .aStudents-add-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(17,63,103,0.25); }
 
-        /* ── CSV buttons (matches acounselors) ── */
+        /* ── CSV buttons ── */
         .aStudents-csv-actions { display: flex; gap: 8px; }
         .aStudents-btn-import, .aStudents-btn-export {
             padding: 10px 14px;
@@ -523,7 +570,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         }
         .aStudents-toast.show { opacity: 1; transform: translateY(0); }
 
-        /* ── Modal (same as acounselors) ── */
+        /* ── Modal ── */
         .aStudents-modal {
             display: none;
             position: fixed;
@@ -571,7 +618,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         }
         .aStudents-modal-close:hover { background: rgba(17,63,103,0.14); }
 
-        /* ── Modal footer (matches acounselors layout) ── */
+        /* ── Modal footer ── */
         .aStudents-modal-footer {
             margin-top: 22px;
             display: flex;
@@ -619,7 +666,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
             cursor: text;
         }
 
-        /* ── Buttons (same palette as acounselors) ── */
+        /* ── Buttons ── */
         .aStudents-btn-cancel {
             padding: 9px 15px;
             border-radius: 10px;
@@ -790,6 +837,131 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         .archive-error   { text-align: center; padding: 30px; color: red; }
 
         button:disabled { opacity: 0.4; cursor: not-allowed !important; transform: none !important; }
+
+        /* ============================================================
+           CHECKBOX & BULK SELECTION — NEW STYLES
+           ============================================================ */
+
+        /* Custom checkbox style */
+        .aStudents-cb {
+            width: 16px;
+            height: 16px;
+            accent-color: #113F67;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        /* Header checkbox cell */
+        th.aStudents-cb-col,
+        td.aStudents-cb-col {
+            width: 40px;
+            text-align: center;
+            padding-left: 12px !important;
+            padding-right: 4px !important;
+        }
+
+        /* Highlight selected rows */
+        tr.row-selected {
+            background: rgba(73,136,196,0.08) !important;
+        }
+        tr.row-selected:hover {
+            background: rgba(73,136,196,0.13) !important;
+        }
+
+        /* ── Bulk Action Toolbar ── */
+        .aStudents-bulk-toolbar {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #113F67, #1a5496);
+            color: #fff;
+            border-radius: 12px;
+            padding: 10px 18px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 16px rgba(17,63,103,0.22);
+            animation: toolbarSlide 0.2s ease;
+        }
+        .aStudents-bulk-toolbar.visible { display: flex; }
+        @keyframes toolbarSlide {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .bulk-toolbar-count {
+            font-size: 0.88rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .bulk-toolbar-count span {
+            background: rgba(255,255,255,0.2);
+            border-radius: 999px;
+            padding: 2px 9px;
+            margin-right: 4px;
+            font-size: 0.82rem;
+        }
+        .bulk-toolbar-spacer { flex: 1; }
+        .bulk-promote-btn {
+            background: #fff;
+            color: #15803d;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.15s;
+            white-space: nowrap;
+        }
+        .bulk-promote-btn:hover { background: #f0fdf4; transform: translateY(-1px); }
+        .bulk-deselect-btn {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.15s;
+        }
+        .bulk-deselect-btn:hover { background: rgba(255,255,255,0.25); }
+
+        /* Promote selected modal summary list */
+        .promote-selected-list {
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid #dbeafe;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            background: #f8faff;
+        }
+        .promote-selected-list li {
+            font-size: 0.84rem;
+            color: #374151;
+            padding: 3px 0;
+            border-bottom: 1px solid #e5e7eb;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .promote-selected-list li:last-child { border-bottom: none; }
+        .psl-year {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+        .psl-4th { background: #fee2e2; color: #b91c1c; }
+        .psl-3rd { background: #dbeafe; color: #1d4ed8; }
+        .psl-2nd { background: #dcfce7; color: #15803d; }
+        .psl-1st { background: #fef9c3; color: #92400e; }
     </style>
 </head>
 <body>
@@ -925,14 +1097,31 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
                 <button onclick="openAddStudentModal()" class="aStudents-add-btn">
                     <i class="fa fa-user-plus"></i> Add Student
                 </button>
-
             </div>
+        </div>
+
+        <!-- ── Bulk Action Toolbar (shown when rows are selected) ── -->
+        <div class="aStudents-bulk-toolbar" id="bulkToolbar">
+            <div class="bulk-toolbar-count">
+                <span id="bulkCount">0</span> student(s) selected
+            </div>
+            <div class="bulk-toolbar-spacer"></div>
+            <button class="bulk-promote-btn" onclick="openPromoteSelectedModal()">
+                <i class="fa fa-angles-up"></i> Promote Selected
+            </button>
+            <button class="bulk-deselect-btn" onclick="clearAllSelections()">
+                <i class="fa fa-xmark"></i> Deselect All
+            </button>
         </div>
 
         <div class="aStudents-table-wrapper">
             <table class="aStudents-table">
                 <thead>
                     <tr>
+                        <!-- Select All checkbox in header -->
+                        <th class="aStudents-cb-col">
+                            <input type="checkbox" class="aStudents-cb" id="selectAllCb" title="Select all on this page" onchange="toggleSelectAll(this)">
+                        </th>
                         <th>Student ID</th>
                         <th>Last Name</th>
                         <th>First Name</th>
@@ -947,7 +1136,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
                 </thead>
                 <tbody id="studentsTableBody">
                     <tr>
-                        <td colspan="10" class="aStudents-table-loading">
+                        <td colspan="11" class="aStudents-table-loading">
                             <i class="fa fa-spinner fa-spin"></i> Loading students...
                         </td>
                     </tr>
@@ -1134,13 +1323,11 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         </div>
 
         <div class="aStudents-modal-footer">
-            <!-- Left: Archive -->
             <div class="left-actions">
                 <button class="aStudents-btn-danger" id="archiveSingleBtn" onclick="archiveSingleStudent()">
                     <i class="fa fa-box-archive"></i> Archive
                 </button>
             </div>
-            <!-- Right: Close / Edit / Save -->
             <button class="aStudents-btn-cancel" onclick="closeViewModal()">Close</button>
             <button class="aStudents-btn-cancel" id="editBtn" onclick="enableEdit()">
                 <i class="fa fa-pen"></i> Edit
@@ -1153,7 +1340,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
 </div>
 
 
-<!-- ================= PROMOTE CONFIRM MODAL ================= -->
+<!-- ================= PROMOTE ALL MODAL ================= -->
 <div id="promoteModal" class="aStudents-modal">
     <div class="aStudents-modal-content">
         <div class="aStudents-modal-header">
@@ -1187,6 +1374,45 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
             <button class="aStudents-btn-cancel" onclick="closePromoteModal()">Cancel</button>
             <button class="aStudents-promote-btn" id="confirmPromoteBtn" onclick="confirmPromote()">
                 <i class="fa fa-angles-up"></i> Yes, Promote All
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ================= PROMOTE SELECTED MODAL ================= -->
+<div id="promoteSelectedModal" class="aStudents-modal">
+    <div class="aStudents-modal-content">
+        <div class="aStudents-modal-header">
+            <div>
+                <h3><i class="fa fa-angles-up" style="margin-right:6px;opacity:.7"></i>Promote Selected Students</h3>
+                <p id="promoteSelectedSubtitle">Review the selected students before confirming</p>
+            </div>
+            <button class="aStudents-modal-close" onclick="closePromoteSelectedModal()">✕</button>
+        </div>
+
+        <div class="promote-confirm-box">
+            <div class="promote-title"><i class="fa fa-triangle-exclamation"></i> Each student will be promoted based on their current year level</div>
+            <div class="promote-flow">
+                <span class="promote-chip chip-graduate">4th Year → Graduated &amp; Archived</span>
+                <span class="chip-arrow">•</span>
+                <span class="promote-chip chip-promote">3rd → 4th Year</span>
+                <span class="chip-arrow">•</span>
+                <span class="promote-chip chip-promote">2nd → 3rd Year</span>
+                <span class="chip-arrow">•</span>
+                <span class="promote-chip chip-promote">1st → 2nd Year</span>
+            </div>
+        </div>
+
+        <div style="font-size:0.8rem;font-weight:700;color:#4988C4;letter-spacing:.06em;margin-bottom:8px;">
+            SELECTED STUDENTS
+        </div>
+        <ul class="promote-selected-list" id="promoteSelectedList"></ul>
+
+        <div class="aStudents-modal-footer">
+            <button class="aStudents-btn-cancel" onclick="closePromoteSelectedModal()">Cancel</button>
+            <button class="aStudents-promote-btn" id="confirmPromoteSelectedBtn" onclick="confirmPromoteSelected()">
+                <i class="fa fa-angles-up"></i> Yes, Promote Selected
             </button>
         </div>
     </div>
@@ -1294,7 +1520,6 @@ document.addEventListener("click", e => {
 });
 
 // ================= DATE FORMATTER =================
-// Converts YYYY-MM-DD  →  MM/DD/YYYY  (Philippine standard display)
 function formatBirthday(dateStr) {
     if (!dateStr) return '—';
     const [y, m, d] = dateStr.split('-');
@@ -1345,6 +1570,79 @@ document.addEventListener('click', e => {
     if (!e.target.closest('.aStudents-sort-wrapper')) dd.classList.remove('show');
 });
 
+// ================= SELECTION STATE =================
+// Tracks selected student IDs across all pages
+let selectedStudentIds = new Set();
+
+function updateBulkToolbar() {
+    const count   = selectedStudentIds.size;
+    const toolbar = document.getElementById('bulkToolbar');
+    document.getElementById('bulkCount').textContent = count;
+    toolbar.classList.toggle('visible', count > 0);
+}
+
+function syncSelectAllCheckbox() {
+    const cbs = document.querySelectorAll('#studentsTableBody .row-cb');
+    if (!cbs.length) {
+        document.getElementById('selectAllCb').checked       = false;
+        document.getElementById('selectAllCb').indeterminate = false;
+        return;
+    }
+    const checkedCount = [...cbs].filter(c => c.checked).length;
+    const allCb = document.getElementById('selectAllCb');
+    if (checkedCount === 0) {
+        allCb.checked = false;
+        allCb.indeterminate = false;
+    } else if (checkedCount === cbs.length) {
+        allCb.checked = true;
+        allCb.indeterminate = false;
+    } else {
+        allCb.checked = false;
+        allCb.indeterminate = true;
+    }
+}
+
+function toggleSelectAll(masterCb) {
+    const cbs = document.querySelectorAll('#studentsTableBody .row-cb');
+    cbs.forEach(cb => {
+        cb.checked = masterCb.checked;
+        const row = cb.closest('tr');
+        if (masterCb.checked) {
+            selectedStudentIds.add(cb.dataset.id);
+            row.classList.add('row-selected');
+        } else {
+            selectedStudentIds.delete(cb.dataset.id);
+            row.classList.remove('row-selected');
+        }
+    });
+    updateBulkToolbar();
+}
+
+function onRowCheckboxChange(cb) {
+    const row = cb.closest('tr');
+    if (cb.checked) {
+        selectedStudentIds.add(cb.dataset.id);
+        row.classList.add('row-selected');
+    } else {
+        selectedStudentIds.delete(cb.dataset.id);
+        row.classList.remove('row-selected');
+    }
+    syncSelectAllCheckbox();
+    updateBulkToolbar();
+}
+
+function clearAllSelections() {
+    selectedStudentIds.clear();
+    document.querySelectorAll('#studentsTableBody .row-cb').forEach(cb => {
+        cb.checked = false;
+        cb.closest('tr').classList.remove('row-selected');
+    });
+    const allCb = document.getElementById('selectAllCb');
+    allCb.checked = false;
+    allCb.indeterminate = false;
+    updateBulkToolbar();
+}
+
 // ================= PAGINATION =================
 const PAGE_SIZE = 20;
 let allStudentsData = [];
@@ -1362,24 +1660,36 @@ function renderPage(page) {
     const pageData = allStudentsData.slice(start, end);
 
     if (pageData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="aStudents-table-empty">No students found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="aStudents-table-empty">No students found.</td></tr>`;
         document.getElementById('paginationWrapper').style.display = 'none';
+        syncSelectAllCheckbox();
         return;
     }
 
     pageData.forEach(s => {
+        const isChecked = selectedStudentIds.has(String(s.student_id));
         const row = document.createElement('tr');
+        if (isChecked) row.classList.add('row-selected');
+
         row.dataset.id        = s.student_id;
         row.dataset.firstName = s.first_name;
         row.dataset.lastName  = s.last_name;
         row.dataset.email     = s.email;
         row.dataset.gender    = s.gender;
-        row.dataset.birthday     = s.birthday;          // raw YYYY-MM-DD kept for edit input
+        row.dataset.birthday  = s.birthday;
         row.dataset.age       = s.age;
         row.dataset.year      = s.year_level;
         row.dataset.course    = s.course;
 
         row.innerHTML = `
+            <td class="aStudents-cb-col">
+                <input type="checkbox" class="aStudents-cb row-cb"
+                    data-id="${s.student_id}"
+                    data-name="${s.first_name} ${s.last_name}"
+                    data-year="${s.year_level}"
+                    ${isChecked ? 'checked' : ''}
+                    onchange="onRowCheckboxChange(this)">
+            </td>
             <td>${s.student_id}</td>
             <td>${s.last_name}</td>
             <td>${s.first_name}</td>
@@ -1397,6 +1707,9 @@ function renderPage(page) {
         tbody.appendChild(row);
     });
 
+    syncSelectAllCheckbox();
+    updateBulkToolbar();
+
     // Show/hide pagination
     const wrapper = document.getElementById('paginationWrapper');
     if (total <= PAGE_SIZE) {
@@ -1405,15 +1718,12 @@ function renderPage(page) {
     }
     wrapper.style.display = 'flex';
 
-    // Info text
     document.getElementById('paginationInfo').textContent =
         `Showing ${start + 1}–${end} of ${total} student${total !== 1 ? 's' : ''}`;
 
-    // Build page buttons
     const controls = document.getElementById('paginationControls');
     controls.innerHTML = '';
 
-    // Prev
     const prevBtn = document.createElement('button');
     prevBtn.className = 'aStudents-page-btn';
     prevBtn.innerHTML = '<i class="fa fa-chevron-left"></i>';
@@ -1421,7 +1731,6 @@ function renderPage(page) {
     prevBtn.onclick   = () => renderPage(page - 1);
     controls.appendChild(prevBtn);
 
-    // Page numbers with ellipsis
     const makePageBtn = (num) => {
         const btn = document.createElement('button');
         btn.className = 'aStudents-page-btn' + (num === page ? ' active' : '');
@@ -1448,7 +1757,6 @@ function renderPage(page) {
         makePageBtn(totalPages);
     }
 
-    // Next
     const nextBtn = document.createElement('button');
     nextBtn.className = 'aStudents-page-btn';
     nextBtn.innerHTML = '<i class="fa fa-chevron-right"></i>';
@@ -1475,7 +1783,7 @@ function loadStudents() {
     });
 
     const tbody = document.getElementById('studentsTableBody');
-    tbody.innerHTML = `<tr><td colspan="10" class="aStudents-table-loading">
+    tbody.innerHTML = `<tr><td colspan="11" class="aStudents-table-loading">
         <i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>`;
     document.getElementById('paginationWrapper').style.display = 'none';
 
@@ -1483,7 +1791,7 @@ function loadStudents() {
         .then(res => res.json())
         .then(json => {
             if (!json.success) {
-                tbody.innerHTML = `<tr><td colspan="10" class="aStudents-table-empty">No students found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="aStudents-table-empty">No students found.</td></tr>`;
                 allStudentsData = [];
                 return;
             }
@@ -1491,7 +1799,7 @@ function loadStudents() {
             renderPage(1);
         })
         .catch(() => {
-            tbody.innerHTML = `<tr><td colspan="10" class="aStudents-table-error">Failed to load students.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="11" class="aStudents-table-error">Failed to load students.</td></tr>`;
         });
 }
 
@@ -1629,7 +1937,6 @@ function triggerImportCsv() {
     document.getElementById('importCsvInput').click();
 }
 function exportStudentCsv() {
-    // Export all data (not just current page)
     if (!allStudentsData.length) { showToast('No data to export.', 'error'); return; }
     const headers = ['Student ID','Last Name','First Name','Email','Gender','Birthday','Age','Year Level','Course'];
     const rows = [headers, ...allStudentsData.map(s => [
@@ -1689,7 +1996,6 @@ function setViewMode() {
 
 function enableEdit() {
     document.getElementById('editGender').value   = document.getElementById('viewGender').value;
-    // viewBirthday holds MM/DD/YYYY — convert back to YYYY-MM-DD for the date input
     const bdParts = document.getElementById('viewBirthday').value.split('/');
     document.getElementById('editBirthday').value = bdParts.length === 3
         ? `${bdParts[2]}-${bdParts[0]}-${bdParts[1]}`
@@ -1804,6 +2110,7 @@ function confirmPromote() {
             showToast(json.message, json.success ? 'success' : 'error');
             if (json.success) {
                 closePromoteModal();
+                clearAllSelections();
                 loadStudents();
                 refreshArchiveCount();
             }
@@ -1812,6 +2119,71 @@ function confirmPromote() {
         .finally(() => {
             btn.disabled = false;
             btn.innerHTML = '<i class="fa fa-angles-up"></i> Yes, Promote All';
+        });
+}
+
+// ================= PROMOTE SELECTED MODAL =================
+const yearBadgeClass = { '4th Year':'psl-4th','3rd Year':'psl-3rd','2nd Year':'psl-2nd','1st Year':'psl-1st' };
+
+function openPromoteSelectedModal() {
+    if (selectedStudentIds.size === 0) {
+        showToast("No students selected.", 'error');
+        return;
+    }
+
+    // Build selected student data from allStudentsData
+    const selectedData = allStudentsData.filter(s => selectedStudentIds.has(String(s.student_id)));
+
+    // Populate the list
+    const list = document.getElementById('promoteSelectedList');
+    list.innerHTML = '';
+    selectedData.forEach(s => {
+        const cls = yearBadgeClass[s.year_level] || '';
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <span class="psl-year ${cls}">${s.year_level}</span>
+            <strong>${s.last_name}, ${s.first_name}</strong>
+            <span style="color:#9ca3af;font-size:.78rem;">${s.student_id}</span>`;
+        list.appendChild(li);
+    });
+
+    document.getElementById('promoteSelectedSubtitle').textContent =
+        `${selectedStudentIds.size} student${selectedStudentIds.size !== 1 ? 's' : ''} selected for promotion`;
+
+    document.getElementById('promoteSelectedModal').classList.add('open');
+}
+
+function closePromoteSelectedModal() {
+    document.getElementById('promoteSelectedModal').classList.remove('open');
+}
+document.getElementById('promoteSelectedModal').addEventListener('click', function(e) {
+    if (e.target === this) closePromoteSelectedModal();
+});
+
+function confirmPromoteSelected() {
+    const btn = document.getElementById('confirmPromoteSelectedBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+    const formData = new FormData();
+    formData.append('action',      'promote_selected');
+    formData.append('student_ids', [...selectedStudentIds].join(','));
+
+    fetch('astudents.php', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(json => {
+            showToast(json.message, json.success ? 'success' : 'error');
+            if (json.success) {
+                closePromoteSelectedModal();
+                clearAllSelections();
+                loadStudents();
+                refreshArchiveCount();
+            }
+        })
+        .catch(() => showToast("Promotion failed.", 'error'))
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-angles-up"></i> Yes, Promote Selected';
         });
 }
 
