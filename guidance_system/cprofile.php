@@ -16,11 +16,31 @@ $cid  = $conn->real_escape_string($_SESSION['user_id']);
 
 $counselorRes = $conn->query("SELECT * FROM counselors WHERE counselor_id='$cid' LIMIT 1");
 $counselor    = $counselorRes->fetch_assoc();
+// ── HANDLE REMOVE PHOTO (AJAX) ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'remove_photo') {
+    header('Content-Type: application/json');
+    $currentImg = $counselor['profile_image'] ?? '';
+    if ($currentImg && file_exists($currentImg)) {
+        @unlink($currentImg);
+    }
+    $ok = $conn->query("UPDATE counselors SET profile_image=NULL WHERE counselor_id='$cid'");
+    echo json_encode($ok
+        ? ['success' => true, 'message' => 'Profile photo removed.']
+        : ['success' => false, 'message' => 'Failed to remove photo.']);
+    exit;
+}
+
 // ── HANDLE PROFILE UPDATE (AJAX) ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_profile') {
     header('Content-Type: application/json');
 
     $phone = $conn->real_escape_string(trim($_POST['phone'] ?? ''));
+
+    // Validate phone format
+    if ($phone && !preg_match('/^09\d{9}$/', $phone)) {
+        echo json_encode(['success' => false, 'message' => 'Contact number must be 11 digits starting with 09.']);
+        exit;
+    }
 
     $profileImage = null;
     if (!empty($_FILES['profile_image']['name'])) {
@@ -170,15 +190,22 @@ $pendingCount = (int)$conn->query(
 
       <div class="cProfile-header">
 
-        <div class="cProfile-avatar">
-          <img id="preview" src="<?= $profileImg ?>"
-            onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff&size=120'">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:8px; flex-shrink:0;">
+          <div class="cProfile-avatar">
+            <img id="preview" src="<?= $profileImg ?>"
+              onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff&size=120'">
 
-          <label for="fileUpload" class="cProfile-upload">
-            <i class="fa fa-camera"></i>
-          </label>
+            <label for="fileUpload" class="cProfile-upload" title="Change photo">
+              <i class="fa fa-camera"></i>
+            </label>
 
-          <input type="file" id="fileUpload" hidden onchange="loadImage(event)">
+            <input type="file" id="fileUpload" hidden onchange="loadImage(event)">
+          </div>
+
+          <button type="button" id="removePhotoBtn" onclick="removePhoto()" title="Remove photo"
+            style="background:none; border:1px solid #e53e3e; color:#e53e3e; border-radius:8px; padding:5px 14px; font-size:12px; cursor:pointer; align-items:center; justify-content:center; gap:6px; transition:0.2s; width:110px; display:<?= (!empty($counselor['profile_image']) && file_exists($counselor['profile_image'])) ? 'flex' : 'none' ?>;">
+            <i class="fa fa-trash"></i> Remove Photo
+          </button>
         </div>
 
         <div>
@@ -207,7 +234,7 @@ $pendingCount = (int)$conn->query(
 
         <div class="form-group">
           <label>Contact Number</label>
-          <input id="phone" type="text" placeholder="Change contact number">
+          <input id="phone" type="text" placeholder="09XX-XXX-XXXX" maxlength="11" inputmode="numeric">
         </div>
 
         <button class="btn cProfile-saveBtn" onclick="saveProfile()">
@@ -275,10 +302,72 @@ document.addEventListener("click", e => {
   }
 });
 
+/* phone number enforcement */
+function enforcePhone(input) {
+  let val = input.value.replace(/\D/g, '');
+  if (val.length === 0) { val = '09'; }
+  else if (val.length === 1) { val = '09'; }
+  else if (val.substring(0, 2) !== '09') { val = '09' + val.replace(/^0*9*/, ''); }
+  val = val.substring(0, 11);
+  input.value = val;
+}
+
+function validatePhone(value, label) {
+  if (!value) return label + ' is required.';
+  if (!/^09\d{9}$/.test(value)) return label + ' must be 11 digits starting with 09.';
+  return null;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const el = document.getElementById('phone');
+  if (!el) return;
+  el.addEventListener('input',   function() { enforcePhone(this); });
+  el.addEventListener('focus',   function() { if (!this.value) this.value = '09'; });
+  el.addEventListener('blur',    function() { if (this.value === '09') this.value = ''; });
+  el.addEventListener('keydown', function(e) {
+    const allowed = [8,9,37,38,39,40,46,35,36];
+    if (allowed.includes(e.keyCode)) return;
+    if (e.key < '0' || e.key > '9') e.preventDefault();
+  });
+});
+
 /* image preview */
 function loadImage(event) {
   document.getElementById("preview").src =
     URL.createObjectURL(event.target.files[0]);
+  // Show remove button when a new file is selected
+  const removeBtn = document.getElementById("removePhotoBtn");
+  if (removeBtn) removeBtn.style.display = 'flex';
+}
+
+/* remove photo */
+function removePhoto() {
+  if (!confirm('Remove your profile photo?')) return;
+  const statusEl  = document.getElementById("status");
+  const removeBtn = document.getElementById("removePhotoBtn");
+  statusEl.innerHTML = "<span class='tag info'>Removing...</span>";
+
+  const fd = new FormData();
+  fd.append('action', 'remove_photo');
+
+  fetch('cprofile.php', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(json => {
+      if (json.success) {
+        const fallback = 'https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff';
+        document.getElementById("preview").src = fallback;
+        const topbar = document.getElementById("topbarAvatar");
+        if (topbar) topbar.src = fallback;
+        document.getElementById("fileUpload").value = '';
+        if (removeBtn) removeBtn.style.display = 'none';
+        statusEl.innerHTML = "<span class='tag info'>" + json.message + "</span>";
+      } else {
+        statusEl.innerHTML = "<span class='tag warning'>" + json.message + "</span>";
+      }
+    })
+    .catch(() => {
+      statusEl.innerHTML = "<span class='tag warning'>Something went wrong. Please try again.</span>";
+    });
 }
 
 function saveProfile() {
@@ -288,6 +377,11 @@ function saveProfile() {
 
   if (!phone) {
     statusEl.innerHTML = "<span class='tag warning'>Please enter your contact number.</span>";
+    return;
+  }
+  const phoneErr = validatePhone(phone, 'Contact number');
+  if (phoneErr) {
+    statusEl.innerHTML = "<span class='tag warning'>" + phoneErr + "</span>";
     return;
   }
 
@@ -307,6 +401,9 @@ function saveProfile() {
           document.getElementById("preview").src = json.image;
           const topbar = document.getElementById("topbarAvatar");
           if (topbar) topbar.src = json.image;
+          // Show remove button after successful upload
+          const removeBtn = document.getElementById("removePhotoBtn");
+          if (removeBtn) removeBtn.style.display = 'flex';
         }
       } else {
         statusEl.innerHTML = "<span class='tag warning'>" + json.message + "</span>";
