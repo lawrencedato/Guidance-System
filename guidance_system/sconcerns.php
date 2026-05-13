@@ -12,6 +12,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $sid  = (int)$_SESSION['user_id'];
+require_once 'scheck_reports_badge.php';
 
 $conn->query("ALTER TABLE concern_replies ADD COLUMN IF NOT EXISTS sender_type ENUM('counselor','student') NOT NULL DEFAULT 'counselor'");
 $conn->query("ALTER TABLE concern_replies ADD COLUMN IF NOT EXISTS student_id INT NULL");
@@ -121,7 +122,10 @@ $res = $conn->query("
     ORDER BY c.created_at DESC
 ");
 while ($row = $res->fetch_assoc()) $concerns[] = $row;
+
+
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -156,7 +160,9 @@ while ($row = $res->fetch_assoc()) $concerns[] = $row;
 </style>
 </head>
 <body class="body">
-
+<?php
+$_totalReportUnseen = $_totalReportUnseen ?? 0;
+?>
 <aside class="sidebar">
   <div class="sidebar-logoBar">
     <div class="sidebar-logo">
@@ -188,7 +194,12 @@ while ($row = $res->fetch_assoc()) $concerns[] = $row;
     <p class="sidebar-title">UPDATES</p>
     <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
     <p class="sidebar-title">RECORDS</p>
-    <a href="sreports.php"><i class="fa fa-ticket"></i> Reports</a>
+    <a href="sreports.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sreports.php' ? 'active' : '' ?>">
+      <i class="fa fa-ticket"></i> Reports
+      <?php if ($_totalReportUnseen > 0): ?>
+        <span class="referral-badge" style="display:inline-block;"></span>
+      <?php endif; ?>
+    </a>
     <p class="sidebar-title">SYSTEM</p>
     <a href="sfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
   </nav>

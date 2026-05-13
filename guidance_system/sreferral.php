@@ -14,6 +14,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 // ===== DB CONNECTION =====
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $sid  = $conn->real_escape_string($_SESSION['user_id']);
+require_once 'scheck_reports_badge.php';
 
 $conn->query("UPDATE referrals SET is_seen=1 WHERE student_id='$sid'");
  

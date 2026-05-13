@@ -14,6 +14,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 // ===== DB CONNECTION =====
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $sid  = $conn->real_escape_string($_SESSION['user_id']);
+require_once 'scheck_reports_badge.php';
 
 // ===== LOAD STUDENT DATA =====
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
@@ -493,7 +494,9 @@ function stressBar($level) {
 </head>
 
 <body class="body">
-
+<?php
+$_totalReportUnseen = $_totalReportUnseen ?? 0;
+?>
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-logoBar">
@@ -530,7 +533,12 @@ function stressBar($level) {
     <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
-    <a href="sreports.php"><i class="fa fa-ticket"></i> Tickets</a>
+    <a href="sreports.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sreports.php' ? 'active' : '' ?>">
+  <i class="fa fa-ticket"></i> Reports
+  <?php if ($_totalReportUnseen > 0): ?>
+    <span class="referral-badge" style="display:inline-block;"></span>
+  <?php endif; ?>
+</a>
 
     <p class="sidebar-title">SYSTEM</p>
     <a href="sfeedback.php"><i class="fa fa-comment"></i> Feedback</a>

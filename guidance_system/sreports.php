@@ -13,6 +13,21 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $sid  = $conn->real_escape_string($_SESSION['user_id']);
 
+// ── Mark seen via AJAX ──
+if (isset($_GET['mark_seen'])) {
+    header('Content-Type: application/json');
+    $type = $_GET['mark_seen'];
+    if ($type === 'notes') {
+        $conn->query("UPDATE session_notes SET is_seen=1 WHERE student_id='$sid' AND is_sent=1");
+    } elseif ($type === 'ticket') {
+        $conn->query("UPDATE appointments SET is_seen=1 WHERE student_id='$sid' AND status='Approved'");
+    } elseif ($type === 'rejected') {
+        $conn->query("UPDATE appointments SET is_seen=1 WHERE student_id='$sid' AND status='Rejected'");
+    }
+    echo json_encode(['ok' => true]);
+    exit;
+}
+
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
 $student    = $studentRes->fetch_assoc();
 
@@ -26,7 +41,7 @@ $profileImg = !empty($profile['profile_image'])
               : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
 
 $apptRes = $conn->query("
-    SELECT appointment_id, appointment_date, appointment_time, status
+    SELECT appointment_id, appointment_date, appointment_time, status, is_seen
     FROM appointments
     WHERE student_id = '$sid'
     ORDER BY appointment_date DESC
@@ -41,7 +56,7 @@ foreach ($apptList as $a) {
 
 $rejectedRes = $conn->query("
     SELECT appointment_id, appointment_date, appointment_time,
-           rejection_reason, priority
+           rejection_reason, priority, is_seen
     FROM appointments
     WHERE student_id = '$sid'
       AND status = 'Rejected'
@@ -51,7 +66,7 @@ $rejectedList = [];
 while ($r = $rejectedRes->fetch_assoc()) $rejectedList[] = $r;
 
 $notesRes = $conn->query("
-    SELECT sn.note_id, sn.notes, sn.created_at,
+    SELECT sn.note_id, sn.notes, sn.created_at, sn.is_seen,
            CONCAT(c.first_name, ' ', c.last_name) AS counselor_name,
            c.department
     FROM session_notes sn
@@ -62,6 +77,13 @@ $notesRes = $conn->query("
 ");
 $notesList = [];
 while ($r = $notesRes->fetch_assoc()) $notesList[] = $r;
+
+// ── Unseen counts for badges ──
+$unseenNotes    = count(array_filter($notesList,    fn($n) => !$n['is_seen']));
+$unseenTicket   = ($latestApproved && !$latestApproved['is_seen']) ? 1 : 0;
+$unseenRejected = count(array_filter($rejectedList, fn($r) => !$r['is_seen']));
+
+$totalUnseen = ($unseenNotes > 0 ? 1 : 0) + ($unseenTicket > 0 ? 1 : 0) + ($unseenRejected > 0 ? 1 : 0);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -92,6 +114,50 @@ while ($r = $notesRes->fetch_assoc()) $notesList[] = $r;
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* ── Section badges ── */
+.sReports-section-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  margin-left: 8px;
+  background: rgba(147, 197, 253, 0.25);
+  border: 1.5px solid rgba(147, 197, 253, 0.7);
+  color: #1e60a8;
+  box-shadow: 0 0 6px rgba(147, 197, 253, 0.45);
+  vertical-align: middle;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(147, 197, 253, 0.45); }
+  50%       { box-shadow: 0 0 12px rgba(147, 197, 253, 0.75); }
+}
+
+[data-theme="dark"] .sReports-section-badge {
+  background: rgba(147, 197, 253, 0.12);
+  border-color: rgba(147, 197, 253, 0.5);
+  color: #93c5fd;
+}
+
+/* ── Nav badge (sidebar) ── */
+.referral-badge {
+  display: inline-block;
+  width: 9px; height: 9px;
+  background: rgba(147, 197, 253, 0.35);
+  border: 1.5px solid rgba(147, 197, 253, 0.75);
+  border-radius: 50%;
+  margin-left: auto;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(147, 197, 253, 0.5);
 }
 </style>
 </head>
@@ -136,7 +202,12 @@ while ($r = $notesRes->fetch_assoc()) $notesList[] = $r;
     <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
-    <a href="sreports.php" class="active"><i class="fa fa-ticket"></i> Reports</a>
+    <a href="sreports.php" class="active">
+      <i class="fa fa-ticket"></i> Reports
+      <?php if ($totalUnseen > 0): ?>
+        <span class="referral-badge" style="display:inline-block;"></span>
+      <?php endif; ?>
+    </a>
 
     <p class="sidebar-title">SYSTEM</p>
     <a href="sfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
@@ -169,6 +240,9 @@ while ($r = $notesRes->fetch_assoc()) $notesList[] = $r;
     <div class="sReports-card">
       <h3 class="sReports-card-title">
         <i class="fa fa-notes-medical"></i> Session Notes
+        <?php if ($unseenNotes > 0): ?>
+          <span class="sReports-section-badge" id="badge-notes"><?= $unseenNotes ?></span>
+        <?php endif; ?>
       </h3>
       <p class="sReports-card-desc">
         Confidential notes sent to you by your counselor after each session. Download any note as a PDF.
@@ -221,8 +295,11 @@ while ($r = $notesRes->fetch_assoc()) $notesList[] = $r;
     <!-- CURRENT TICKET -->
     <div class="sReports-card">
       <h3 class="sReports-card-title">
-        <i class="fa fa-ticket"></i> Your Session Ticket
-      </h3>
+  <i class="fa fa-ticket"></i> Your Session Ticket
+  <?php if ($unseenTicket > 0): ?>
+    <span class="sReports-section-badge" id="badge-ticket">1</span>
+  <?php endif; ?>
+</h3>
       <p class="sReports-card-desc">
         This ticket is generated when a counselor approves your appointment.
       </p>
@@ -316,6 +393,9 @@ while ($r = $notesRes->fetch_assoc()) $notesList[] = $r;
     <div class="sReports-card">
       <h3 class="sReports-card-title">
         <i class="fa fa-times-circle"></i> Rejected Appointments
+        <?php if ($unseenRejected > 0): ?>
+          <span class="sReports-section-badge" id="badge-rejected"><?= $unseenRejected ?></span>
+        <?php endif; ?>
       </h3>
       <p class="sReports-card-desc">
         These appointments were declined by the counselor. You may rebook for another available date.
@@ -376,28 +456,22 @@ function toggleSettingsMenu(e) {
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
 }
-
 function toggleTheme() {
   const html = document.documentElement;
   const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
   html.setAttribute("data-theme", newTheme);
   localStorage.setItem("theme", newTheme);
 }
-
 function logout()        { document.getElementById('logoutOverlay').classList.add('show'); }
 function closeLogout()   { document.getElementById('logoutOverlay').classList.remove('show'); }
 function confirmLogout() { window.location.href = 'logout.php?role=student'; }
-
 document.getElementById('logoutOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeLogout();
 });
-
 document.addEventListener("click", e => {
   const menu = document.getElementById("settingsDropdown");
   const btn  = document.querySelector(".sidebar-settingsButton");
-  if (!menu.contains(e.target) && !btn.contains(e.target)) {
-    menu.classList.remove("show");
-  }
+  if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("show");
 });
 
 async function checkReferralBadge() {
@@ -408,8 +482,42 @@ async function checkReferralBadge() {
     if (badge) badge.style.display = data.unseen > 0 ? 'inline-block' : 'none';
   } catch (e) {}
 }
-
 checkReferralBadge();
+
+// ── Mark section as seen when scrolled into view ──
+function markSeen(type, badgeId) {
+  const badge = document.getElementById(badgeId);
+  if (!badge) return; // already no badge = already seen
+  fetch('sreports.php?mark_seen=' + type)
+    .then(() => {
+      badge.style.transition = 'opacity 0.4s ease';
+      badge.style.opacity    = '0';
+      setTimeout(() => badge.remove(), 420);
+    })
+    .catch(() => {});
+}
+
+// Use IntersectionObserver so badge clears when card comes into view
+const sectionMap = [
+  { selector: '.sReports-card:nth-child(1)', type: 'notes',    badge: 'badge-notes'    },
+  { selector: '.sReports-card:nth-child(2)', type: 'ticket',   badge: 'badge-ticket'   },
+  { selector: '.sReports-card:nth-child(4)', type: 'rejected', badge: 'badge-rejected' },
+];
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const card = entry.target;
+      const found = sectionMap.find(s => card.matches(s.selector));
+      if (found) {
+        markSeen(found.type, found.badge);
+        observer.unobserve(card);
+      }
+    }
+  });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('.sReports-card').forEach(card => observer.observe(card));
 </script>
 </body>
 </html>

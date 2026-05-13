@@ -18,6 +18,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 
 $sid_int = (int)$_SESSION['user_id'];
+require_once 'scheck_reports_badge.php';
 
 // ===== HANDLE PASSWORD RESET AJAX =====
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset_password') {
@@ -234,6 +235,9 @@ ORDER BY a.created_at DESC
     </div>
 </div>
 
+<?php
+$_totalReportUnseen = $_totalReportUnseen ?? 0;
+?>
 <!-- ================= SIDEBAR ================= -->
 <aside class="sidebar">
     <div class="sidebar-logoBar">
@@ -267,7 +271,12 @@ ORDER BY a.created_at DESC
         <p class="sidebar-title">UPDATES</p>
         <a href="sannouncements.php" class="active"><i class="fa fa-bullhorn"></i> Announcements</a>
         <p class="sidebar-title">RECORDS</p>
-        <a href="sreports.php"><i class="fa fa-ticket"></i> Reports</a>
+        <a href="sreports.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sreports.php' ? 'active' : '' ?>">
+      <i class="fa fa-ticket"></i> Reports
+      <?php if ($_totalReportUnseen > 0): ?>
+        <span class="referral-badge" style="display:inline-block;"></span>
+      <?php endif; ?>
+    </a>
         <p class="sidebar-title">SYSTEM</p>
         <a href="sfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
     </nav>

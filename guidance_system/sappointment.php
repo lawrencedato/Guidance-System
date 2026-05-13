@@ -27,7 +27,7 @@ if ($conn->connect_error) {
 
 $conn->set_charset("utf8mb4");
 $sid = $conn->real_escape_string((string)$_SESSION['user_id']);
-
+require_once 'scheck_reports_badge.php';
 // ── Load student info ──
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
 $student    = $studentRes ? $studentRes->fetch_assoc() : [];
@@ -177,6 +177,9 @@ if ($counselorRes) while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
 <body class="body">
 
 <!-- SIDEBAR -->
+<?php
+$_totalReportUnseen = $_totalReportUnseen ?? 0;
+?>
 <aside class="sidebar">
   <div class="sidebar-logoBar">
     <div class="sidebar-logo">
@@ -208,7 +211,12 @@ if ($counselorRes) while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
     <p class="sidebar-title">UPDATES</p>
     <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
     <p class="sidebar-title">RECORDS</p>
-    <a href="sreports.php"><i class="fa fa-ticket"></i> Reports</a>
+    <a href="sreports.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sreports.php' ? 'active' : '' ?>">
+      <i class="fa fa-ticket"></i> Reports
+      <?php if ($_totalReportUnseen > 0): ?>
+        <span class="referral-badge" style="display:inline-block;"></span>
+      <?php endif; ?>
+    </a>
     <p class="sidebar-title">SYSTEM</p>
     <a href="sfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
   </nav>
