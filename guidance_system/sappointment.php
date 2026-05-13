@@ -1,7 +1,6 @@
 <?php
 error_reporting(0);
 ini_set('display_errors', 0);
-mysqli_report(MYSQLI_REPORT_OFF);
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -10,29 +9,52 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     exit;
 }
 
-$conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
-$sid  = $conn->real_escape_string($_SESSION['user_id']);
+// ── DB Connection ──
+$conn = @new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
+if ($conn->connect_error) {
+    if (
+        ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_slots') ||
+        ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book')
+    ) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Database connection failed.']);
+    } else {
+        http_response_code(503);
+        echo "Service temporarily unavailable.";
+    }
+    exit;
+}
 
+$conn->set_charset("utf8mb4");
+$sid = $conn->real_escape_string((string)$_SESSION['user_id']);
+
+// ── Load student info ──
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
-$student    = $studentRes->fetch_assoc();
+$student    = $studentRes ? $studentRes->fetch_assoc() : [];
 
 $profileRes = $conn->query("SELECT profile_image FROM student_profiles WHERE student_id='$sid' LIMIT 1");
-$profile    = $profileRes->fetch_assoc();
+$profile    = $profileRes ? $profileRes->fetch_assoc() : [];
 
-$fullName   = htmlspecialchars(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? ''));
+$fullName   = htmlspecialchars(trim(($student['first_name'] ?? '') . ' ' . ($student['last_name'] ?? '')));
 $email      = htmlspecialchars($student['email'] ?? '');
 $profileImg = !empty($profile['profile_image'])
               ? htmlspecialchars($profile['profile_image'])
-              : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff';
+              : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=113f67&color=fff&size=128';
 
-// ── AJAX: get available slots for a counselor + date ──
+// ── AJAX: get available slots ──
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_slots') {
     header('Content-Type: application/json');
     $cid  = (int)($_GET['counselor_id'] ?? 0);
     $date = $conn->real_escape_string($_GET['date'] ?? '');
-    if (!$cid || !$date) { echo json_encode(['slots' => []]); exit; }
 
-    $dow = (int)date('w', strtotime($date));
+    if (!$cid || !$date) {
+        echo json_encode(['slots' => []]);
+        exit;
+    }
+
+    $ts  = strtotime($date);
+    if (!$ts) { echo json_encode(['slots' => []]); exit; }
+    $dow = (int)date('w', $ts);
 
     $res = $conn->query("
         SELECT slot_time FROM counselor_availability
@@ -40,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_slo
         ORDER BY slot_time
     ");
     $allSlots = [];
-    while ($r = $res->fetch_assoc()) $allSlots[] = $r['slot_time'];
+    if ($res) while ($r = $res->fetch_assoc()) $allSlots[] = $r['slot_time'];
 
     $bookedRes = $conn->query("
         SELECT appointment_time FROM appointments
@@ -49,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_slo
           AND status IN ('Pending','Approved')
     ");
     $booked = [];
-    while ($r = $bookedRes->fetch_assoc()) $booked[] = $r['appointment_time'];
+    if ($bookedRes) while ($r = $bookedRes->fetch_assoc()) $booked[] = $r['appointment_time'];
 
     $slots = [];
     foreach ($allSlots as $t) {
@@ -62,36 +84,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_slo
 // ── AJAX: book appointment ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book') {
     header('Content-Type: application/json');
+
     $cid      = (int)($_POST['counselor_id'] ?? 0);
-    $date     = $conn->real_escape_string($_POST['date']     ?? '');
-    $time     = $conn->real_escape_string($_POST['time']     ?? '');
-    $message  = $conn->real_escape_string($_POST['message']  ?? '');
-    $priority = $conn->real_escape_string($_POST['priority'] ?? 'Low');
+    $date     = $conn->real_escape_string($_POST['date']    ?? '');
+    $time     = $conn->real_escape_string($_POST['time']    ?? '');
+    $message  = $conn->real_escape_string($_POST['message'] ?? '');
+
+    $allowedPriority = ['Low', 'Medium', 'High'];
+    $priority = in_array($_POST['priority'] ?? '', $allowedPriority) ? $_POST['priority'] : 'Low';
+    $priority = $conn->real_escape_string($priority);
 
     if (!$cid || !$date || !$time) {
-        echo json_encode(['success' => false, 'message' => 'Please fill in all required fields.']); exit;
+        echo json_encode(['success' => false, 'message' => 'Please fill in all required fields.']);
+        exit;
     }
 
     $cCheck = $conn->query("SELECT counselor_id FROM counselors WHERE counselor_id=$cid AND status='Active' LIMIT 1");
     if (!$cCheck || $cCheck->num_rows === 0) {
-        echo json_encode(['success' => false, 'message' => 'Selected counselor is not available.']); exit;
+        echo json_encode(['success' => false, 'message' => 'Selected counselor is not available.']);
+        exit;
     }
 
     $conn->begin_transaction();
     try {
         $lock = $conn->query("
             SELECT appointment_id FROM appointments
-            WHERE counselor_id=$cid AND appointment_date='$date' AND appointment_time='$time'
+            WHERE counselor_id=$cid
+              AND appointment_date='$date'
+              AND appointment_time='$time'
               AND status IN ('Pending','Approved')
             FOR UPDATE
         ");
-        if ($lock && $lock->num_rows > 0) throw new Exception('That slot was just taken. Please choose another.');
+        if ($lock && $lock->num_rows > 0) {
+            throw new Exception('That slot was just taken. Please choose another.');
+        }
 
         $ok = $conn->query("
-            INSERT INTO appointments (student_id, counselor_id, appointment_date, appointment_time, message, priority, status, created_at)
-            VALUES ('$sid', $cid, '$date', '$time', '$message', '$priority', 'Pending', NOW())
+            INSERT INTO appointments
+                (student_id, counselor_id, appointment_date, appointment_time, message, priority, status, created_at)
+            VALUES
+                ('$sid', $cid, '$date', '$time', '$message', '$priority', 'Pending', NOW())
         ");
-        if (!$ok) throw new Exception($conn->error);
+        if (!$ok) throw new Exception('Booking failed. Please try again.');
+
         $conn->commit();
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
@@ -101,14 +136,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book'
     exit;
 }
 
-// ── Load counselors for the grid ──
+// ── Load counselors ──
 $counselorRes = $conn->query("
-    SELECT counselor_id, first_name, last_name, department
-    FROM counselors WHERE status='Active' AND archived=0
+    SELECT counselor_id, first_name, last_name, department, profile_image
+    FROM counselors
+    WHERE status='Active' AND archived=0
     ORDER BY last_name
 ");
 $counselors = [];
-while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
+if ($counselorRes) while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -119,16 +155,12 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="logout.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-    /* ─────────────────────────────────────────
-      SIDEBAR MENU LINK LAYOUT
-    ───────────────────────────────────────── */
+  <style>
     .sidebar-menu a {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-
     .referral-badge {
       width: 9px;
       height: 9px;
@@ -140,10 +172,8 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
       box-shadow: 0 0 6px rgba(147, 197, 253, 0.5);
       backdrop-filter: blur(4px);
     }
-    </style>
+  </style>
 </head>
-
-  
 <body class="body">
 
 <!-- SIDEBAR -->
@@ -189,8 +219,9 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
   <div class="topbar-left"><h2>Book Appointment</h2></div>
   <div class="topbar-right">
     <div class="topbar-user">
-      <img src="<?= $profileImg ?>" alt="user"
-           onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff'">
+      <img src="<?= $profileImg ?>"
+           alt="<?= $fullName ?>"
+           onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=113f67&color=fff&size=128'">
       <div>
         <strong><?= $fullName ?></strong>
         <p><?= $email ?></p>
@@ -215,22 +246,37 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
         </div>
         <div class="sBooking-counselor-grid">
           <?php foreach ($counselors as $c):
-            $cName = htmlspecialchars($c['first_name'] . ' ' . $c['last_name']);
-            $cDept = htmlspecialchars($c['department']);
-            $cImg  = 'c_' . $c['counselor_id'] . '.jpg';
+            $cName      = htmlspecialchars(trim($c['first_name'] . ' ' . $c['last_name']));
+            $cDept      = htmlspecialchars($c['department'] ?? '');
+            $cFallback  = 'https://ui-avatars.com/api/?name=' . urlencode($cName) . '&background=113f67&color=fff&size=128';
+
+            // Build image src based on what's stored in DB:
+            // - NULL/empty             → fallback avatar
+            // - starts with http       → external URL, use as-is
+            // - contains slash         → already a path like uploads/profiles/file.jpg, use as-is
+            // - bare filename (c_2.jpg)→ use as-is, onerror handles broken paths
+            if (!empty($c['profile_image'])) {
+                $cImg = htmlspecialchars(trim($c['profile_image']));
+            } else {
+                $cImg = $cFallback;
+            }
           ?>
           <div class="sBooking-counselor-option"
-               data-id="<?= $c['counselor_id'] ?>"
-               onclick="selectCounselor(this, <?= $c['counselor_id'] ?>)">
+               data-id="<?= (int)$c['counselor_id'] ?>"
+               onclick="selectCounselor(this, <?= (int)$c['counselor_id'] ?>)">
             <img src="<?= $cImg ?>"
-                 onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($cName) ?>&background=113f67&color=fff'"
-                 alt="<?= $cName ?>">
+                 onerror="this.onerror=null;this.src='<?= htmlspecialchars($cFallback) ?>'"
+                 alt="<?= $cName ?>"
+                 loading="lazy">
             <div class="sBooking-counselor-info">
               <strong><?= $cName ?></strong>
               <span><?= $cDept ?></span>
             </div>
           </div>
           <?php endforeach; ?>
+          <?php if (empty($counselors)): ?>
+            <p style="font-size:13px;color:var(--text-muted);">No counselors available at this time.</p>
+          <?php endif; ?>
         </div>
       </div>
 
@@ -291,9 +337,9 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
   <div class="sBooking-upload-card">
     <h3>Upload Documents</h3>
     <p>You may upload supporting documents for your appointment.</p>
-    <input type="file" id="fileInput">
+    <input type="file" id="fileInput" onchange="document.getElementById('fileName').textContent = this.files[0]?.name || ''">
     <p id="fileName" style="font-size:12px; margin-top:8px;"></p>
-    <button class="sBooking-upload-btn">Upload File</button>
+    <button class="sBooking-upload-btn" onclick="handleUpload()">Upload File</button>
   </div>
 
 </div>
@@ -312,7 +358,7 @@ while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
 </div>
 
 <script>
-(function() {
+(function () {
     const saved = localStorage.getItem("theme") || "light";
     document.documentElement.setAttribute("data-theme", saved);
 })();
@@ -327,22 +373,24 @@ function toggleTheme() {
     html.setAttribute("data-theme", t);
     localStorage.setItem("theme", t);
 }
-function logout() { document.getElementById('logoutOverlay').classList.add('show'); }
-function closeLogout() { document.getElementById('logoutOverlay').classList.remove('show'); }
-function confirmLogout() { window.location.href = 'logout.php?role=student'; }
-document.getElementById('logoutOverlay').addEventListener('click', function(e) {
+function logout()       { document.getElementById('logoutOverlay').classList.add('show'); }
+function closeLogout()  { document.getElementById('logoutOverlay').classList.remove('show'); }
+function confirmLogout(){ window.location.href = 'logout.php?role=student'; }
+
+document.getElementById('logoutOverlay').addEventListener('click', function (e) {
     if (e.target === this) closeLogout();
 });
 document.addEventListener("click", e => {
     const menu = document.getElementById("settingsDropdown");
     const btn  = document.querySelector(".sidebar-settingsButton");
-    if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("show");
+    if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.classList.remove("show");
+    }
 });
 
 // ── State ──
 let selectedCounselorId = null;
 
-// Set min date to today
 document.addEventListener('DOMContentLoaded', () => {
     const today = new Date();
     const yyyy  = today.getFullYear();
@@ -383,7 +431,10 @@ function loadSlots(cid, date) {
     document.getElementById('timeDisplay').value = '';
 
     fetch(`sappointment.php?action=get_slots&counselor_id=${cid}&date=${date}`)
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) throw new Error('Server error');
+            return r.json();
+        })
         .then(json => {
             wrap.innerHTML = '';
             if (!json.slots || json.slots.length === 0) {
@@ -410,16 +461,17 @@ function loadSlots(cid, date) {
             wrap.appendChild(container);
         })
         .catch(() => {
-            wrap.innerHTML = '<em style="font-size:13px;color:var(--error,#e53e3e);">Failed to load slots.</em>';
+            wrap.innerHTML = '<em style="font-size:13px;color:var(--error,#e53e3e);">Failed to load slots. Please try again.</em>';
         });
 }
 
 function formatTime(t) {
-    let [h, m] = t.split(':');
-    const hr   = +h;
-    const ampm = hr >= 12 ? 'PM' : 'AM';
-    const disp = (hr % 12 || 12);
-    return `${disp}:${m} ${ampm}`;
+    const parts = (t || '').split(':');
+    const hr    = parseInt(parts[0], 10);
+    const min   = parts[1] || '00';
+    const ampm  = hr >= 12 ? 'PM' : 'AM';
+    const disp  = (hr % 12) || 12;
+    return `${disp}:${min} ${ampm}`;
 }
 
 function bookAppointment() {
@@ -439,6 +491,9 @@ function bookAppointment() {
         result.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please select a time slot.</span>"; return;
     }
 
+    const submitBtn = document.querySelector('.sBooking-submit');
+    if (submitBtn) submitBtn.disabled = true;
+
     const fd = new FormData();
     fd.append('action',       'book');
     fd.append('counselor_id', selectedCounselorId);
@@ -448,11 +503,16 @@ function bookAppointment() {
     fd.append('priority',     priority);
 
     fetch('sappointment.php', { method: 'POST', body: fd })
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) throw new Error('Server error');
+            return r.json();
+        })
         .then(json => {
+            if (submitBtn) submitBtn.disabled = false;
             result.innerHTML = json.success
                 ? "<span style='color:var(--success,#15803d);'>✔ Appointment submitted successfully!</span>"
-                : "<span style='color:var(--error,#e53e3e);'>❌ " + (json.message || 'Failed.') + "</span>";
+                : "<span style='color:var(--error,#e53e3e);'>❌ " + (json.message || 'Failed. Please try again.') + "</span>";
+
             if (json.success) {
                 document.querySelectorAll('.sBooking-counselor-option').forEach(o => o.classList.remove('selected'));
                 selectedCounselorId = null;
@@ -467,20 +527,31 @@ function bookAppointment() {
             }
         })
         .catch(() => {
-            result.innerHTML = "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong.</span>";
+            if (submitBtn) submitBtn.disabled = false;
+            result.innerHTML = "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong. Please try again.</span>";
         });
 }
 
+function handleUpload() {
+    const input = document.getElementById('fileInput');
+    if (!input.files || !input.files[0]) {
+        alert('Please select a file first.');
+        return;
+    }
+    alert('Upload functionality: connect to your upload endpoint here.');
+}
+
 async function checkReferralBadge() {
-  try {
-    const res  = await fetch('scheck_referral.php');
-    const data = await res.json();
-    const badge = document.getElementById('referralBadge');
-    if (badge) badge.style.display = data.unseen > 0 ? 'inline-block' : 'none';
-  } catch (e) {}
+    try {
+        const res  = await fetch('scheck_referral.php');
+        const data = await res.json();
+        const badge = document.getElementById('referralBadge');
+        if (badge) badge.style.display = data.unseen > 0 ? 'inline-block' : 'none';
+    } catch (e) {}
 }
 
 checkReferralBadge();
+setInterval(checkReferralBadge, 60000); 
 </script>
 </body>
 </html>
