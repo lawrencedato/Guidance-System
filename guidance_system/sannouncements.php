@@ -119,6 +119,7 @@ LEFT JOIN (
     WHERE student_id = $sid_int AND response = 'interested'
 ) my
 ON a.announcement_id = my.announcement_id
+WHERE a.is_archived = 0
 ORDER BY a.created_at DESC
 ");
 ?>
