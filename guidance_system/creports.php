@@ -68,6 +68,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
     echo json_encode($ok ? ['success' => true] : ['success' => false, 'message' => 'Failed to save.']);
     exit;
 }
+
+// ── Fetch sent notes for this counselor ──
+$sentNotesRes = $conn->query("
+    SELECT sn.note_id, sn.notes, sn.created_at,
+           CONCAT(s.first_name, ' ', s.last_name) AS student_name,
+           s.student_id, s.course, s.year_level
+    FROM session_notes sn
+    JOIN students s ON sn.student_id = s.student_id
+    WHERE sn.counselor_id = '$cid'
+      AND sn.is_sent = 1
+    ORDER BY sn.created_at DESC
+");
+$sentNotes = [];
+while ($r = $sentNotesRes->fetch_assoc()) $sentNotes[] = $r;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -122,9 +136,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
 <header class="topbar">
   <div class="topbar-left">
     <h2>Session Notes</h2>
-    <p class="topbar-muted">
-      Write and send confidential session notes to students during or after an appointment.
-    </p>
   </div>
   <div class="topbar-right">
     <div class="topbar-icon" onclick="toggleDropdown('notifDropdown', event)">
@@ -154,53 +165,143 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
 <!-- MAIN -->
 <main class="cReports-main">
   <div class="cReports-center">
+
+    <!-- ── CARD 1: WRITE NOTE ── -->
+    <div class="cReports-card" style="display:flex; flex-direction:column; gap:32px;">
+      <div>
+        <h3 style="margin:0 0 4px;">Write Session Notes</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin:0 0 18px;">Send confidential notes directly to your student.</p>
+
+        <div class="cReports-idRow">
+          <input
+            type="number"
+            class="cReports-idInput"
+            id="studentIdInput"
+            placeholder="Enter Student ID (e.g. 220001)"
+            min="1"
+            oninput="lookupStudent(this.value)"
+          >
+        </div>
+
+        <div class="cReports-notFound" id="notFound">
+          ⚠ No student found with that ID.
+        </div>
+
+        <div class="cReports-studentPreview" id="studentPreview">
+          <img class="cReports-studentAvatar" id="studentAvatar" src="" alt="avatar">
+          <div class="cReports-studentInfo">
+            <strong id="studentName"></strong>
+            <span id="studentMeta"></span>
+          </div>
+        </div>
+
+        <textarea
+          class="cReports-textarea"
+          id="notesTextarea"
+          placeholder="Write session notes here..."
+        ></textarea>
+
+        <button class="cReports-btn" id="sendBtn" onclick="saveNotes()" disabled>
+          <i class="fa fa-paper-plane"></i> Send to Student
+        </button>
+
+        <div class="cReports-status" id="notesStatus"></div>
+      </div>
+    </div>
+
+    <!-- ── CARD 2: SENT NOTES ── -->
     <div class="cReports-card">
 
-      <h3>Write Session Notes</h3>
-      <p>Send confidential notes directly to your student</p>
-
-      <!-- Student ID Input -->
-      <div class="cReports-idRow">
-        <input
-          type="number"
-          class="cReports-idInput"
-          id="studentIdInput"
-          placeholder="Enter Student ID (e.g. 220001)"
-          min="1"
-          oninput="lookupStudent(this.value)"
-        >
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="margin:0; display:flex; align-items:center; gap:8px;">
+          Sent Notes
+        </h2>
+        <button onclick="toggleSentNotes()" id="toggleSentBtn" class="cReports-toggle-btn">
+          <i class="fa fa-chevron-down"></i> Show
+        </button>
       </div>
 
-      <!-- Not Found Message -->
-      <div class="cReports-notFound" id="notFound">
-        ⚠ No student found with that ID.
+      <div id="sentNotesWrapper" style="display:none; margin-top:16px;">
+        <p style="font-size:13px; color:var(--text-muted); margin:0 0 12px;">
+          <?= count($sentNotes) ?> note<?= count($sentNotes) !== 1 ? 's' : '' ?> sent
+        </p>
+
+        <?php if (!empty($sentNotes)): ?>
+          <ul class="cReports-notes-list">
+            <?php foreach ($sentNotes as $sn):
+              $ref       = 'SN-' . str_pad($sn['note_id'], 5, '0', STR_PAD_LEFT);
+              $snDate    = date('M d, Y', strtotime($sn['created_at']));
+              $snTime    = date('g:i A',  strtotime($sn['created_at']));
+              $preview   = mb_strimwidth(strip_tags($sn['notes']), 0, 120, '…');
+              $jsRef     = json_encode($ref);
+              $jsStudent = json_encode($sn['student_name']);
+              $jsMeta    = json_encode($sn['year_level'] . ' — ' . $sn['course']);
+              $jsDate    = json_encode(date('F d, Y g:i A', strtotime($sn['created_at'])));
+              $jsNotes   = json_encode($sn['notes']);
+            ?>
+            <li class="cReports-notes-item">
+
+              <div class="cReports-notes-thumb">
+                <i class="fa fa-file-medical"></i>
+              </div>
+
+              <div class="cReports-notes-body">
+                <p class="cReports-notes-ref"><?= $ref ?></p>
+                <p class="cReports-notes-student">
+                  <i class="fa fa-user-graduate"></i>
+                  <?= htmlspecialchars($sn['student_name']) ?>
+                  &mdash; <?= htmlspecialchars($sn['year_level']) ?> &bull; <?= htmlspecialchars($sn['course']) ?>
+                </p>
+                <p class="cReports-notes-preview"><?= htmlspecialchars($preview) ?></p>
+                <div class="cReports-notes-meta">
+                  <span><i class="fa fa-calendar"></i><?= $snDate ?></span>
+                  <span><i class="fa fa-clock"></i><?= $snTime ?></span>
+                </div>
+              </div>
+
+              <div class="cReports-notes-actions">
+                <button class="cReports-notes-btn-view"
+                  data-ref=<?= $jsRef ?>
+                  data-student=<?= $jsStudent ?>
+                  data-meta='<?= htmlspecialchars($sn['year_level'] . ' — ' . $sn['course'], ENT_QUOTES) ?>'
+                  data-date=<?= $jsDate ?>
+                  data-notes=<?= $jsNotes ?>
+                  onclick="viewNote(this)">
+                  <i class="fa fa-eye"></i> View
+                </button>
+              </div>
+
+            </li>
+            <?php endforeach; ?>
+          </ul>
+
+        <?php else: ?>
+          <div class="cReports-notes-empty">
+            <i class="fa fa-notes-medical"></i>
+            <p>No session notes sent yet.</p>
+          </div>
+        <?php endif; ?>
       </div>
-
-      <!-- Student Preview -->
-      <div class="cReports-studentPreview" id="studentPreview">
-        <img class="cReports-studentAvatar" id="studentAvatar" src="" alt="avatar">
-        <div class="cReports-studentInfo">
-          <strong id="studentName"></strong>
-          <span id="studentMeta"></span>
-        </div>
-      </div>
-
-      <!-- Notes Textarea -->
-      <textarea
-        class="cReports-textarea"
-        id="notesTextarea"
-        placeholder="Write session notes here..."
-      ></textarea>
-
-      <button class="cReports-btn" id="sendBtn" onclick="saveNotes()" disabled>
-        <i class="fa fa-paper-plane"></i> Send to Student
-      </button>
-
-      <div class="cReports-status" id="notesStatus"></div>
 
     </div>
+    <!-- ── END CARD 2 ── -->
+
   </div>
 </main>
+
+<!-- VIEW NOTE MODAL -->
+<div class="cReports-notes-modal-overlay" id="viewNoteModal" onclick="closeViewNoteModal(event)">
+  <div class="cReports-notes-modal-box">
+    <button class="cReports-notes-modal-close" onclick="closeViewNoteModalDirect()">&#x2715;</button>
+    <p class="cReports-notes-modal-ref" id="vnRef"></p>
+    <h3 class="cReports-notes-modal-title" id="vnStudent"></h3>
+    <p class="cReports-notes-modal-message" id="vnMeta" style="font-size:12px; margin:0;"></p>
+    <p class="cReports-notes-modal-message" id="vnNotes"></p>
+    <div class="cReports-notes-modal-footer">
+      <span id="vnDate"></span>
+    </div>
+  </div>
+</div>
 
 <!-- Logout Modal -->
 <div class="logout-overlay" id="logoutOverlay">
@@ -326,6 +427,7 @@ function saveNotes() {
         document.getElementById('notFound').classList.remove('visible');
         validStudent     = false;
         sendBtn.disabled = true;
+        setTimeout(() => location.reload(), 1200);
       } else {
         status.innerHTML = `<span style='color:#fca5a5;'>❌ ${json.message}</span>`;
       }
@@ -335,6 +437,33 @@ function saveNotes() {
       sendBtn.innerHTML = '<i class="fa fa-paper-plane"></i> Send to Student';
       status.innerHTML  = "<span style='color:#fca5a5;'>❌ Something went wrong.</span>";
     });
+}
+
+// ── Toggle Sent Notes ──
+function toggleSentNotes() {
+  const wrapper  = document.getElementById('sentNotesWrapper');
+  const btn      = document.getElementById('toggleSentBtn');
+  const isHidden = wrapper.style.display === 'none';
+  wrapper.style.display = isHidden ? 'block' : 'none';
+  btn.innerHTML = isHidden
+    ? '<i class="fa fa-chevron-up"></i> Hide'
+    : '<i class="fa fa-chevron-down"></i> Show';
+}
+
+// ── View Note Modal ──
+function viewNote(btn) {
+  document.getElementById('vnRef').textContent     = btn.dataset.ref;
+  document.getElementById('vnStudent').textContent = btn.dataset.student;
+  document.getElementById('vnMeta').textContent    = btn.dataset.meta;
+  document.getElementById('vnNotes').textContent   = btn.dataset.notes;
+  document.getElementById('vnDate').textContent    = '📅 ' + btn.dataset.date;
+  document.getElementById('viewNoteModal').classList.add('show');
+}
+function closeViewNoteModalDirect() {
+  document.getElementById('viewNoteModal').classList.remove('show');
+}
+function closeViewNoteModal(e) {
+  if (e.target === document.getElementById('viewNoteModal')) closeViewNoteModalDirect();
 }
 </script>
 </body>
