@@ -758,6 +758,11 @@ function icon_table(string $t): string {
 </div>
 
 <script>
+(function() {
+  const saved = localStorage.getItem("theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
+})();
+
 function toggleSettingsMenu(e) {
   e.stopPropagation();
   document.getElementById("settingsDropdown").classList.toggle("show");
@@ -765,7 +770,9 @@ function toggleSettingsMenu(e) {
 
 function toggleTheme() {
   const html = document.documentElement;
-  html.setAttribute("data-theme", html.getAttribute("data-theme") === "light" ? "dark" : "light");
+  const newTheme = html.getAttribute("data-theme") === "light" ? "dark" : "light";
+  html.setAttribute("data-theme", newTheme);
+  localStorage.setItem("theme", newTheme);
 }
 
 function logout() { document.getElementById('logoutOverlay').classList.add('show'); }
