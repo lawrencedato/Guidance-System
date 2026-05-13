@@ -10308,6 +10308,150 @@ body:has(.cStudentModal.show) .sidebar {
   font-size: 13px;
 }
 
+/* ═══════════════════════════════════════
+   cProfile — Avatar section layout
+═══════════════════════════════════════ */
+.cProfile-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════
+   cProfile — Remove Photo Button
+═══════════════════════════════════════ */
+.cProfile-remove-btn {
+  background: none;
+  border: 1px solid #e53e3e;
+  color: #e53e3e;
+  border-radius: 8px;
+  padding: 5px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: 0.2s ease;
+  width: 110px;
+  font-family: inherit;
+}
+
+.cProfile-remove-btn:hover {
+  background: #e53e3e;
+  color: #fff;
+}
+
+.cProfile-remove-btn--hidden {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════
+   cProfile — Dark mode: card & form
+═══════════════════════════════════════ */
+[data-theme="dark"] .cProfile-card {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .cProfile-card::before {
+  background: radial-gradient(circle at top left, rgba(73, 136, 196, 0.12), transparent 60%);
+}
+
+[data-theme="dark"] .cProfile-header h3 {
+  color: #e2eaf4;
+}
+
+[data-theme="dark"] .cProfile-muted {
+  color: #8ba4be;
+}
+
+/* ═══════════════════════════════════════
+   cProfile — Dark mode: form inputs
+═══════════════════════════════════════ */
+[data-theme="dark"] .cProfile-form .form-group label {
+  color: #c4d6e8;
+}
+
+[data-theme="dark"] .cProfile-form .form-group input {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #dce8f5;
+}
+
+[data-theme="dark"] .cProfile-form .form-group input::placeholder {
+  color: #4a6680;
+}
+
+[data-theme="dark"] .cProfile-form .form-group input:focus {
+  border-color: #4988C4;
+  box-shadow: 0 0 0 4px rgba(73, 136, 196, 0.2);
+}
+
+[data-theme="dark"] .cProfile-form .form-group input[readonly] {
+  background: rgba(255, 255, 255, 0.03);
+  color: #5c7d9a;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ═══════════════════════════════════════
+   cProfile — Dark mode: save button
+═══════════════════════════════════════ */
+[data-theme="dark"] .cProfile-saveBtn {
+  background: linear-gradient(135deg, #0d3254, #3a7ab8);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .cProfile-saveBtn:hover {
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* ═══════════════════════════════════════
+   cProfile — Dark mode: remove photo button
+═══════════════════════════════════════ */
+[data-theme="dark"] .cProfile-remove-btn {
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .cProfile-remove-btn:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: #f87171;
+  color: #fecaca;
+}
+
+/* ═══════════════════════════════════════
+   cProfile — Dark mode: avatar border
+═══════════════════════════════════════ */
+[data-theme="dark"] .cProfile-avatar img {
+  border-color: rgba(73, 136, 196, 0.35);
+}
+
+/* ═══════════════════════════════════════
+   cProfile — Dark mode: status tags
+═══════════════════════════════════════ */
+[data-theme="dark"] .cProfile-status .tag.info {
+  background: rgba(73, 136, 196, 0.15);
+  color: #93c5fd;
+  border-color: rgba(73, 136, 196, 0.25);
+}
+
+[data-theme="dark"] .cProfile-status .tag.warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+/* ═══════════════════════════════════════
+   cProfile — Dark mode: main background
+═══════════════════════════════════════ */
+[data-theme="dark"] .cProfile-main {
+  background: var(--bg);
+}
+
 /* ══════════════════════════════════════
    cHISTORY — MAIN LAYOUT
 ══════════════════════════════════════ */

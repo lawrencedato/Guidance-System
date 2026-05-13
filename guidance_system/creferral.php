@@ -313,7 +313,6 @@ $history = $historyRes ? $historyRes->fetch_all(MYSQLI_ASSOC) : [];
       </button>
       <div id="cReferralResult"></div>
     </div>
-      <!-- ── REFERRAL HISTORY (sent-notes style) ── -->
       <div class="cReferral-card">
 
         <div class="cReferral-history-header">

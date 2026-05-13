@@ -133,7 +133,7 @@ while ($row = $studentsRes->fetch_assoc()) $students[] = $row;
       <span class="sidebar-logoText">UNITYCARE</span>
     </div>
     <div class="sidebar-settings">
-      <button class="sidebar-settingsButton" onclick="toggleSettings()">
+      <button class="sidebar-settingsButton" onclick="toggleSettings(event)">
         <i class="fa fa-gear"></i>
       </button>
       <div class="sidebar-settingsDropdown" id="settingsMenu">
@@ -643,7 +643,8 @@ function closeStudentModal() {
 /* ═══════════════════════════════════════
    SETTINGS / THEME / LOGOUT / DROPDOWNS
 ═══════════════════════════════════════ */
-function toggleSettings() {
+function toggleSettings(e) {
+  e.stopPropagation();
   document.getElementById("settingsMenu").classList.toggle("show");
 }
 
