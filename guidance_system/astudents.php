@@ -173,14 +173,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit;
         }
 
-        $sql = "INSERT INTO students (student_id, first_name, last_name, email, gender, birthday, year_level, course, archived)
-                VALUES ($student_id, '$first_name', '$last_name', '$email', '$gender', '$birthday', '$year_level', '$course', 0)";
+        // Use direct INSERT instead of stored procedure to avoid multi-result-set issues
+        $stmt = $conn->prepare("
+            INSERT INTO students (student_id, first_name, last_name, email, gender, birthday, year_level, course, archived)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+        ");
+        $stmt->bind_param("isssssss",
+            $student_id,
+            $first_name,
+            $last_name,
+            $email,
+            $gender,
+            $birthday,
+            $year_level,
+            $course
+        );
+        $ok = $stmt->execute();
+        $err = $stmt->error;
+        $stmt->close();
 
-        if ($conn->query($sql)) {
-            echo json_encode(["success" => true, "message" => "Student added successfully."]);
-        } else {
-            echo json_encode(["success" => false, "message" => "Failed to add student: " . $conn->error]);
-        }
+        echo $ok
+            ? json_encode(["success" => true,  "message" => "Student added successfully."])
+            : json_encode(["success" => false, "message" => "Failed to add student: " . $err]);
         exit;
     }
 
@@ -839,10 +853,8 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
         button:disabled { opacity: 0.4; cursor: not-allowed !important; transform: none !important; }
 
         /* ============================================================
-           CHECKBOX & BULK SELECTION — NEW STYLES
+           CHECKBOX & BULK SELECTION
            ============================================================ */
-
-        /* Custom checkbox style */
         .aStudents-cb {
             width: 16px;
             height: 16px;
@@ -851,7 +863,6 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
             flex-shrink: 0;
         }
 
-        /* Header checkbox cell */
         th.aStudents-cb-col,
         td.aStudents-cb-col {
             width: 40px;
@@ -860,7 +871,6 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
             padding-right: 4px !important;
         }
 
-        /* Highlight selected rows */
         tr.row-selected {
             background: rgba(73,136,196,0.08) !important;
         }
@@ -1100,7 +1110,7 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
             </div>
         </div>
 
-        <!-- ── Bulk Action Toolbar (shown when rows are selected) ── -->
+        <!-- ── Bulk Action Toolbar ── -->
         <div class="aStudents-bulk-toolbar" id="bulkToolbar">
             <div class="bulk-toolbar-count">
                 <span id="bulkCount">0</span> student(s) selected
@@ -1118,7 +1128,6 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
             <table class="aStudents-table">
                 <thead>
                     <tr>
-                        <!-- Select All checkbox in header -->
                         <th class="aStudents-cb-col">
                             <input type="checkbox" class="aStudents-cb" id="selectAllCb" title="Select all on this page" onchange="toggleSelectAll(this)">
                         </th>
@@ -1571,7 +1580,6 @@ document.addEventListener('click', e => {
 });
 
 // ================= SELECTION STATE =================
-// Tracks selected student IDs across all pages
 let selectedStudentIds = new Set();
 
 function updateBulkToolbar() {
@@ -1710,7 +1718,6 @@ function renderPage(page) {
     syncSelectAllCheckbox();
     updateBulkToolbar();
 
-    // Show/hide pagination
     const wrapper = document.getElementById('paginationWrapper');
     if (total <= PAGE_SIZE) {
         wrapper.style.display = 'none';
@@ -2131,10 +2138,8 @@ function openPromoteSelectedModal() {
         return;
     }
 
-    // Build selected student data from allStudentsData
     const selectedData = allStudentsData.filter(s => selectedStudentIds.has(String(s.student_id)));
 
-    // Populate the list
     const list = document.getElementById('promoteSelectedList');
     list.innerHTML = '';
     selectedData.forEach(s => {

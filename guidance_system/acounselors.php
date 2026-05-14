@@ -67,14 +67,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hashed = password_hash($password, PASSWORD_BCRYPT);
         $hp     = $conn->real_escape_string($hashed);
 
-        $ok = $conn->query(
-            "INSERT INTO counselors (counselor_id, first_name, last_name, email, department, password, status, archived)
-             VALUES ('$counselor_id', '$fn', '$ln', '$em', '$dept', '$hp', 'Active', 0)"
-        );
+       $stmt = $conn->prepare("CALL add_counselor(?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssss", $counselor_id, $fn, $ln, $em, $dept, $hp);
+        $ok  = $stmt->execute();
+        $err = $stmt->error;
+        $stmt->close();
+
+        // flush extra result sets MariaDB returns after CALL
+        while ($conn->more_results()) {
+            $conn->next_result();
+        }
 
         echo $ok
             ? json_encode(["success" => true,  "message" => "Counselor account created.", "counselor_id" => $counselor_id])
-            : json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
+            : json_encode(["success" => false, "message" => "Database error: " . $err]);
         exit;
     }
 
