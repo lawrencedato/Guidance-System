@@ -73,11 +73,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
         if (!$lock || $lock->num_rows === 0) throw new Exception("Appointment no longer available or already handled.");
 
         $reasonSql = $status === 'Rejected' ? "'$rejectReason'" : 'NULL';
-        $reason = $status === 'Rejected' ? $rejectReason : null;
-        $stmt = $conn->prepare("CALL update_appointment_status(?, ?, ?, ?)");
-        $stmt->bind_param("isss", $apptId, $status, $cid, $reason);
-        $ok = $stmt->execute();
-        $stmt->close();
+        $ok = $conn->query("
+            UPDATE appointments
+            SET status = '$status',
+                rejection_reason = $reasonSql
+            WHERE appointment_id = $apptId
+              AND counselor_id = '$cid'
+              AND status = 'Pending'
+        ");
         if (!$ok || $conn->affected_rows === 0) throw new Exception("Could not update. Try again.");
         $conn->commit();
         echo json_encode(['success' => true]);
