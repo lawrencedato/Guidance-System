@@ -498,6 +498,28 @@ function stressBar($level) {
 $_totalReportUnseen = $_totalReportUnseen ?? 0;
 ?>
 <!-- SIDEBAR -->
+<?php if (!empty($_SESSION['is_archived'])): ?>
+<aside class="sidebar">
+  <div class="sidebar-logoBar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="logo">
+      <span class="sidebar-logoText">UNITYCARE</span>
+    </div>
+    <div class="sidebar-settings">
+      <button class="sidebar-settingsButton" onclick="toggleSettingsMenu(event)">
+        <i class="fa fa-gear"></i>
+      </button>
+      <div class="sidebar-settingsDropdown" id="settingsDropdown">
+        <button onclick="toggleTheme()"><i class="fa fa-moon"></i> Theme</button>
+        <button onclick="logout()"><i class="fa fa-right-from-bracket"></i> Logout</button>
+      </div>
+    </div>
+  </div>
+  <nav class="sidebar-menu">
+    <a href="shistory.php" class="active"><i class="fa fa-clock"></i> History</a>
+  </nav>
+</aside>
+<?php else: ?>
 <aside class="sidebar">
   <div class="sidebar-logoBar">
     <div class="sidebar-logo">
@@ -516,34 +538,28 @@ $_totalReportUnseen = $_totalReportUnseen ?? 0;
       </div>
     </div>
   </div>
-
   <nav class="sidebar-menu">
     <a href="dashboard.php"><i class="fa fa-th-large"></i> Dashboard</a>
-
     <p class="sidebar-title">SERVICES</p>
     <a href="sappointment.php"><i class="fa fa-calendar"></i> Book Appointment</a>
     <a href="sconcerns.php"><i class="fa fa-headset"></i> Submit Concern</a>
     <a href="swellness.php"><i class="fa fa-heart"></i> Wellness Check</a>
-    <a href="sreferral.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sreferral.php' ? 'active' : '' ?>">
-            <i class="fa fa-route"></i> Referral
-            <span class="referral-badge" id="referralBadge" style="display:none;"></span>
-        </a>
-
+    <a href="sreferral.php"><i class="fa fa-route"></i> Referral
+      <span class="referral-badge" id="referralBadge" style="display:none;"></span>
+    </a>
     <p class="sidebar-title">UPDATES</p>
     <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
-
     <p class="sidebar-title">RECORDS</p>
-    <a href="sreports.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sreports.php' ? 'active' : '' ?>">
-  <i class="fa fa-ticket"></i> Reports
-  <?php if ($_totalReportUnseen > 0): ?>
-    <span class="referral-badge" style="display:inline-block;"></span>
-  <?php endif; ?>
-</a>
-
+    <a href="sreports.php"><i class="fa fa-ticket"></i> Reports
+      <?php if ($_totalReportUnseen > 0): ?>
+        <span class="referral-badge" style="display:inline-block;"></span>
+      <?php endif; ?>
+    </a>
     <p class="sidebar-title">SYSTEM</p>
     <a href="sfeedback.php"><i class="fa fa-comment"></i> Feedback</a>
   </nav>
 </aside>
+<?php endif; ?>
 
 <!-- TOPBAR -->
 <header class="topbar">

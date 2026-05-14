@@ -85,6 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_stu
     $res = $conn->query("
         SELECT s.student_id, s.first_name, s.last_name,
                s.email, s.course, s.year_level,
+               sp.profile_image,
                sp.emergency_contact_name                 AS emergency_name,
                sp.relationship_to_emergency_contact      AS emergency_relation,
                sp.emergency_contact_number               AS emergency_number,
@@ -291,11 +292,24 @@ while ($row = $studentsRes->fetch_assoc()) $students[] = $row;
            data-status="<?= $status ?>"
            data-last-session="<?= $lastSessRaw ?>">
         <div class="cStudentList-info">
-          <div class="cStudentList-avatar"><?= $initials ?></div>
+          <div class="cStudentList-avatar" style="overflow:hidden;padding:0;">
+            <?php
+              $cardImg = null;
+              $imgRes = $conn->query("SELECT profile_image FROM student_profiles WHERE student_id='{$s['student_id']}' LIMIT 1");
+              $imgRow = $imgRes ? $imgRes->fetch_assoc() : null;
+              $cardImg = $imgRow['profile_image'] ?? null;
+            ?>
+            <?php if ($cardImg && file_exists($cardImg)): ?>
+              <img src="<?= htmlspecialchars($cardImg) ?>" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
+            <?php else: ?>
+              <?= $initials ?>
+            <?php endif; ?>
+          </div>
           <div class="cStudentList-content">
             <div class="cStudentList-left">
               <div class="cStudentList-nameRow">
                 <h3><?= $sName ?></h3>
+                <span style="font-size:12px;color:var(--text-muted);font-weight:600;">#<?= $s['student_id'] ?></span>
                 <button class="btn-small" onclick="openStudentModal(<?= $s['student_id'] ?>)">View Profile</button>
               </div>
               <p><?= htmlspecialchars($s['course']) ?> • <?= htmlspecialchars($s['year_level']) ?></p>
@@ -599,8 +613,13 @@ function openStudentModal(studentId) {
       }[mood] || 'info';
 
       body.innerHTML = `
-        <div class="cStudentModal-profile">
-          <div class="cStudentModal-avatar">${initials}</div>
+      <div class="cStudentModal-profile">
+        <div class="cStudentModal-avatar" style="overflow:hidden;">
+          ${s.profile_image
+            ? `<img src="${s.profile_image}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+            : initials
+          }
+        </div>
           <div class="cStudentModal-profileText">
             <div class="cStudentModal-nameRow">
               <h3>${s.first_name} ${s.last_name}</h3>

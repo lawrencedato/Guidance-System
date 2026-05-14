@@ -28,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login
     $lockKey     = 'lock_'     . md5($email);
     $attemptsKey = 'attempts_' . md5($email);
 
-    // ---------- CHECK LOCKOUT ----------
     if (isset($_SESSION[$lockKey])) {
         $remaining = $_SESSION[$lockKey] - time();
         if ($remaining > 0) {
@@ -43,18 +42,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login
         unset($_SESSION[$lockKey], $_SESSION[$attemptsKey]);
     }
 
-    // =============================================
-    // CALL find_user_by_email procedure
-    // =============================================
     $stmt = $conn->prepare("CALL find_user_by_email(?)");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
     $user   = $result->fetch_assoc();
     $stmt->close();
-    $conn->next_result(); // flush multi-result from stored proc
+    $conn->next_result();
 
-    // ---------- HELPER: handle failed attempt ----------
     function handleFailedAttempt($attemptsKey, $lockKey, $lockoutSecs, $maxAttempts) {
         $_SESSION[$attemptsKey] = ($_SESSION[$attemptsKey] ?? 0) + 1;
         $attempts = $_SESSION[$attemptsKey];
@@ -71,13 +66,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login
                 "left" => $left, "message" => "Invalid email or password. {$left} attempt(s) remaining."];
     }
 
-    // ---------- EMAIL NOT FOUND ----------
     if (!$user) {
         echo json_encode(handleFailedAttempt($attemptsKey, $lockKey, $lockoutSecs, $maxAttempts));
         exit;
     }
 
-    // ---------- CHECK STATUS ----------
     if (strtolower($user['status']) !== 'active') {
         $messages = [
             'student'   => "Account not yet activated. Please activate your account first.",
@@ -91,7 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login
         exit;
     }
 
-    // ---------- VERIFY PASSWORD ----------
     if (!password_verify($password, $user['password'])) {
         echo json_encode(handleFailedAttempt($attemptsKey, $lockKey, $lockoutSecs, $maxAttempts));
         exit;
@@ -104,25 +96,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login
     $_SESSION['user_name']  = $user['full_name'];
     $_SESSION['user_email'] = $user['email'];
     $_SESSION['role']       = $user['role'];
+    $_SESSION['is_archived'] = 0;
+
+    $redirect = $user['redirect'];
 
     if ($user['role'] === 'student') {
         $_SESSION['is_temp_password'] = (int) $user['is_temp_password'];
+
+        $archCheck = $conn->query(
+            "SELECT archived FROM students WHERE student_id = '{$user['user_id']}' LIMIT 1"
+        );
+        $archRow = $archCheck ? $archCheck->fetch_assoc() : null;
+        $_SESSION['is_archived'] = ($archRow && $archRow['archived'] == 1) ? 1 : 0;
+
+        if ($_SESSION['is_archived']) {
+            $redirect = 'shistory.php';
+        }
     }
 
     echo json_encode([
         "success"  => true,
         "message"  => "Login successful.",
-        "redirect" => $user['redirect']
+        "redirect" => $redirect
     ]);
-    exit;
+    exit; // <-- closes the entire POST block
 }
 
 // ================= REDIRECT IF ALREADY LOGGED IN =================
+// This must be OUTSIDE the POST block
 if (isset($_SESSION['role'])) {
     switch ($_SESSION['role']) {
-        case 'student':   header("Location: dashboard.php");  exit;
-        case 'counselor': header("Location: counselor.php");  exit;
-        case 'admin':     header("Location: admin.php");      exit;
+        case 'student':
+            $go = !empty($_SESSION['is_archived']) ? 'shistory.php' : 'dashboard.php';
+            header("Location: $go");
+            exit;
+        case 'counselor': header("Location: counselor.php"); exit;
+        case 'admin':     header("Location: admin.php");     exit;
     }
 }
 ?>

@@ -11,6 +11,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     exit;
 }
 
+// archived students can only view history
+if (!empty($_SESSION['is_archived'])) {
+    header("Location: shistory.php");
+    exit;
+}
+
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $sid  = (int)$_SESSION['user_id'];
 require_once 'scheck_reports_badge.php';

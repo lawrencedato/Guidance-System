@@ -10,6 +10,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     header("Location: slogin.php");
     exit;
 }
+
+// archived students can only view history
+if (!empty($_SESSION['is_archived'])) {
+    header("Location: shistory.php");
+    exit;
+}
  
 // ===== DB CONNECTION =====
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");

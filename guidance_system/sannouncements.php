@@ -6,12 +6,13 @@ mysqli_report(MYSQLI_REPORT_OFF);
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'Unauthorized']);
-        exit;
-    }
     header("Location: slogin.php");
+    exit;
+}
+
+// archived students can only view history
+if (!empty($_SESSION['is_archived'])) {
+    header("Location: shistory.php");
     exit;
 }
 

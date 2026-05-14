@@ -31,14 +31,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'lookup_
     header('Content-Type: application/json');
     $sid = (int)($_GET['student_id'] ?? 0);
     if (!$sid) { echo json_encode(['found' => false]); exit; }
-    $res = $conn->query("SELECT first_name, last_name, course, year_level FROM students WHERE student_id='$sid' AND archived=0 LIMIT 1");
-    $st  = $res ? $res->fetch_assoc() : null;
+
+    $res = $conn->query("
+        SELECT s.first_name, s.last_name, s.course, s.year_level, sp.profile_image
+        FROM students s
+        LEFT JOIN student_profiles sp ON sp.student_id = s.student_id
+        WHERE s.student_id = '$sid' AND s.archived = 0
+        LIMIT 1
+    ");
+    $st = $res ? $res->fetch_assoc() : null;
+
     if ($st) {
         echo json_encode([
-            'found'      => true,
-            'name'       => $st['first_name'] . ' ' . $st['last_name'],
-            'course'     => $st['course'],
-            'year_level' => $st['year_level']
+            'found'         => true,
+            'name'          => $st['first_name'] . ' ' . $st['last_name'],
+            'course'        => $st['course'],
+            'year_level'    => $st['year_level'],
+            'profile_image' => $st['profile_image'] ?? null
         ]);
     } else {
         echo json_encode(['found' => false]);
@@ -374,8 +383,9 @@ function lookupStudent(val) {
         if (json.found) {
           document.getElementById('studentName').textContent = json.name;
           document.getElementById('studentMeta').textContent = json.year_level + ' — ' + json.course;
-          document.getElementById('studentAvatar').src =
-            'https://ui-avatars.com/api/?name=' + encodeURIComponent(json.name) + '&background=113f67&color=fff';
+          document.getElementById('studentAvatar').src = json.profile_image
+          ? json.profile_image
+          : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(json.name) + '&background=113f67&color=fff';
           preview.classList.add('visible');
           notFound.classList.remove('visible');
           validStudent     = true;

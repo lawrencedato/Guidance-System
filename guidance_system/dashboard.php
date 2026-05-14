@@ -11,6 +11,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     exit;
 }
 
+// archived students can only view history
+if (!empty($_SESSION['is_archived'])) {
+    header("Location: shistory.php");
+    exit;
+}
+
 // ===== HANDLE PASSWORD RESET AJAX =====
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset_password') {
     header('Content-Type: application/json');

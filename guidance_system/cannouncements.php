@@ -87,25 +87,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'restore_announcement') {
     exit;
 }
 
-// ── EDIT ANNOUNCEMENT ──
-if (isset($_POST['action']) && $_POST['action'] === 'edit_announcement') {
-    header('Content-Type: application/json');
-    $aid     = (int)($_POST['announcement_id'] ?? 0);
-    $title   = $conn->real_escape_string($_POST['title']   ?? '');
-    $message = $conn->real_escape_string($_POST['message'] ?? '');
-    if (!$aid || !$title || !$message) {
-        echo json_encode(['success' => false, 'message' => 'Missing fields.']); exit;
-    }
-    $ok = $conn->query(
-        "UPDATE announcements SET title='$title', message='$message'
-         WHERE announcement_id=$aid AND counselor_id=$cid"
-    );
-    echo json_encode([
-        'success' => ($conn->affected_rows > 0 || $ok),
-        'message' => $ok ? '' : $conn->error
-    ]);
-    exit;
-}
 
 // ── LOAD ANNOUNCEMENTS ──
 $myAnnouncements = [];

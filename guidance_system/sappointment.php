@@ -9,6 +9,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     exit;
 }
 
+// archived students can only view history
+if (!empty($_SESSION['is_archived'])) {
+    header("Location: shistory.php");
+    exit;
+}
+
 // ── DB Connection ──
 $conn = @new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 if ($conn->connect_error) {
@@ -165,7 +171,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book'
 
         $newAppointmentId = $conn->insert_id;
 
-        // ── Insert file record into appointment_files if a file was uploaded ──
         if (!empty($destPath)) {
             $safeFileName = $conn->real_escape_string(basename($destPath));
             $safeFilePath = $conn->real_escape_string($destPath);
@@ -180,7 +185,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book'
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
         $conn->rollback();
-        // Remove uploaded file if transaction failed
         if (!empty($destPath) && file_exists($destPath)) {
             unlink($destPath);
         }
