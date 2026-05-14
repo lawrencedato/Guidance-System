@@ -26046,3 +26046,993 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
 [data-theme="dark"] .sReports-card { background: var(--card); border-color: var(--border); }
 [data-theme="dark"] .sReports-ticket-box { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #dce8f5; }
 [data-theme="dark"] .sReports-exportBtn  { background: linear-gradient(135deg,#0d3254,#3a7ab8); box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+
+
+/* ==========================================================
+   RESPONSIVE STYLES
+   Breakpoints:
+     xl  : ≤ 1280px
+     lg  : ≤ 1024px
+     md  : ≤ 768px
+     sm  : ≤ 480px
+     xs  : ≤ 360px
+   ========================================================== */
+
+/* ----------------------------------------------------------
+   SIDEBAR — collapsible hamburger pattern
+   ---------------------------------------------------------- */
+
+/* Hamburger button (hidden on desktop) */
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1200;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.sidebar-toggle span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: var(--transition);
+}
+
+.sidebar-toggle:hover {
+  background: var(--hover);
+}
+
+/* Overlay backdrop */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.sidebar-backdrop.show {
+  opacity: 1;
+}
+
+/* ----------------------------------------------------------
+   XL  ≤ 1280px — slight compression
+   ---------------------------------------------------------- */
+@media (max-width: 1280px) {
+  .aDashboard-chart-grid,
+  .aReports-chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .aReports-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sBooking-columns {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sBooking-col-divider:last-child {
+    grid-column: 1 / -1;
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+
+  .sDashboard-content {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cStudentModal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ----------------------------------------------------------
+   LG  ≤ 1024px — sidebar becomes overlay
+   ---------------------------------------------------------- */
+@media (max-width: 1024px) {
+
+  /* Show hamburger */
+  .sidebar-toggle {
+    display: flex;
+  }
+
+  /* Sidebar slides off-screen by default */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    z-index: 1100;
+  }
+
+  /* Open state — toggled via JS by adding .sidebar--open */
+  .sidebar.sidebar--open {
+    transform: translateX(0);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Show backdrop when sidebar is open */
+  .sidebar-backdrop {
+    display: block;
+  }
+
+  /* Push all main content areas to full width */
+  .topbar,
+  .sDashboard-main,
+  .sBooking-wrap,
+  .sConcern-main,
+  .sWellness-main,
+  .sReferral-main,
+  .sAnnouncements-main,
+  .sReports-main,
+  .sFeedback-main,
+  .sProfile-main,
+  .sHistory-main,
+  .cDashboard-main,
+  .cAppointment-main,
+  .cAvail-main,
+  .cConcerns-main,
+  .cFeedback-main,
+  .cStudentList-main,
+  .cReports-main,
+  .cAnnouncements-main,
+  .cReferral-main,
+  .cProfile-main,
+  .cHistory-main,
+  .aDashboard-main,
+  .aUsers-main,
+  .aStudents-main,
+  .aAppointments-main,
+  .aCounselors-main,
+  .aReports-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .sConcern-main,
+  .cConcerns-main {
+    height: auto;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .sConcern-left,
+  .cConcerns-left {
+    width: 100%;
+    min-width: unset;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sConcern-right,
+  .cConcerns-right {
+    min-height: 500px;
+  }
+
+  .topbar {
+    padding: 20px 20px 14px 70px; /* space for hamburger */
+  }
+
+  /* Topbar layouts */
+  .topbar-right {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Dashboard grids */
+  .sDashboard-content {
+    grid-template-columns: 1fr;
+  }
+
+  .sDashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .cDashboard-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Booking */
+  .sBooking-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .sBooking-col-divider {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+
+  /* Charts */
+  .aDashboard-chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .aReports-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Student list content */
+  .cStudentList-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .cStudentList-right {
+    height: auto;
+    align-items: flex-start;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  /* Availability grid */
+  .cAvail-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Announcements */
+  .sAnnouncements-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Referral card */
+  .sReferral-card {
+    width: 100%;
+    padding: 28px 24px;
+  }
+
+  /* History table scroll */
+  .cHistory-tabContent {
+    overflow-x: auto;
+  }
+}
+
+/* ----------------------------------------------------------
+   MD  ≤ 768px — single column, stacked layouts
+   ---------------------------------------------------------- */
+@media (max-width: 768px) {
+
+  /* Topbar */
+  .topbar {
+    padding: 14px 16px 10px 68px;
+    gap: 12px;
+  }
+
+  .topbar-left h2 {
+    font-size: 1.4rem;
+  }
+
+  .topbar-searchBox {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .topbar-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .topbar-user {
+    max-width: 160px;
+  }
+
+  /* Dashboard stats — single column */
+  .sDashboard-stats,
+  .cDashboard-container,
+  .aDashboard-stats,
+  .aAppointments-status-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .sDashboard-side {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  /* Booking wrap */
+  .sBooking-wrap {
+    padding: 20px 16px;
+  }
+
+  .sBooking-card,
+  .sBooking-upload-card {
+    padding: 20px;
+  }
+
+  /* Concern / thread */
+  .sConcern-main,
+  .cConcerns-main {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .sConcern-left,
+  .cConcerns-left {
+    width: 100%;
+    max-height: 300px;
+  }
+
+  .sConcern-thread-header,
+  .cConcerns-thread-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* Wellness */
+  .sWellness-main {
+    padding: 20px 16px;
+  }
+
+  .sWellness-mood-container {
+    gap: 6px;
+  }
+
+  /* Referral */
+  .sReferral-main,
+  .sWellness-main,
+  .sFeedback-main,
+  .sProfile-main,
+  .sAnnouncements-main,
+  .sReports-main {
+    padding: 20px 16px;
+  }
+
+  .sReferral-card {
+    padding: 20px 16px;
+  }
+
+  .cReferral-slip-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cReferral-slip-row label {
+    width: auto;
+  }
+
+  /* Announcements */
+  .sAnnouncements-container {
+    grid-template-columns: 1fr;
+  }
+
+  /* Reports */
+  .sReports-container,
+  .cReports-center,
+  .cReferral-center,
+  .cAnnouncements-center {
+    gap: 16px;
+  }
+
+  /* Profile */
+  .sProfile-header,
+  .cProfile-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .sProfile-card,
+  .cProfile-card {
+    padding: 20px 16px;
+  }
+
+  /* Counselor availability */
+  .cAvail-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .cAvail-card {
+    padding: 16px;
+  }
+
+  /* Appointments */
+  .cAppointment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cAppointment-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cAppointment-tab {
+    padding: 10px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .cAppointment-approvedGrid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Concerns left panel list */
+  .cConcerns-left {
+    max-height: 260px;
+  }
+
+  /* Student list */
+  .cStudentList-main {
+    padding: 16px;
+  }
+
+  .cStudentList-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cStudentList-content {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cStudentList-right {
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .cStudentList-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cStudentList-filters input,
+  .cStudentList-filters select,
+  .cStudentList-filters button {
+    width: 100%;
+  }
+
+  .cStudentList-pagination {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Student modal */
+  .cStudentModal-container {
+    padding: 16px;
+  }
+
+  .cStudentModal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* History */
+  .cHistory-main {
+    padding: 16px;
+  }
+
+  .cHistory-topbarRow {
+    flex-wrap: wrap;
+  }
+
+  .cHistory-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cHistory-tabs button {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .cHistory-filterBar {
+    flex-direction: column;
+  }
+
+  .cHistory-filter-search {
+    width: 100%;
+  }
+
+  .cHistory-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Reports modal */
+  .cReports-notes-item {
+    flex-direction: column;
+  }
+
+  .cReports-notes-thumb {
+    width: 100%;
+    height: 80px;
+    border-radius: 10px;
+  }
+
+  .cReports-notes-actions {
+    flex-direction: row;
+  }
+
+  /* Referral list */
+  .cReferral-list-item {
+    flex-direction: column;
+  }
+
+  .cReferral-list-thumb {
+    width: 100%;
+    height: 80px;
+    border-radius: 10px;
+  }
+
+  .cReferral-list-actions {
+    flex-direction: row;
+  }
+
+  /* Announcements list */
+  .cAnnouncements-item {
+    flex-direction: column;
+  }
+
+  .cAnnouncements-thumb {
+    width: 100%;
+    height: 120px;
+    border-radius: 10px;
+  }
+
+  .cAnnouncements-actions {
+    flex-direction: row;
+  }
+
+  /* Reports notes */
+  .sReports-rejected-item,
+  .sReports-history-item {
+    flex-wrap: wrap;
+  }
+
+  /* Admin sections */
+  .aDashboard-main,
+  .aUsers-main,
+  .aStudents-main,
+  .aAppointments-main,
+  .aCounselors-main,
+  .aReports-main {
+    padding: 16px;
+  }
+
+  .aDashboard-chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .aReports-chart-grid,
+  .aReports-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .aStudents-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .aStudents-record-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .aCounselors-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .aCounselors-record-actions {
+    width: 100%;
+  }
+
+  .aAppointments-filter-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .aAppointments-date-filters {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .aAppointments-date-filters #filterDate,
+  .btn-apply,
+  .btn-clear {
+    width: 100%;
+  }
+
+  .aAppointments-status-filters {
+    width: 100%;
+  }
+
+  .aUsers-tabs {
+    flex-wrap: wrap;
+  }
+
+  /* Counselors modal */
+  .aCounselors-field-grid,
+  .aStudents-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .aCounselors-field.full,
+  .aStudents-field.full {
+    grid-column: span 1;
+  }
+
+  .aCounselors-modal-content,
+  .aStudents-modal-content {
+    padding: 16px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Auth */
+  .auth-container {
+    flex-direction: column;
+  }
+
+  .auth-left {
+    min-height: 200px;
+    padding: 24px;
+  }
+
+  .auth-brand-logo {
+    width: 100px;
+    height: 100px;
+  }
+
+  .auth-brand-title {
+    font-size: 22px;
+  }
+
+  .auth-right {
+    padding: 24px 16px;
+  }
+
+  /* UC hero */
+  .uc-hero {
+    flex-direction: column;
+    padding: 24px 5%;
+    min-height: auto;
+    text-align: center;
+  }
+
+  .uc-title {
+    font-size: 32px;
+  }
+
+  .uc-hero__visual {
+    width: 100%;
+  }
+
+  .uc-nav {
+    padding: 16px 5%;
+  }
+
+  /* Filter bar */
+  .topbar-filter-bar {
+    flex-wrap: wrap;
+  }
+
+  /* Reset modal */
+  .reset-box {
+    width: 90%;
+    padding: 20px;
+  }
+
+  /* cDashboard modal */
+  .cDashboard-modalBox,
+  .cAppointment-modalBox {
+    padding: 20px;
+    width: 92%;
+  }
+
+  /* Booking receipt */
+  .sBooking-counselor-option {
+    padding: 10px;
+  }
+}
+
+/* ----------------------------------------------------------
+   SM  ≤ 480px — tightest spacing
+   ---------------------------------------------------------- */
+@media (max-width: 480px) {
+
+  /* Typography scale-down */
+  .topbar-left h2 {
+    font-size: 1.2rem;
+  }
+
+  /* Condensed cards */
+  .sDashboard-card,
+  .sDashboard-announcement,
+  .card-emergency,
+  .sBooking-card,
+  .sConcern-card,
+  .sWellness-card,
+  .sReferral-card,
+  .sAnnouncements-card,
+  .sReports-card,
+  .sFeedback-card,
+  .sProfile-card,
+  .cDashboard-card,
+  .cAppointment-card,
+  .cConcerns-card,
+  .cStudentList-item,
+  .cReports-card,
+  .cAnnouncements-card,
+  .cReferral-card,
+  .cProfile-card,
+  .aDashboard-card,
+  .aUsers-card,
+  .aStudents-card,
+  .aAppointments-card,
+  .aAppointments-summary-card,
+  .aCounselors-card,
+  .aReports-card {
+    padding: 16px;
+  }
+
+  /* Disable lift-hover on small touch screens (avoid layout shift) */
+  .sDashboard-card:hover,
+  .sDashboard-announcement:hover,
+  .card-emergency:hover,
+  .sBooking-card:hover,
+  .sAnnouncements-card:hover,
+  .sReports-card:hover,
+  .sFeedback-card:hover,
+  .sProfile-card:hover,
+  .sHistory-card:hover,
+  .cDashboard-card:hover,
+  .cAppointment-card:hover,
+  .cStudentList-item:hover,
+  .cReports-card:hover,
+  .cAnnouncements-card:hover,
+  .cReferral-card:hover,
+  .cProfile-card:hover,
+  .aDashboard-card:hover,
+  .aStudents-card:hover,
+  .aAppointments-summary-card:hover,
+  .aCounselors-card:hover,
+  .aReports-card:hover {
+    transform: none;
+  }
+
+  /* Availability — single column */
+  .cAvail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Wellness mood row */
+  .sWellness-mood-container {
+    flex-wrap: wrap;
+  }
+
+  .sWellness-mood-btn {
+    flex: 1 1 28%;
+    font-size: 18px;
+    padding: 10px 6px;
+  }
+
+  /* Booking slots */
+  .sBooking-slots-wrap {
+    gap: 6px;
+  }
+
+  .sBooking-slotBtn {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  /* Announcement modal */
+  .announcement-modal-content {
+    padding: 18px;
+  }
+
+  /* Profile avatar */
+  .sProfile-avatar img,
+  .cProfile-avatar img {
+    width: 90px;
+    height: 90px;
+  }
+
+  .sProfile-avatar,
+  .cProfile-avatar {
+    width: 90px;
+    height: 90px;
+  }
+
+  /* Concern modal */
+  .sConcern-modal,
+  .cStudentModal-container {
+    padding: 16px;
+    width: 95%;
+  }
+
+  /* Feedback */
+  .sFeedback-card,
+  .cFeedback-card {
+    padding: 16px;
+  }
+
+  /* Topbar user hide name on very small screens */
+  .topbar-user div {
+    display: none;
+  }
+
+  /* Pagination compact */
+  .cStudentList-page-btn {
+    min-width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .cStudentList-per-page {
+    font-size: 11px;
+  }
+
+  /* History tabs scroll */
+  .cHistory-tabs {
+    gap: 4px;
+  }
+
+  /* Topbar actions stack */
+  .topbar-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .topbar-actions .btn,
+  .topbar-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Done banner chips */
+  .sWellness-done-summary {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Filter box full width */
+  #cStudentList-filterBox {
+    width: calc(100vw - 32px);
+    right: -16px;
+  }
+
+  /* Modal actions stack */
+  .cDashboard-modalActions,
+  .cAppointment-modalActions,
+  .avail-modal-actions,
+  .sConcern-modal-actions {
+    flex-direction: column;
+  }
+
+  .cDashboard-modalBtn,
+  .cAppointment-modalBtn,
+  .avail-modal-btn,
+  .sConcern-modal-cancel,
+  .sConcern-modal-submit {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+/* ----------------------------------------------------------
+   XS  ≤ 360px — micro adjustments
+   ---------------------------------------------------------- */
+@media (max-width: 360px) {
+
+  .topbar {
+    padding: 12px 12px 10px 62px;
+  }
+
+  .sidebar-toggle {
+    top: 12px;
+    left: 12px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .sDashboard-card,
+  .cAppointment-card,
+  .sReports-card,
+  .cReports-card {
+    padding: 12px;
+  }
+
+  .uc-title {
+    font-size: 26px;
+  }
+
+  .sWellness-done-banner .done-emoji {
+    font-size: 40px;
+  }
+
+  .cHistory-filterBar {
+    padding: 10px;
+  }
+}
+
+/* ----------------------------------------------------------
+   PRINT  — clean, no sidebar / topbar
+   ---------------------------------------------------------- */
+@media print {
+  .sidebar,
+  .sidebar-toggle,
+  .sidebar-backdrop,
+  .topbar,
+  .sReferral-btn,
+  .btn,
+  .sConcern-reply-box,
+  .cConcerns-reply-box {
+    display: none !important;
+  }
+
+  .sDashboard-main,
+  .sReferral-main,
+  .sReports-main,
+  .cReports-main,
+  .sProfile-main {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* ----------------------------------------------------------
+   DARK MODE — responsive overrides
+   ---------------------------------------------------------- */
+[data-theme="dark"] .sidebar-toggle {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .sidebar-toggle span {
+  background: #e2e8f0;
+}
+
+[data-theme="dark"] .sidebar-backdrop {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* ----------------------------------------------------------
+   UTILITY — responsive helpers
+   ---------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .hide-md { display: none !important; }
+}
+@media (max-width: 768px) {
+  .hide-sm { display: none !important; }
+}
+@media (max-width: 480px) {
+  .hide-xs { display: none !important; }
+}
