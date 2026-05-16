@@ -144,7 +144,9 @@ if (!empty($referral['signature']) && file_exists($referral['signature'])) {
   }
 </style>
 <body class="body">
-
+<?php
+$_totalReportUnseen = $_totalReportUnseen ?? 0;
+?>
 <!-- ========================= SIDEBAR ========================= -->
 <aside class="sidebar">
 
@@ -187,7 +189,12 @@ if (!empty($referral['signature']) && file_exists($referral['signature'])) {
     <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
 
     <p class="sidebar-title">RECORDS</p>
-    <a href="sreports.php"><i class="fa fa-ticket"></i> Reports</a>
+    <a href="sreports.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sreports.php' ? 'active' : '' ?>">
+  <i class="fa fa-ticket"></i> Reports
+  <?php if ($_totalReportUnseen > 0): ?>
+    <span class="referral-badge" style="display:inline-block;"></span>
+  <?php endif; ?>
+</a>
 
     <p class="sidebar-title">SYSTEM</p>
     <a href="sfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>

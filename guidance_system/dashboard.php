@@ -58,11 +58,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
         echo json_encode(["success" => false, "message" => "Failed to save password. Please try again."]);
     }
     exit;
+
 }
 
 // ===== LOAD DATA =====
 $conn = new mysqli("127.0.0.1", "System_User", "gcs_db2026", "gcs_db");
 $sid = $conn->real_escape_string($_SESSION['user_id']);
+require_once 'scheck_reports_badge.php';
 
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
 $student    = $studentRes->fetch_assoc();
@@ -80,7 +82,7 @@ $completed = $conn->query("SELECT COUNT(*) c FROM appointments WHERE student_id=
 $referrals = $conn->query("SELECT COUNT(*) c FROM referrals WHERE student_id='$sid'")->fetch_assoc()['c'] ?? 0;
 $concerns  = $conn->query("SELECT COUNT(*) c FROM concerns WHERE student_id='$sid' AND status='Pending'")->fetch_assoc()['c'] ?? 0;
 
-$announce = $conn->query("SELECT * FROM announcements ORDER BY created_at DESC LIMIT 1")->fetch_assoc();
+$announce = $conn->query("SELECT * FROM announcements WHERE is_archived = 0 ORDER BY created_at DESC LIMIT 1")->fetch_assoc();
 
 $actRes = $conn->query(
     "(SELECT 'Booked appointment' AS activity, created_at FROM appointments WHERE student_id='$sid' ORDER BY created_at DESC LIMIT 1)
@@ -463,7 +465,9 @@ $profileImg = !empty($profile['profile_image'])
     </style>
 </head>
 <body class="body">
-
+<?php
+$_totalReportUnseen = $_totalReportUnseen ?? 0;
+?>
 <!-- ===== FULL PAGE BLOCK (only active when temp password) ===== -->
 <div class="page-block-overlay <?= $isTempPassword ? 'active' : '' ?>" id="pageBlockOverlay"></div>
 
@@ -558,7 +562,12 @@ $profileImg = !empty($profile['profile_image'])
         <p class="sidebar-title">UPDATES</p>
         <a href="sannouncements.php"><i class="fa fa-bullhorn"></i> Announcements</a>
         <p class="sidebar-title">RECORDS</p>
-        <a href="sreports.php"><i class="fa fa-ticket"></i> Reports</a>
+        <a href="sreports.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sreports.php' ? 'active' : '' ?>">
+  <i class="fa fa-ticket"></i> Reports
+  <?php if ($_totalReportUnseen > 0): ?>
+    <span class="referral-badge" style="display:inline-block;"></span>
+  <?php endif; ?>
+</a>
         <p class="sidebar-title">SYSTEM</p>
         <a href="sfeedback.php"><i class="fa fa-comment"></i> Session Feedback</a>
     </nav>
