@@ -394,5 +394,7 @@ async function checkReferralBadge() {
 
 checkReferralBadge();
 </script>
+<script>var SESSION_ROLE = 'student';</script>
+<script src="session_timeout.js"></script>
 </body>
 </html>

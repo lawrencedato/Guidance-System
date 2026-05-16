@@ -8,7 +8,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 
 $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 
-// ── FETCH APPOINTMENTS ──
 $appointmentRows = [];
 $result = $conn->query("
     SELECT
@@ -23,7 +22,6 @@ $result = $conn->query("
 ");
 while ($row = $result->fetch_assoc()) $appointmentRows[] = $row;
 
-// ── STATUS COUNTS ──
 $pendingCount   = 0;
 $approvedCount  = 0;
 $rejectedCount  = 0;
@@ -35,7 +33,6 @@ foreach ($appointmentRows as $a) {
 
 $conn->close();
 
-// ── HELPER: FORMAT DATE & TIME ──
 function formatDateTime($date, $time) {
     $dt = new DateTime($date . ' ' . $time);
     return $dt->format('M d, Y') . ' · ' . $dt->format('g:i A');
@@ -303,6 +300,7 @@ document.addEventListener("click", e => {
 });
 
 </script>
-
+<script>var SESSION_ROLE = 'admin';</script>
+<script src="session_timeout.js"></script>
 </body>
 </html>

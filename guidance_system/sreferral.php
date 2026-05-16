@@ -372,6 +372,7 @@ function exportPDF() {
   }).from(element).save();
 }
 </script>
-
+<script>var SESSION_ROLE = 'student';</script>
+<script src="session_timeout.js"></script>
 </body>
 </html>

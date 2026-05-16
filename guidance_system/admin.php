@@ -316,6 +316,7 @@ window.onload = () => {
 
 };
 </script>
-
+<script>var SESSION_ROLE = 'admin';</script>
+<script src="session_timeout.js"></script>
 </body>
 </html>

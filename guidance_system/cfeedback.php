@@ -248,6 +248,7 @@ document.getElementById('logoutOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeLogout();
 });
 </script>
-
+<script>var SESSION_ROLE = 'counselor';</script>
+<script src="session_timeout.js"></script>
 </body>
 </html>

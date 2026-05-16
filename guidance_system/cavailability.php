@@ -428,5 +428,7 @@ function doRemoveSlot(avid, dow) {
         .catch(() => showAlert('Network error', 'Please check your connection and try again.'));
 }
 </script>
+<script>var SESSION_ROLE = 'counselor';</script>
+<script src="session_timeout.js"></script>
 </body>
 </html>

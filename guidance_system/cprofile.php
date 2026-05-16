@@ -422,6 +422,7 @@ function saveProfile() {
     });
 }
 </script>
-
+<script>var SESSION_ROLE = 'counselor';</script>
+<script src="session_timeout.js"></script>
 </body>
 </html>

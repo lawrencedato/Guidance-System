@@ -738,5 +738,7 @@ async function checkReferralBadge() {
 checkReferralBadge();
 setInterval(checkReferralBadge, 60000);
 </script>
+<script>var SESSION_ROLE = 'student';</script>
+<script src="session_timeout.js"></script>
 </body>
 </html>

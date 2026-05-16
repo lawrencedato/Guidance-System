@@ -525,5 +525,7 @@ const observer = new IntersectionObserver((entries) => {
 
 document.querySelectorAll('.sReports-card').forEach(card => observer.observe(card));
 </script>
+<script>var SESSION_ROLE = 'student';</script>
+<script src="session_timeout.js"></script>
 </body>
 </html>
