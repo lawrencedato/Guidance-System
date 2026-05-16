@@ -10,7 +10,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     exit;
 }
 
-// archived students can only view history
 if (!empty($_SESSION['is_archived'])) {
     header("Location: shistory.php");
     exit;
@@ -21,7 +20,6 @@ $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 $sid_int = (int)$_SESSION['user_id'];
 require_once 'scheck_reports_badge.php';
 
-// ===== HANDLE PASSWORD RESET AJAX =====
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset_password') {
     header('Content-Type: application/json');
     $is_forced  = ($_POST['is_forced']  ?? '0') === '1';
@@ -48,9 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
     exit;
 }
 
-/* =========================
-   AJAX: PARTICIPATE TOGGLE
-   ========================= */
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['announcement_id'])) {
     header('Content-Type: application/json');
     $student_id      = $_SESSION['user_id'];
@@ -81,7 +77,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['announcement_id'])) {
     }
 }
 
-// ===== LOAD STUDENT DATA =====
 $sid  = $conn->real_escape_string($_SESSION['user_id']);
 
 $studentRes = $conn->query("SELECT * FROM students WHERE student_id='$sid' LIMIT 1");
@@ -221,7 +216,6 @@ ORDER BY a.created_at DESC
     </div>
 </div>
 
-<!-- ===== SUCCESS MODAL ===== -->
 <div class="success-modal-wrap" id="successModal">
     <div class="success-box">
         <div class="success-icon">
@@ -239,7 +233,6 @@ ORDER BY a.created_at DESC
 <?php
 $_totalReportUnseen = $_totalReportUnseen ?? 0;
 ?>
-<!-- ================= SIDEBAR ================= -->
 <aside class="sidebar">
     <div class="sidebar-logoBar">
         <div class="sidebar-logo">
