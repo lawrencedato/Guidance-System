@@ -24640,6 +24640,108 @@ tbody tr {
   max-width: 280px;
 }
 
+/* =========================
+   aDashboard — DARK MODE FIX
+========================= */
+
+[data-theme="dark"] .aDashboard-main {
+  background: #0b1220;
+}
+
+/* ── KPI stat cards — elevated surface ── */
+[data-theme="dark"] .aDashboard-stats .aDashboard-card {
+  background: #131f2e !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .aDashboard-stats .aDashboard-card h3 {
+  color: #8ba4be !important;
+}
+
+[data-theme="dark"] .aDashboard-stats .aDashboard-card h2 {
+  color: #e2eaf4 !important;
+}
+
+[data-theme="dark"] .aDashboard-stats .aDashboard-card p.aDashboard-muted {
+  color: #6e8ea8 !important;
+}
+
+/* ── Quick Actions card ── */
+[data-theme="dark"] .aDashboard-actions {
+  background: #131f2e !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .aDashboard-actions h3 {
+  color: #e2eaf4 !important;
+}
+
+[data-theme="dark"] .aDashboard-actions p {
+  color: #8ba4be !important;
+}
+
+/* ── Analytics card ── */
+[data-theme="dark"] .aDashboard-analytics {
+  background: #131f2e !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .aDashboard-analytics h3 {
+  color: #e2eaf4 !important;
+}
+
+[data-theme="dark"] .aDashboard-analytics p {
+  color: #8ba4be !important;
+}
+
+/* ── Chart inner boxes ── */
+[data-theme="dark"] .aDashboard-chart-box {
+  background: #0f1829 !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+[data-theme="dark"] .aDashboard-chart-box h4 {
+  color: #8ba4be !important;
+}
+
+/* ── Action buttons ── */
+[data-theme="dark"] .aDashboard-btn {
+  background: linear-gradient(135deg, #0d3254, #3a7ab8) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .aDashboard-btn:hover {
+  background: linear-gradient(135deg, #113f67, #4988c4) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ── Live status ── */
+[data-theme="dark"] .aDashboard-live-status {
+  color: #8ba4be;
+}
+
+[data-theme="dark"] .aDashboard-pulse {
+  background: #4ade80;
+}
+
+[data-theme="dark"] .aDashboard-pulse::after {
+  background: #4ade80;
+}
+
+/* ── Topbar ── */
+[data-theme="dark"] .topbar-left h2 {
+  color: #e2eaf4;
+}
+
+[data-theme="dark"] .topbar-muted {
+  color: #8ba4be;
+}
+
 .aUsers-main {
   background: var(--bg);
   margin-left: 280px;

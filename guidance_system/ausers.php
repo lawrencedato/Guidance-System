@@ -347,22 +347,7 @@ $conn->close();
         </tbody>
       </table>
     </div>
-
-    <div class="aUsers-pagination" id="counselors-pagination">
-      <div class="aUsers-per-page">
-        <label for="counselors-per-page">Rows per page:</label>
-        <select id="counselors-per-page" onchange="changePerPage('counselors', this.value)">
-          <option value="10">10</option>
-          <option value="25">25</option>
-          <option value="50">50</option>
-          <option value="100">100</option>
-        </select>
-      </div>
-      <span class="aUsers-pagination-info" id="counselors-info"></span>
-      <div class="aUsers-pagination-controls" id="counselors-controls"></div>
-    </div>
-  </section>
-
+ </section>
   <!-- ================= ADMINS ================= -->
   <section id="admins" class="aUsers-tab aUsers-card">
     <div class="aUsers-header">
@@ -410,19 +395,6 @@ $conn->close();
       </table>
     </div>
 
-    <div class="aUsers-pagination" id="admins-pagination">
-      <div class="aUsers-per-page">
-        <label for="admins-per-page">Rows per page:</label>
-        <select id="admins-per-page" onchange="changePerPage('admins', this.value)">
-          <option value="10">10</option>
-          <option value="25">25</option>
-          <option value="50">50</option>
-          <option value="100">100</option>
-        </select>
-      </div>
-      <span class="aUsers-pagination-info" id="admins-info"></span>
-      <div class="aUsers-pagination-controls" id="admins-controls"></div>
-    </div>
   </section>
 
   <div class="logout-overlay" id="logoutOverlay">
@@ -627,8 +599,6 @@ document.getElementById('logoutOverlay').addEventListener('click', function(e) {
 /* ── INIT ── */
 document.addEventListener("DOMContentLoaded", () => {
   initPagination("students");
-  initPagination("counselors");
-  initPagination("admins");
 });
 
 </script>

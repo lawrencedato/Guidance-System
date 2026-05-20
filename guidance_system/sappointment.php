@@ -51,38 +51,50 @@ $profileImg = !empty($profile['profile_image'])
 // ── AJAX: get available slots ──
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_slots') {
     header('Content-Type: application/json');
-    $cid  = (int)($_GET['counselor_id'] ?? 0);
+    $dept = $conn->real_escape_string($_GET['department'] ?? '');
     $date = $conn->real_escape_string($_GET['date'] ?? '');
 
-    if (!$cid || !$date) {
-        echo json_encode(['slots' => []]);
-        exit;
+    $allowedDepts = ['Wellness', 'Academic Support', 'Career Guidance'];
+    if (!$dept || !in_array($dept, $allowedDepts) || !$date) {
+        echo json_encode(['slots' => []]); exit;
     }
 
-    $ts  = strtotime($date);
+    $ts = strtotime($date);
     if (!$ts) { echo json_encode(['slots' => []]); exit; }
     $dow = (int)date('w', $ts);
 
+    // Get all counselor IDs in this department
+    $cidRes = $conn->query("
+        SELECT counselor_id FROM counselors
+        WHERE department='$dept' AND status='Active' AND archived=0
+    ");
+    $cids = [];
+    if ($cidRes) while ($r = $cidRes->fetch_assoc()) $cids[] = (int)$r['counselor_id'];
+    if (empty($cids)) { echo json_encode(['slots' => []]); exit; }
+    $cidList = implode(',', $cids);
+
+    // All available slots across counselors in this dept
     $res = $conn->query("
-        SELECT slot_time FROM counselor_availability
-        WHERE counselor_id = $cid AND day_of_week = $dow AND is_active = 1
+        SELECT DISTINCT slot_time FROM counselor_availability
+        WHERE counselor_id IN ($cidList) AND day_of_week=$dow AND is_active=1
         ORDER BY slot_time
     ");
     $allSlots = [];
     if ($res) while ($r = $res->fetch_assoc()) $allSlots[] = $r['slot_time'];
 
-    $bookedRes = $conn->query("
-        SELECT appointment_time FROM appointments
-        WHERE counselor_id = $cid
-          AND appointment_date = '$date'
-          AND status IN ('Pending','Approved')
-    ");
-    $booked = [];
-    if ($bookedRes) while ($r = $bookedRes->fetch_assoc()) $booked[] = $r['appointment_time'];
-
+    // A slot is only taken if ALL counselors in the dept are booked at that time
     $slots = [];
     foreach ($allSlots as $t) {
-        $slots[] = ['time' => $t, 'taken' => in_array($t, $booked)];
+        $escaped = $conn->real_escape_string($t);
+        $bookedRes = $conn->query("
+            SELECT COUNT(*) AS cnt FROM appointments
+            WHERE counselor_id IN ($cidList)
+              AND appointment_date='$date'
+              AND appointment_time='$escaped'
+              AND status IN ('Pending','Approved')
+        ");
+        $bookedCount = $bookedRes ? (int)$bookedRes->fetch_assoc()['cnt'] : 0;
+        $slots[] = ['time' => $t, 'taken' => ($bookedCount >= count($cids))];
     }
     echo json_encode(['slots' => $slots]);
     exit;
@@ -92,7 +104,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'get_slo
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book') {
     header('Content-Type: application/json');
 
-    $cid      = (int)($_POST['counselor_id'] ?? 0);
+    $allowedDepts = ['Wellness', 'Academic Support', 'Career Guidance'];
+    $dept     = $_POST['department'] ?? '';
+    if (!in_array($dept, $allowedDepts)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid department.']); exit;
+    }
+    $dept     = $conn->real_escape_string($dept);
     $date     = $conn->real_escape_string($_POST['date']    ?? '');
     $time     = $conn->real_escape_string($_POST['time']    ?? '');
     $message  = $conn->real_escape_string($_POST['message'] ?? '');
@@ -101,49 +118,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book'
     $priority = in_array($_POST['priority'] ?? '', $allowedPriority) ? $_POST['priority'] : 'Low';
     $priority = $conn->real_escape_string($priority);
 
-    if (!$cid || !$date || !$time) {
-        echo json_encode(['success' => false, 'message' => 'Please fill in all required fields.']);
-        exit;
+    if (!$dept || !$date || !$time) {
+        echo json_encode(['success' => false, 'message' => 'Please fill in all required fields.']); exit;
     }
 
-    $cCheck = $conn->query("SELECT counselor_id FROM counselors WHERE counselor_id=$cid AND status='Active' LIMIT 1");
-    if (!$cCheck || $cCheck->num_rows === 0) {
-        echo json_encode(['success' => false, 'message' => 'Selected counselor is not available.']);
-        exit;
-    }
+    // Find available counselor in dept for this slot (least booked first)
+    $cidRes = $conn->query("
+        SELECT c.counselor_id
+        FROM counselors c
+        LEFT JOIN appointments a
+          ON a.counselor_id = c.counselor_id
+         AND a.appointment_date = '$date'
+         AND a.appointment_time = '$time'
+         AND a.status IN ('Pending','Approved')
+        WHERE c.department='$dept' AND c.status='Active' AND c.archived=0
+          AND a.appointment_id IS NULL
+        ORDER BY (
+            SELECT COUNT(*) FROM appointments
+            WHERE counselor_id=c.counselor_id AND status IN ('Pending','Approved')
+        ) ASC
+        LIMIT 1
+    ");
 
-    // ── Handle optional file upload ──
+    if (!$cidRes || $cidRes->num_rows === 0) {
+        echo json_encode(['success' => false, 'message' => 'No available counselor for this slot. Please choose another time.']); exit;
+    }
+    $cid = (int)$cidRes->fetch_assoc()['counselor_id'];
+
+    // File upload (unchanged)
     $destPath = null;
     if (!empty($_FILES['document']['name'])) {
         $allowedTypes = ['application/pdf','application/msword',
                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                          'image/jpeg','image/png','image/gif','image/webp'];
-        $maxSize = 10 * 1024 * 1024; // 10 MB
-
+        $maxSize  = 10 * 1024 * 1024;
         $fileType = mime_content_type($_FILES['document']['tmp_name']);
         $fileSize = $_FILES['document']['size'];
-
         if (!in_array($fileType, $allowedTypes)) {
-            echo json_encode(['success' => false, 'message' => 'Invalid file type. Allowed: PDF, Word, JPG, PNG, GIF, WEBP.']);
-            exit;
+            echo json_encode(['success' => false, 'message' => 'Invalid file type.']); exit;
         }
         if ($fileSize > $maxSize) {
-            echo json_encode(['success' => false, 'message' => 'File is too large. Maximum size is 10 MB.']);
-            exit;
+            echo json_encode(['success' => false, 'message' => 'File too large. Max 10 MB.']); exit;
         }
-
         $uploadDir = 'uploads/appointment_docs/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0775, true);
-        }
-
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
         $ext      = strtolower(pathinfo($_FILES['document']['name'], PATHINFO_EXTENSION));
         $filename = 'appt_' . $sid . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
         $destPath = $uploadDir . $filename;
-
         if (!move_uploaded_file($_FILES['document']['tmp_name'], $destPath)) {
-            echo json_encode(['success' => false, 'message' => 'File upload failed. Please try again.']);
-            exit;
+            echo json_encode(['success' => false, 'message' => 'File upload failed.']); exit;
         }
     }
 
@@ -157,9 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book'
               AND status IN ('Pending','Approved')
             FOR UPDATE
         ");
-        if ($lock && $lock->num_rows > 0) {
-            throw new Exception('That slot was just taken. Please choose another.');
-        }
+        if ($lock && $lock->num_rows > 0) throw new Exception('That slot was just taken. Please choose another.');
 
         $ok = $conn->query("
             INSERT INTO appointments
@@ -168,7 +189,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book'
                 ('$sid', $cid, '$date', '$time', '$message', '$priority', 'Pending', NOW())
         ");
         if (!$ok) throw new Exception('Booking failed. Please try again.');
-
         $newAppointmentId = $conn->insert_id;
 
         if (!empty($destPath)) {
@@ -178,16 +198,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'book'
                 INSERT INTO appointment_files (appointment_id, file_name, file_path)
                 VALUES ($newAppointmentId, '$safeFileName', '$safeFilePath')
             ");
-            if (!$fileOk) throw new Exception('File record could not be saved. Please try again.');
+            if (!$fileOk) throw new Exception('File record could not be saved.');
         }
 
         $conn->commit();
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
         $conn->rollback();
-        if (!empty($destPath) && file_exists($destPath)) {
-            unlink($destPath);
-        }
+        if (!empty($destPath) && file_exists($destPath)) unlink($destPath);
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
     exit;
@@ -198,10 +216,13 @@ $counselorRes = $conn->query("
     SELECT counselor_id, first_name, last_name, department, profile_image
     FROM counselors
     WHERE status='Active' AND archived=0
-    ORDER BY last_name
+      AND department IN ('Wellness','Academic Support','Career Guidance')
+    ORDER BY department, last_name
 ");
 $counselors = [];
-if ($counselorRes) while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
+if ($counselorRes) while ($c = $counselorRes->fetch_assoc()) {
+    $counselors[$c['department']][] = $c;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -294,6 +315,66 @@ if ($counselorRes) while ($c = $counselorRes->fetch_assoc()) $counselors[] = $c;
       display: block;
       text-align: center;
     }
+
+.sBooking-dept-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sBooking-dept-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border, #d1d5db);
+  border-radius: 12px;
+  background: var(--bg-soft, #f8fafc);
+  color: var(--text, #1e293b);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+.sBooking-dept-btn:hover {
+  border-color: #4988C4;
+  background: rgba(73,136,196,0.06);
+  color: #113f67;
+}
+.sBooking-dept-btn.active {
+  border-color: #113f67;
+  background: #113f67;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(17,63,103,0.2);
+}
+.sBooking-dept-btn .dept-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: rgba(73,136,196,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: #4988C4;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.sBooking-dept-btn.active .dept-icon {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.sBooking-dept-btn .dept-arrow {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.4;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.sBooking-dept-btn.active .dept-arrow {
+  transform: rotate(90deg);
+  opacity: 1;
+}
   </style>
 </head>
 <body class="body">
@@ -369,41 +450,40 @@ $_totalReportUnseen = $_totalReportUnseen ?? 0;
 
     <div class="sBooking-columns">
 
-      <!-- COL 1: Choose Counselor -->
-      <div>
-        <div class="sBooking-section-label">
-          <span class="sBooking-section-num">1</span> Choose a Counselor
-        </div>
-        <div class="sBooking-counselor-grid">
-          <?php foreach ($counselors as $c):
-            $cName      = htmlspecialchars(trim($c['first_name'] . ' ' . $c['last_name']));
-            $cDept      = htmlspecialchars($c['department'] ?? '');
-            $cFallback  = 'https://ui-avatars.com/api/?name=' . urlencode($cName) . '&background=113f67&color=fff&size=128';
+      <!-- COL 1: Department → Counselor -->
+<!-- COL 1: Choose Department -->
+<div>
+  <div class="sBooking-section-label">
+    <span class="sBooking-section-num">1</span> Choose a Service
+  </div>
 
-            if (!empty($c['profile_image'])) {
-                $cImg = htmlspecialchars(trim($c['profile_image']));
-            } else {
-                $cImg = $cFallback;
-            }
-          ?>
-          <div class="sBooking-counselor-option"
-               data-id="<?= (int)$c['counselor_id'] ?>"
-               onclick="selectCounselor(this, <?= (int)$c['counselor_id'] ?>)">
-            <img src="<?= $cImg ?>"
-                 onerror="this.onerror=null;this.src='<?= htmlspecialchars($cFallback) ?>'"
-                 alt="<?= $cName ?>"
-                 loading="lazy">
-            <div class="sBooking-counselor-info">
-              <strong><?= $cName ?></strong>
-              <span><?= $cDept ?></span>
-            </div>
-          </div>
-          <?php endforeach; ?>
-          <?php if (empty($counselors)): ?>
-            <p style="font-size:13px;color:var(--text-muted);">No counselors available at this time.</p>
-          <?php endif; ?>
-        </div>
-      </div>
+  <div class="sBooking-dept-list">
+    <?php
+    $deptMeta = [
+      'Wellness'         => ['icon' => 'fa-heart',          'desc' => 'Mental health & personal wellbeing'],
+      'Academic Support' => ['icon' => 'fa-graduation-cap', 'desc' => 'Academic performance & learning'],
+      'Career Guidance'  => ['icon' => 'fa-briefcase',      'desc' => 'Career planning & job readiness'],
+    ];
+    foreach ($deptMeta as $dept => $meta):
+      if (empty($counselors[$dept])) continue;
+    ?>
+    <button class="sBooking-dept-btn"
+            data-dept="<?= htmlspecialchars($dept) ?>"
+            onclick="selectDept(this, '<?= htmlspecialchars($dept) ?>')">
+      <span class="dept-icon"><i class="fa <?= $meta['icon'] ?>"></i></span>
+      <span>
+        <span style="display:block;"><?= htmlspecialchars($dept) ?></span>
+        <span style="font-size:11px; font-weight:400; opacity:0.7;"><?= $meta['desc'] ?></span>
+      </span>
+      <i class="fa fa-chevron-right dept-arrow"></i>
+    </button>
+    <?php endforeach; ?>
+
+    <?php if (empty(array_filter($counselors))): ?>
+      <p style="font-size:13px;color:var(--text-muted);">No departments available at this time.</p>
+    <?php endif; ?>
+  </div>
+</div>
 
       <!-- COL 2: Date & Slots -->
       <div class="sBooking-col-divider">
@@ -416,7 +496,7 @@ $_totalReportUnseen = $_totalReportUnseen ?? 0;
           <span class="sBooking-section-num">3</span> Available Slots
         </div>
         <div id="slotsWrap">
-          <p class="sBooking-slots-hint">Select a counselor and date to see available slots.</p>
+          <p class="sBooking-slots-hint">Select a service and date to see available slots.</p>
         </div>
         <p id="noSlots" style="display:none; font-size:13px; color:var(--text-muted); margin-top:6px;">
           No available slots for this day. Try a different date.
@@ -534,8 +614,40 @@ document.addEventListener("click", e => {
 });
 
 // ── State ──
-let selectedCounselorId = null;
+let selectedDept = null;
 
+function selectDept(btn, dept) {
+    const isAlready = btn.classList.contains('active');
+    document.querySelectorAll('.sBooking-dept-btn').forEach(b => b.classList.remove('active'));
+
+    if (isAlready) {
+        selectedDept = null;
+    } else {
+        btn.classList.add('active');
+        selectedDept = dept;
+    }
+
+    // Reset slots
+    document.getElementById('time').value        = '';
+    document.getElementById('timeDisplay').value = '';
+    document.getElementById('bookingResult').innerHTML = '';
+    document.getElementById('noSlots').style.display = 'none';
+
+    if (selectedDept) {
+        const dateVal = document.getElementById('date').value;
+        if (dateVal) {
+            loadSlots(selectedDept, dateVal);
+        } else {
+            document.getElementById('slotsWrap').innerHTML =
+                '<p class="sBooking-slots-hint">Now pick a date to see available slots.</p>';
+        }
+    } else {
+        document.getElementById('slotsWrap').innerHTML =
+            '<p class="sBooking-slots-hint">Select a department and date to see available slots.</p>';
+    }
+}
+
+// Update date listener to use dept
 document.addEventListener('DOMContentLoaded', () => {
     const today = new Date();
     const yyyy  = today.getFullYear();
@@ -544,30 +656,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('date').min = `${yyyy}-${mm}-${dd}`;
 
     document.getElementById('date').addEventListener('change', function () {
-        if (!selectedCounselorId || !this.value) return;
-        loadSlots(selectedCounselorId, this.value);
+        if (!selectedDept || !this.value) return;
+        loadSlots(selectedDept, this.value);
     });
 });
 
-function selectCounselor(el, cid) {
-    document.querySelectorAll('.sBooking-counselor-option').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedCounselorId = cid;
-
-    document.getElementById('time').value        = '';
-    document.getElementById('timeDisplay').value = '';
-    document.getElementById('bookingResult').innerHTML = '';
-
-    const dateVal = document.getElementById('date').value;
-    if (dateVal) {
-        loadSlots(cid, dateVal);
-    } else {
-        document.getElementById('slotsWrap').innerHTML =
-            '<p class="sBooking-slots-hint">Now pick a date to see available slots.</p>';
-    }
-}
-
-function loadSlots(cid, date) {
+function loadSlots(dept, date) {
     const wrap    = document.getElementById('slotsWrap');
     const noSlots = document.getElementById('noSlots');
     wrap.innerHTML = '<span class="sBooking-slots-loading"><i class="fa fa-spinner fa-spin"></i> Loading slots…</span>';
@@ -575,16 +669,12 @@ function loadSlots(cid, date) {
     document.getElementById('time').value        = '';
     document.getElementById('timeDisplay').value = '';
 
-    fetch(`sappointment.php?action=get_slots&counselor_id=${cid}&date=${date}`)
-        .then(r => {
-            if (!r.ok) throw new Error('Server error');
-            return r.json();
-        })
+    fetch(`sappointment.php?action=get_slots&department=${encodeURIComponent(dept)}&date=${date}`)
+        .then(r => { if (!r.ok) throw new Error(); return r.json(); })
         .then(json => {
             wrap.innerHTML = '';
             if (!json.slots || json.slots.length === 0) {
-                noSlots.style.display = '';
-                return;
+                noSlots.style.display = ''; return;
             }
             const container = document.createElement('div');
             container.className = 'sBooking-slots-wrap';
@@ -607,6 +697,74 @@ function loadSlots(cid, date) {
         })
         .catch(() => {
             wrap.innerHTML = '<em style="font-size:13px;color:var(--error,#e53e3e);">Failed to load slots. Please try again.</em>';
+        });
+}
+
+function bookAppointment() {
+    const d        = document.getElementById('date').value;
+    const t        = document.getElementById('time').value;
+    const msg      = document.getElementById('message').value.trim();
+    const priority = document.getElementById('priority').value;
+    const result   = document.getElementById('bookingResult');
+
+    if (!selectedDept) {
+        result.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please select a department.</span>"; return;
+    }
+    if (!d) {
+        result.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please pick a date.</span>"; return;
+    }
+    if (!t) {
+        result.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please select a time slot.</span>"; return;
+    }
+
+    const submitBtn = document.querySelector('.sBooking-submit');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i> Submitting…';
+    }
+
+    const fd = new FormData();
+    fd.append('action',     'book');
+    fd.append('department', selectedDept);
+    fd.append('date',       d);
+    fd.append('time',       t);
+    fd.append('message',    msg);
+    fd.append('priority',   priority);
+
+    const fileInput = document.getElementById('documentFile');
+    if (fileInput.files && fileInput.files[0]) fd.append('document', fileInput.files[0]);
+
+    fetch('sappointment.php', { method: 'POST', body: fd })
+        .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+        .then(json => {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-calendar-check" style="margin-right:6px;"></i> Confirm Booking';
+            }
+            result.innerHTML = json.success
+                ? "<span style='color:var(--success,#15803d);'>✔ Appointment submitted successfully!</span>"
+                : "<span style='color:var(--error,#e53e3e);'>❌ " + (json.message || 'Failed. Please try again.') + "</span>";
+
+            if (json.success) {
+                document.querySelectorAll('.sBooking-dept-btn').forEach(b => b.classList.remove('active'));
+                selectedDept = null;
+                document.getElementById('date').value        = '';
+                document.getElementById('time').value        = '';
+                document.getElementById('timeDisplay').value = '';
+                document.getElementById('message').value     = '';
+                document.getElementById('slotsWrap').innerHTML =
+                    '<p class="sBooking-slots-hint">Select a department and date to see available slots.</p>';
+                document.getElementById('noSlots').style.display = 'none';
+                clearFile();
+                setTimeout(() => result.innerHTML = '', 5000);
+            }
+        })
+        .catch(() => {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-calendar-check" style="margin-right:6px;"></i> Confirm Booking';
+            }
+            result.innerHTML = "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong. Please try again.</span>";
         });
 }
 
@@ -650,80 +808,6 @@ function handleDrop(e) {
     dt.items.add(file);
     document.getElementById('documentFile').files = dt.files;
     showFileName(file.name);
-}
-
-// ── Book appointment ──
-function bookAppointment() {
-    const d        = document.getElementById('date').value;
-    const t        = document.getElementById('time').value;
-    const msg      = document.getElementById('message').value.trim();
-    const priority = document.getElementById('priority').value;
-    const result   = document.getElementById('bookingResult');
-
-    if (!selectedCounselorId) {
-        result.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please select a counselor.</span>"; return;
-    }
-    if (!d) {
-        result.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please pick a date.</span>"; return;
-    }
-    if (!t) {
-        result.innerHTML = "<span style='color:var(--error,#e53e3e);'>⚠ Please select a time slot.</span>"; return;
-    }
-
-    const submitBtn = document.querySelector('.sBooking-submit');
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i> Submitting…';
-    }
-
-    const fd = new FormData();
-    fd.append('action',       'book');
-    fd.append('counselor_id', selectedCounselorId);
-    fd.append('date',         d);
-    fd.append('time',         t);
-    fd.append('message',      msg);
-    fd.append('priority',     priority);
-
-    const fileInput = document.getElementById('documentFile');
-    if (fileInput.files && fileInput.files[0]) {
-        fd.append('document', fileInput.files[0]);
-    }
-
-    fetch('sappointment.php', { method: 'POST', body: fd })
-        .then(r => {
-            if (!r.ok) throw new Error('Server error');
-            return r.json();
-        })
-        .then(json => {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fa fa-calendar-check" style="margin-right:6px;"></i> Confirm Booking';
-            }
-            result.innerHTML = json.success
-                ? "<span style='color:var(--success,#15803d);'>✔ Appointment submitted successfully!</span>"
-                : "<span style='color:var(--error,#e53e3e);'>❌ " + (json.message || 'Failed. Please try again.') + "</span>";
-
-            if (json.success) {
-                document.querySelectorAll('.sBooking-counselor-option').forEach(o => o.classList.remove('selected'));
-                selectedCounselorId = null;
-                document.getElementById('date').value        = '';
-                document.getElementById('time').value        = '';
-                document.getElementById('timeDisplay').value = '';
-                document.getElementById('message').value     = '';
-                document.getElementById('slotsWrap').innerHTML =
-                    '<p class="sBooking-slots-hint">Select a counselor and date to see available slots.</p>';
-                document.getElementById('noSlots').style.display = 'none';
-                clearFile();
-                setTimeout(() => result.innerHTML = '', 5000);
-            }
-        })
-        .catch(() => {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fa fa-calendar-check" style="margin-right:6px;"></i> Confirm Booking';
-            }
-            result.innerHTML = "<span style='color:var(--error,#e53e3e);'>❌ Something went wrong. Please try again.</span>";
-        });
 }
 
 async function checkReferralBadge() {

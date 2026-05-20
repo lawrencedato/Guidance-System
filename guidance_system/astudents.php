@@ -11,13 +11,6 @@ if ($conn->connect_error) {
     die(json_encode(["error" => "Connection failed: " . $conn->connect_error]));
 }
 
-/*
-  REQUIRED: Run these SQL statements once on your database before using this file.
-
-  ALTER TABLE students ADD COLUMN IF NOT EXISTS archived TINYINT(1) NOT NULL DEFAULT 0;
-  ALTER TABLE students ADD COLUMN IF NOT EXISTS graduated_at DATETIME NULL DEFAULT NULL;
-*/
-
 // ================= HANDLE GET: NEXT STUDENT ID =================
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'next_id') {
     header('Content-Type: application/json');
@@ -1155,6 +1148,17 @@ $archivedCount    = $archivedCountRes ? $archivedCountRes->fetch_assoc()['cnt'] 
 
         <!-- ── Pagination ── -->
         <div class="aStudents-pagination" id="paginationWrapper" style="display:none;">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted);">
+                <label for="rowsPerPage">Rows per page:</label>
+                <select id="rowsPerPage" onchange="changePageSize(this.value)"
+                    style="padding:5px 9px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="all">All</option>
+                </select>
+            </div>
             <div class="aStudents-pagination-info" id="paginationInfo"></div>
             <div class="aStudents-pagination-controls" id="paginationControls"></div>
         </div>
@@ -1652,7 +1656,7 @@ function clearAllSelections() {
 }
 
 // ================= PAGINATION =================
-const PAGE_SIZE = 20;
+let PAGE_SIZE = 20;
 let allStudentsData = [];
 let currentPage = 1;
 
@@ -1662,9 +1666,9 @@ function renderPage(page) {
     tbody.innerHTML = '';
 
     const total = allStudentsData.length;
-    const totalPages = Math.ceil(total / PAGE_SIZE);
-    const start = (page - 1) * PAGE_SIZE;
-    const end   = Math.min(start + PAGE_SIZE, total);
+    const isAll = PAGE_SIZE === Infinity;
+    const start = (page - 1) * (isAll ? total : PAGE_SIZE);
+    const end   = isAll ? total : Math.min(start + PAGE_SIZE, total);
     const pageData = allStudentsData.slice(start, end);
 
     if (pageData.length === 0) {
@@ -1718,18 +1722,20 @@ function renderPage(page) {
     syncSelectAllCheckbox();
     updateBulkToolbar();
 
-    const wrapper = document.getElementById('paginationWrapper');
-    if (total <= PAGE_SIZE) {
-        wrapper.style.display = 'none';
-        return;
-    }
-    wrapper.style.display = 'flex';
-
-    document.getElementById('paginationInfo').textContent =
-        `Showing ${start + 1}–${end} of ${total} student${total !== 1 ? 's' : ''}`;
-
+    const wrapper  = document.getElementById('paginationWrapper');
     const controls = document.getElementById('paginationControls');
+    const infoEl   = document.getElementById('paginationInfo');
+
+    wrapper.style.display = 'flex';
+    infoEl.textContent = isAll
+        ? `Showing all ${total} student${total !== 1 ? 's' : ''}`
+        : `Showing ${start + 1}–${end} of ${total} student${total !== 1 ? 's' : ''}`;
+
     controls.innerHTML = '';
+    if (isAll) return; 
+
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+    if (totalPages <= 1) { wrapper.style.display = 'none'; return; }
 
     const prevBtn = document.createElement('button');
     prevBtn.className = 'aStudents-page-btn';
@@ -2320,6 +2326,12 @@ document.getElementById('importCsvInput').addEventListener('change', function ()
         .catch(() => showToast("CSV import failed.", 'error'));
     this.value = '';
 });
+
+function changePageSize(value) {
+    PAGE_SIZE = value === 'all' ? Infinity : parseInt(value, 10);
+    renderPage(1);
+}
+
 </script>
 <script>var SESSION_ROLE = 'admin';</script>
 <script src="session_timeout.js"></script>
