@@ -3,13 +3,13 @@ $conn = new mysqli("localhost", "System_User", "gcs_db2026", "gcs_db");
 
 // ── SET YOUR PASSWORDS HERE ──
 $admins = [
-    '000001' => 'Sysadmin@123',      // sysadmin@univ.edu.ph
+    '000001' => 'S3cure@Sys#2026!',
 ];
 
 $counselors = [
-    '000001' => 'Counselor@123',     // andrea.villafuerte@univ.edu.ph
-    '000002' => 'Counselor@123',      // ramon.ocampo@univ.edu.ph
-    '000003' => 'Counselor@123',    // celeste.navarro@univ.edu.ph
+    '000001' => 'W3llness@Andrea#91!',
+    '000002' => 'AcadSup@Ramon#82!',
+    '000003' => 'Career@Celeste#73!',
 ];
 
 // ── UPDATE ADMINS ──
